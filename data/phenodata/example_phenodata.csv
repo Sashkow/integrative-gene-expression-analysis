@@ -1,0 +1,15 @@
+arraydatafile_exprscolumnnames,accession,secondaryaccession,Diagnosis,Gestational.Age.Category,Gestational.Age,Biological.Specimen,Fetus.Sex,estimated_sex
+GSM1891989_P13.CEL,E-GEOD-73374,GSE73374,Healthy,Term,39,Placenta,_,Female
+GSM1891992_P1.CEL,E-GEOD-73374,GSE73374,Healthy,Term,38,Placenta,_,Male
+GSM1891993_P10.CEL,E-GEOD-73374,GSE73374,Healthy,Term,40,Placenta,_,Female
+X11420,E-GEOD-9984,GSE9984,Healthy,First Trimester,8,Placenta,Female,Female
+X11670,E-GEOD-9984,GSE9984,Healthy,First Trimester,10,Placenta,Male,Male
+X13497,E-GEOD-9984,GSE9984,Healthy,Second Trimester,15,Placenta,_,Female
+X13521,E-GEOD-9984,GSE9984,Healthy,Second Trimester,18,Placenta,_,Male
+X14258,E-GEOD-9984,GSE9984,Healthy,Second Trimester,20,Placenta,Male,Male
+GSM309515,E-GEOD-12767,GSE12767,Healthy,First Trimester,9,Placenta,_,Male
+GSM309516,E-GEOD-12767,GSE12767,Healthy,First Trimester,11,Placenta,Female,Female
+GSM309517,E-GEOD-12767,GSE12767,Healthy,Second Trimester,16,Placenta,_,Female
+GSM309518,E-GEOD-12767,GSE12767,Healthy,Second Trimester,22,Placenta,Male,Male
+GSM309519,E-GEOD-12767,GSE12767,Healthy,Term,38,Placenta,_,Male
+GSM309520,E-GEOD-12767,GSE12767,Healthy,Term,39,Placenta,Female,Female

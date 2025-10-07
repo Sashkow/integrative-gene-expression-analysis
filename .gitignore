@@ -1,0 +1,37 @@
+# Data files - too large for git
+data/raw/
+data/mapped/
+data/merged/
+data/temp/
+data/stringdb_cache/
+
+# But keep phenodata and examples
+!data/phenodata/
+!data/phenodata/example*
+
+# Output files
+output/
+
+# R specific
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+
+# Temporary files
+*.tmp
+*.log
+*~
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Keep .gitkeep and example files
+!.gitkeep
+!*example*

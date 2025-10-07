@@ -1,0 +1,496 @@
+---
+title: "Expression Data Integration Pipeline"
+subtitle: "Multi-dataset integration with batch correction, PCA, differential expression, and network clustering"
+author: "Expression Integration Pipeline"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    code_folding: show
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = TRUE,
+  warning = TRUE,
+  fig.width = 10,
+  fig.height = 8
+)
+```
+
+# Overview
+
+This pipeline integrates gene expression data from multiple studies/datasets and performs:
+
+1. **Data Merging** - Combine expression matrices by common genes
+2. **Batch Correction** - Remove technical batch effects using ComBat
+3. **PCA Analysis** - Visualize data structure and sample relationships
+4. **Differential Expression** - Identify differentially expressed genes using limma
+5. **Network Clustering** - Build protein-protein interaction networks and detect communities using fastgreedy algorithm
+6. **Functional Enrichment** - Perform pathway enrichment analysis cluster-by-cluster
+
+---
+
+# 1. Setup
+
+## Load Libraries
+
+```{r load_libraries, message=FALSE}
+# Load pipeline modules
+source("../R/config.R")
+source("../R/utils.R")
+source("../R/01_data_merging.R")
+source("../R/02_batch_correction.R")
+source("../R/03_pca_analysis.R")
+source("../R/04_differential_expression.R")
+source("../R/05_network_clustering.R")
+source("../R/06_enrichment_analysis.R")
+source("../R/07_visualization.R")
+
+# Load required packages
+library(limma)
+library(sva)
+library(factoextra)
+library(ggplot2)
+library(igraph)
+```
+
+## Load Configuration
+
+```{r load_config}
+# Load configuration from YAML file
+config <- load_config("../config/config.yaml")
+
+# Validate and print configuration
+validate_config(config)
+print_config(config)
+
+# Create output directories
+output_dirs <- create_output_dirs(config$paths$output)
+```
+
+---
+
+# 2. Data Merging
+
+Merge expression data from multiple datasets, keeping only genes common to all studies.
+
+```{r merge_data}
+log_msg("Starting data merging...")
+
+# Merge expression matrices
+merged_exprs <- merge_expression_data(
+  mapped_path = config$paths$mapped_data,
+  pattern = config$merging$pattern
+)
+
+# Load phenodata
+pdata <- read.csv(config$paths$phenodata, stringsAsFactors = FALSE)
+
+# Align phenodata with expression data
+pdata_aligned <- align_phenodata(
+  mrgd = merged_exprs,
+  pdata = pdata,
+  sample_col = config$merging$sample_column
+)
+
+# Display dimensions
+cat("\nMerged expression data:\n")
+cat("  Genes:", nrow(merged_exprs), "\n")
+cat("  Samples:", ncol(merged_exprs), "\n")
+cat("  Phenodata samples:", nrow(pdata_aligned), "\n")
+```
+
+## Apply Filters (Optional)
+
+```{r filter_data}
+# Apply sample filters if defined in config
+if (!is.null(config$filtering) && length(config$filtering) > 0) {
+
+  log_msg("Applying sample filters...")
+
+  filtered_data <- filter_samples(
+    mrgd = merged_exprs,
+    pdata = pdata_aligned,
+    filters = config$filtering
+  )
+
+  merged_exprs <- filtered_data$exprs
+  pdata_aligned <- filtered_data$pdata
+
+} else {
+  log_msg("No filters defined, using all samples")
+}
+
+# Validate input data
+validate_input(merged_exprs, pdata_aligned)
+```
+
+---
+
+# 3. Batch Correction
+
+Remove technical batch effects using ComBat while preserving biological variation.
+
+```{r prepare_batch_correction}
+log_msg("Preparing for batch correction...")
+
+# Add trimester variable if needed
+if ("trim_term" %in% all.vars(as.formula(config$batch_correction$model_formula))) {
+  pdata_aligned <- add_trimester_variable(pdata_aligned)
+}
+
+# Check batch distribution
+cat("\nBatch distribution:\n")
+print(table(pdata_aligned[[config$batch_correction$batch_column]]))
+```
+
+```{r batch_correction}
+log_msg("Applying ComBat batch correction...")
+
+# Apply batch correction
+exprs_corrected <- apply_combat_correction(
+  exprs = merged_exprs,
+  pdata = pdata_aligned,
+  batch_col = config$batch_correction$batch_column,
+  mod_formula = as.formula(config$batch_correction$model_formula),
+  par_prior = config$batch_correction$par_prior,
+  prior_plots = config$batch_correction$prior_plots
+)
+
+# Save corrected data
+save_data(exprs_corrected,
+          file.path(output_dirs$base, "exprs_corrected.tsv"),
+          format = "tsv")
+save_data(pdata_aligned,
+          file.path(output_dirs$base, "pdata_aligned.tsv"),
+          format = "tsv")
+```
+
+---
+
+# 4. PCA Analysis
+
+Perform principal component analysis to visualize data structure.
+
+```{r pca}
+log_msg("Performing PCA...")
+
+# Perform PCA
+pca <- perform_pca(exprs_corrected,
+                   center = config$pca$center,
+                   scale = config$pca$scale)
+
+# Create scree plot
+plot_pca_scree(pca,
+               output_dir = output_dirs$plots,
+               n_pcs = config$pca$n_pcs)
+```
+
+## PCA Plots by Metadata
+
+```{r pca_plots}
+log_msg("Creating PCA plots...")
+
+# Plot PCA colored by different variables
+plot_pca_metadata(pca,
+                  pdata = pdata_aligned,
+                  variables = config$pca$color_by,
+                  output_dir = output_dirs$plots,
+                  axes = c(1, 2))
+
+# Create biplot if specified
+if (!is.null(config$pca$biplot_genes) && config$pca$biplot_genes > 0) {
+  plot_pca_biplot(pca,
+                  pdata = pdata_aligned,
+                  color_by = config$pca$color_by[1],
+                  n_genes = config$pca$biplot_genes,
+                  output_dir = output_dirs$plots)
+}
+```
+
+---
+
+# 5. Differential Expression Analysis
+
+Identify differentially expressed genes using limma.
+
+```{r differential_expression}
+log_msg("Performing differential expression analysis...")
+
+# Perform differential expression
+de_results <- differential_expression(
+  exprs = exprs_corrected,
+  pdata = pdata_aligned,
+  design_formula = as.formula(config$differential_expression$design_formula),
+  contrasts = config$differential_expression$contrasts,
+  method = config$differential_expression$decide_method
+)
+
+# Extract and annotate results
+difexp <- extract_difexp_results(
+  efit = de_results$efit,
+  results = de_results$results,
+  exprs = exprs_corrected,
+  pdata = pdata_aligned
+)
+
+# Filter by thresholds
+difexp_filtered <- filter_difexp(
+  difexp,
+  logfc_threshold = config$differential_expression$logfc_threshold,
+  pvalue_threshold = config$differential_expression$pvalue_threshold
+)
+
+# Save results
+save_data(difexp,
+          file.path(output_dirs$difexp, "difexp_all.csv"))
+save_data(difexp_filtered,
+          file.path(output_dirs$difexp, "difexp_filtered.csv"))
+
+cat("\nDifferential expression summary:\n")
+cat("  Total genes tested:", nrow(difexp), "\n")
+cat("  Significant genes:", nrow(difexp_filtered), "\n")
+```
+
+## Volcano Plot
+
+```{r volcano_plot}
+log_msg("Creating volcano plot...")
+
+plot_volcano(
+  difexp,
+  output_file = file.path(output_dirs$plots, "volcano_plot.png"),
+  logfc_threshold = config$differential_expression$logfc_threshold,
+  pval_threshold = config$differential_expression$pvalue_threshold,
+  label_top = config$visualization$volcano_top_genes
+)
+```
+
+## Heatmap
+
+```{r heatmap}
+log_msg("Creating differential expression heatmap...")
+
+plot_difexp_heatmap(
+  exprs = exprs_corrected,
+  difexp = difexp_filtered,
+  pdata = pdata_aligned,
+  top_n = config$visualization$heatmap_top_genes,
+  output_file = file.path(output_dirs$plots, "difexp_heatmap.png")
+)
+```
+
+---
+
+# 6. Network Clustering
+
+Build protein-protein interaction network and detect communities using fastgreedy algorithm.
+
+```{r stringdb_init}
+log_msg("Initializing STRING database...")
+
+# Initialize STRING database
+string_db <- initialize_stringdb(
+  version = config$stringdb$version,
+  species = config$stringdb$species,
+  score_threshold = config$stringdb$score_threshold,
+  use_cache = config$stringdb$use_cache,
+  cache_dir = config$stringdb$cache_dir
+)
+```
+
+```{r map_stringdb}
+log_msg("Mapping genes to STRING database...")
+
+# Map genes to STRING
+mapped <- map_to_stringdb(
+  difexp = difexp_filtered,
+  background_exprs = exprs_corrected,
+  string_db = string_db
+)
+
+difexp_mapped <- mapped$difexp
+```
+
+```{r build_network}
+log_msg("Building protein-protein interaction network...")
+
+# Build PPI network
+G <- build_ppi_network(
+  string_ids = difexp_mapped$STRING_id,
+  string_db = string_db
+)
+
+# Perform fastgreedy clustering
+fgreedy <- fastgreedy_clustering(G)
+
+# Add cluster assignments
+difexp_clustered <- add_cluster_column(
+  difexp = difexp_mapped,
+  fgreedy = fgreedy,
+  G = G
+)
+
+# Save clustered results
+save_data(difexp_clustered,
+          file.path(output_dirs$clusters, "difexp_clustered.csv"))
+```
+
+## Network Visualization
+
+```{r network_plot}
+log_msg("Creating network visualization...")
+
+plot_network(
+  G = G,
+  difexp = difexp_clustered,
+  fgreedy = fgreedy,
+  output_file = file.path(output_dirs$plots, "network_clusters.png"),
+  layout_algo = config$visualization$network_layout
+)
+```
+
+## Recursive Clustering (Optional)
+
+```{r recursive_clustering}
+if (config$clustering$recursive) {
+  log_msg("Performing recursive sub-clustering...")
+
+  cluster_recursive(
+    difexp = difexp_clustered,
+    string_db = string_db,
+    output_dir = output_dirs$base,
+    min_cluster_size = config$clustering$min_cluster_size
+  )
+}
+```
+
+---
+
+# 7. Functional Enrichment Analysis
+
+Perform pathway enrichment analysis for each cluster.
+
+```{r enrichment}
+log_msg("Performing functional enrichment analysis...")
+
+# Cluster-by-cluster enrichment
+enrichment_summary <- cluster_enrichment(
+  difexp = difexp_clustered,
+  string_db = string_db,
+  output_dir = output_dirs$base,
+  max_pvalue = config$enrichment$max_pvalue
+)
+
+# Add term membership to genes
+difexp_final <- add_term_membership(
+  difexp = difexp_clustered,
+  enrichment = string_enrichment(
+    difexp_clustered$STRING_id,
+    string_db,
+    max_pvalue = config$enrichment$max_pvalue
+  )
+)
+
+# Save final results
+save_data(difexp_final,
+          file.path(output_dirs$base, "difexp_final.csv"))
+```
+
+## Enrichment Visualizations
+
+```{r enrichment_plots}
+log_msg("Creating enrichment visualizations...")
+
+# Cluster sizes
+plot_cluster_sizes(
+  summary_data = enrichment_summary,
+  output_file = file.path(output_dirs$plots, "cluster_sizes.png")
+)
+
+# Enrichment coverage
+plot_enrichment_coverage(
+  summary_data = enrichment_summary,
+  output_file = file.path(output_dirs$plots, "enrichment_coverage.png")
+)
+```
+
+---
+
+# 8. Summary and Results
+
+```{r summary}
+log_msg("Generating pipeline summary...")
+
+# Collect summary statistics
+summary_stats <- list(
+  total_genes = nrow(merged_exprs),
+  total_samples = ncol(merged_exprs),
+  filtered_samples = ncol(exprs_corrected),
+  difexp_genes_all = nrow(difexp),
+  difexp_genes_filtered = nrow(difexp_filtered),
+  genes_on_network = sum(difexp_clustered$on_graph),
+  num_clusters = length(unique(difexp_clustered$cluster[!is.na(difexp_clustered$cluster)])),
+  avg_cluster_size = mean(table(difexp_clustered$cluster)),
+  total_enrichment_terms = sum(enrichment_summary$enrichment_terms),
+  avg_coverage = mean(enrichment_summary$coverage)
+)
+
+# Write summary
+write_summary(
+  stats = summary_stats,
+  output_file = file.path(output_dirs$reports, "pipeline_summary.csv")
+)
+
+# Print summary
+cat("\n=== Pipeline Summary ===\n")
+cat("Total genes analyzed:", summary_stats$total_genes, "\n")
+cat("Total samples:", summary_stats$total_samples, "\n")
+cat("Filtered samples:", summary_stats$filtered_samples, "\n")
+cat("\nDifferential Expression:\n")
+cat("  All genes:", summary_stats$difexp_genes_all, "\n")
+cat("  Filtered genes:", summary_stats$difexp_genes_filtered, "\n")
+cat("\nNetwork Clustering:\n")
+cat("  Genes on network:", summary_stats$genes_on_network, "\n")
+cat("  Number of clusters:", summary_stats$num_clusters, "\n")
+cat("  Average cluster size:", round(summary_stats$avg_cluster_size, 1), "\n")
+cat("\nEnrichment:\n")
+cat("  Total enrichment terms:", summary_stats$total_enrichment_terms, "\n")
+cat("  Average coverage:", round(summary_stats$avg_coverage * 100, 1), "%\n")
+cat("========================\n\n")
+```
+
+## Session Information
+
+```{r session_info}
+print_session_info()
+```
+
+---
+
+# Outputs
+
+All results have been saved to: **`r output_dirs$base`**
+
+- **Corrected expression data**: `exprs_corrected.tsv`
+- **Phenodata**: `pdata_aligned.tsv`
+- **Differential expression results**: `difexp/`
+- **Network clusters**: `clusters/`
+- **Enrichment results**: `clusters/*/cluster_enrichment.csv`
+- **Visualizations**: `plots/`
+- **Summary report**: `reports/pipeline_summary.csv`
+
+For cluster-specific enrichment results, see the `clusters/` directory where each cluster has its own subdirectory with:
+- `cluster_genes.csv` - Genes in the cluster
+- `cluster_enrichment.csv` - Enrichment results
+- `cluster_to_revigo.tsv` - Input for REVIGO analysis
+
+---
+
+**Pipeline completed successfully!** `r Sys.time()`

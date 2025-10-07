@@ -1,0 +1,96 @@
+# Expression Integration Pipeline Configuration
+# Edit this file to customize pipeline parameters
+
+# Project Information
+project:
+  name: "Integrative Gene Expression Analysis"
+  description: "Multi-dataset expression integration with ComBat, PCA, differential expression, and network clustering"
+  author: "Olexandr Lykhenko"
+  date: "2025-10-05"
+
+# Input Paths
+paths:
+  mapped_data: "/home/shivers/a/r/igea-r/scripts/integrative-gene-expression-analysis/data/mapped"  # Directory containing mapped expression files
+  phenodata: "/home/shivers/a/r/igea-r/scripts/integrative-gene-expression-analysis/data/phenodata/samples.csv"  # Phenotype/metadata file
+  output: "/home/shivers/a/r/igea-r/scripts/integrative-gene-expression-analysis/output"  # Base output directory
+
+# Data Merging Parameters
+merging:
+  pattern: ".tsv"                      # File pattern for expression files
+  sample_column: "arraydatafile_exprscolumnnames"  # Column with sample IDs
+
+# Filtering Parameters
+filtering:
+  # Define sample filters as key-value pairs
+  # Example filters (uncomment and edit as needed):
+  Biological.Specimen: ["Placenta"]
+  Diagnosis: ["Healthy"]
+  Gestational.Age.Category: ["First Trimester", "Second Trimester", "Term"]
+
+# Batch Correction Parameters
+batch_correction:
+  batch_column: "secondaryaccession"   # Column defining batches
+  model_formula: "~trim_term"          # R formula for biological covariates
+  par_prior: TRUE                      # Use parametric priors
+  prior_plots: FALSE                   # Generate diagnostic plots
+
+# PCA Parameters
+pca:
+  center: TRUE
+  scale: FALSE
+  color_by:                            # Variables for PCA coloring
+    - "trim_term"
+    - "estimated_sex"
+    - "secondaryaccession"
+    - "Biological.Specimen"
+  n_pcs: 20                           # Number of PCs for scree plot
+  biplot_genes: 10                    # Number of genes to show in biplot
+
+# Differential Expression Parameters
+differential_expression:
+  design_formula: "~0 + trim_term"    # Design matrix formula
+  contrasts:                           # Contrasts to test
+    - "trim_termSecond Trimester - trim_termFirst Trimester"
+    - "trim_termTerm - trim_termSecond Trimester"
+  decide_method: "global"              # Method for decideTests (global, separate, hierarchical, nestedF)
+  logfc_threshold: 1                   # Log fold-change threshold
+  pvalue_threshold: 0.05               # Adjusted p-value threshold
+
+# STRING Database Parameters
+stringdb:
+  version: "11"
+  species: 9606                        # NCBI taxonomy ID (9606 = human)
+  score_threshold: 400                 # Confidence score (0-1000)
+  use_cache: TRUE                      # Use cached STRING database if available
+  cache_dir: "data/stringdb_cache"     # Directory for STRING database cache
+
+# Network Clustering Parameters
+clustering:
+  min_cluster_size: 3                  # Minimum genes per cluster
+  recursive: TRUE                      # Perform recursive sub-clustering
+
+# Enrichment Analysis Parameters
+enrichment:
+  max_pvalue: 0.05                     # P-value threshold
+  category: "Process"                  # Enrichment category (Process, Function, Component)
+  enrichr_databases:                   # EnrichR databases (optional)
+    - "GO_Biological_Process_2018"
+    - "KEGG_2021_Human"
+
+# Visualization Parameters
+visualization:
+  network_layout: "fr"                 # Network layout algorithm (fr, kk, nicely)
+  volcano_top_genes: 20                # Number of genes to label in volcano plot
+  heatmap_top_genes: 50                # Number of genes in heatmap
+
+# Output Formats
+output:
+  save_rds: TRUE                       # Save intermediate R objects
+  save_csv: TRUE                       # Save tables as CSV
+  save_plots: TRUE                     # Save plots
+  plot_format: "svg"                   # Plot format (svg, png, pdf)
+
+# Performance
+performance:
+  cores: 1                             # Number of cores for parallel processing
+  memory_limit: 8000                   # Memory limit in MB (for large datasets)

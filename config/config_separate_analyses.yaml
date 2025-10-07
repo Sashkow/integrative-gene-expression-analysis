@@ -1,0 +1,150 @@
+# Expression Integration Pipeline Configuration - Separate Analyses
+# This config runs separate analyses for different trimester comparisons
+
+# Project Information
+project:
+  name: "Trimester Comparison Analysis"
+  description: "Separate analyses for First-Second and Second-Third trimester comparisons"
+  author: "Olexandr Lykhenko"
+  date: "2025-10-05"
+
+# Input Paths
+paths:
+  mapped_data: "/home/shivers/a/r/igea-r/scripts/integrative-gene-expression-analysis/data/mapped"
+  phenodata: "/home/shivers/a/r/igea-r/scripts/integrative-gene-expression-analysis/data/phenodata/samples.csv"
+  output: "/home/shivers/a/r/igea-r/scripts/integrative-gene-expression-analysis/output"
+
+# Data Merging Parameters
+merging:
+  pattern: ".tsv"
+  sample_column: "arraydatafile_exprscolumnnames"
+
+# Analysis Mode
+analysis_mode: "separate"  # "combined" or "separate"
+
+# Separate Analyses Configuration
+# Each analysis will be run independently with its own filtering and contrasts
+separate_analyses:
+
+  # Analysis 1: First vs Second Trimester
+  trim_1_2:
+    name: "First vs Second Trimester"
+    output_subdir: "trim_1_2"
+
+    # Filtering - only samples from First and Second trimester
+    filtering:
+      Biological.Specimen: ["Placenta"]
+      Diagnosis: ["Healthy"]
+      Gestational.Age.Category: ["First Trimester", "Second Trimester"]
+
+    # Batch correction
+    batch_correction:
+      batch_column: "secondaryaccession"
+      model_formula: "~trim_term"
+      par_prior: TRUE
+      prior_plots: FALSE
+
+    # Differential expression
+    differential_expression:
+      design_formula: "~0 + trim_term"
+      contrasts:
+        - "trim_termSecond Trimester - trim_termFirst Trimester"
+      decide_method: "global"
+      logfc_threshold: 1
+      pvalue_threshold: 0.05
+
+  # Analysis 2: Second vs Third Trimester (Term)
+  trim_2_3:
+    name: "Second Trimester vs Term"
+    output_subdir: "trim_2_3"
+
+    # Filtering - only samples from Second trimester and Term
+    filtering:
+      Biological.Specimen: ["Placenta"]
+      Diagnosis: ["Healthy"]
+      Gestational.Age.Category: ["Second Trimester", "Term"]
+
+    # Batch correction
+    batch_correction:
+      batch_column: "secondaryaccession"
+      model_formula: "~trim_term"
+      par_prior: TRUE
+      prior_plots: FALSE
+
+    # Differential expression
+    differential_expression:
+      design_formula: "~0 + trim_term"
+      contrasts:
+        - "trim_termTerm - trim_termSecond Trimester"
+      decide_method: "global"
+      logfc_threshold: 1
+      pvalue_threshold: 0.05
+
+# PCA Parameters (applied to each analysis)
+pca:
+  center: TRUE
+  scale: FALSE
+  color_by:
+    - "trim_term"
+    - "estimated_sex"
+    - "secondaryaccession"
+  n_pcs: 20
+  biplot_genes: 10
+
+# STRING Database Parameters (shared across analyses)
+stringdb:
+  version: "11"
+  species: 9606
+  score_threshold: 400
+  use_cache: TRUE
+  cache_dir: "data/stringdb_cache"
+
+# Network Clustering Parameters (applied to each analysis)
+clustering:
+  min_cluster_size: 3
+  recursive: TRUE
+
+# Enrichment Analysis Parameters (applied to each analysis)
+enrichment:
+  max_pvalue: 0.05
+  category: "Process"
+  enrichr_databases:
+    - "GO_Biological_Process_2018"
+    - "KEGG_2021_Human"
+
+# Visualization Parameters (applied to each analysis)
+visualization:
+  network_layout: "fr"
+  volcano_top_genes: 20
+  heatmap_top_genes: 50
+
+# Output Formats
+output:
+  save_rds: TRUE
+  save_csv: TRUE
+  save_plots: TRUE
+  plot_format: "svg"
+
+# Performance
+performance:
+  cores: 1
+  memory_limit: 8000
+
+# Comparison Analysis
+# After running separate analyses, compare the results
+comparison:
+  enabled: TRUE
+  output_subdir: "comparison"
+  analyses_to_compare: ["trim_1_2", "trim_2_3"]
+
+  # Venn diagram of DE genes
+  venn_diagram: TRUE
+
+  # Compare directions (up/down regulated)
+  direction_comparison: TRUE
+
+  # Find genes with opposite directions
+  opposite_direction: TRUE
+
+  # Compare fold changes
+  fold_change_correlation: TRUE
