@@ -395,8 +395,7 @@ string_db <- initialize_stringdb(species = 9606, score_threshold = 400)
 If you use this pipeline or database, please cite:
 
 ### This Pipeline
-- Lykhenko O., Frolova A., Obolenska M. (2021) **Consecutive integration of available microarray data for analysis of differential gene expression in human placenta.** Biotechnologia Acta, 14(1), pp. 38–45. DOI: [10.15407/biotech14.01.38](https://doi.org/10.15407/biotech14.01.38)
-- Lykhenko O., Frolova A., Obolenska M. (2017) **Designing the database for microarray experiments metadata.** IEEE International Young Scientists Forum on Applied Physics and Engineering (YSF). DOI: [10.1109/YSF.2017.8126658](https://doi.org/10.1109/YSF.2017.8126658)
+- Lykhenko O., Frolova A., Obolenskaya M. (2021) **Changes in the human placental transcriptome during the physiological course of pregnancy.** Biopolym. Cell, 37(1), pp. 73–82. DOI: [10.7124/bc.000A4D](https://doi.org/10.7124/bc.000A4D)
 
 ### Dependencies
 - **limma**: Ritchie ME et al. (2015) Nucleic Acids Research
