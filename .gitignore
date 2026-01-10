@@ -5,7 +5,22 @@ data/merged/
 data/temp/
 data/stringdb_cache/
 data/preprocessed_illumina/
+data/preprocessed_operon/
 data/phenodata/old/
+data/GSE*.tsv
+
+# GEO annotation/raw files in root (should be moved to data/raw)
+GPL*.txt
+GPL*.gz
+GSE*.gz
+GSE*_redownload/
+
+# Backup files
+*.backup*
+*_backup_*
+
+# Lock files
+.~lock.*
 
 # But keep phenodata and examples
 !data/phenodata/
@@ -21,6 +36,7 @@ output/
 .RData
 .Ruserdata
 *.Rproj
+Rplots*.pdf
 
 # Temporary files
 *.tmp
