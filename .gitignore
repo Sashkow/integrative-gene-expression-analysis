@@ -31,6 +31,9 @@ GSE*_redownload/
 # Output files
 output/
 
+# One-off/temporary scripts
+one_off_scripts/
+
 # R specific
 .Rproj.user
 .Rhistory
