@@ -16,36 +16,58 @@ A comprehensive R pipeline for integrating gene expression data from multiple st
 ## Directory Structure
 
 ```
-exprs_integration_pipeline/
-├── R/                          # Core pipeline functions
-│   ├── 01_data_merging.R       # Data merging functions
-│   ├── 02_batch_correction.R   # Batch correction with ComBat
-│   ├── 03_pca_analysis.R       # PCA and visualization
-│   ├── 04_differential_expression.R  # Limma DE analysis
-│   ├── 05_network_clustering.R # STRING mapping and fastgreedy clustering
-│   ├── 06_enrichment_analysis.R # Functional enrichment
-│   ├── 07_visualization.R      # Plotting functions
-│   ├── config.R                # Configuration management
-│   └── utils.R                 # Utility functions
+integrative-gene-expression-analysis/
+├── R/                                     # Core pipeline modules
+│   ├── 01_data_merging.R                  # Merge expression matrices
+│   ├── 02_batch_correction.R              # ComBat batch correction
+│   ├── 03_pca_analysis.R                  # PCA and visualization
+│   ├── 04_differential_expression.R       # Limma differential expression
+│   ├── 05_network_clustering.R            # STRING mapping & fastgreedy clustering
+│   ├── 06_enrichment_analysis.R           # Functional enrichment
+│   ├── 07_visualization.R                 # Plotting functions
+│   ├── config.R                           # Configuration management
+│   └── utils.R                            # Utility functions
+│
+├── preprocessing_illumina/                # Illumina preprocessing pipeline
+│   ├── preprocess_illumina_simple.R       # Simple Illumina preprocessing
+│   └── preprocess_illumina_from_sample_tables.R  # Batch preprocessing
+│
 ├── config/
-│   └── config.yaml             # Pipeline configuration file
+│   └── config.yaml                        # Pipeline configuration (EDIT THIS)
+│
 ├── notebooks/
-│   └── pipeline.Rmd            # Main analysis notebook
+│   └── pipeline.Rmd                       # Main analysis notebook (RUN THIS)
+│
 ├── data/
-│   ├── raw/                    # Raw expression data
-│   ├── mapped/                 # Mapped expression matrices (input)
-│   ├── phenodata/              # Sample metadata
-│   ├── merged/                 # Merged data
-│   └── temp/                   # Temporary files
-├── output/
-│   ├── difexp/                 # Differential expression results
-│   ├── clusters/               # Network clustering results
-│   ├── enrichment/             # Enrichment analysis results
-│   ├── plots/                  # Visualizations
-│   └── reports/                # Summary reports
-├── tests/                      # Unit tests (optional)
-├── docs/                       # Additional documentation
-└── README.md                   # This file
+│   ├── mapped/                            # INPUT: Mapped expression files
+│   ├── phenodata/                         # INPUT: Sample metadata
+│   │   ├── samples.csv                    # Main sample metadata
+│   │   ├── example_phenodata.csv          # Example phenodata format
+│   │   └── sample_GSE*.csv                # Dataset-specific metadata
+│   ├── raw/                               # Raw downloaded data
+│   │   └── raw_illumina/                  # Raw Illumina data
+│   ├── preprocessed_illumina/             # Preprocessed Illumina data
+│   ├── merged/                            # Merged expression data
+│   ├── stringdb_cache/                    # STRING database cache
+│   └── temp/                              # Temporary files
+│
+├── output/                                # OUTPUT: All results
+│   ├── difexp/                            # Differential expression results
+│   ├── clusters/                          # Network clustering results
+│   ├── enrichment/                        # Enrichment summaries
+│   ├── plots/                             # All visualizations
+│   ├── reports/                           # Summary reports
+│   ├── trim_1_2/                          # First vs Second trimester analysis
+│   ├── trim_2_3/                          # Second vs Third trimester analysis
+│   └── comparison/                        # Cross-analysis comparisons
+│
+├── tests/                                 # Test scripts
+├── docs/                                  # Additional documentation
+│
+├── setup.R                                # Setup script (RUN FIRST)
+├── check_metadata_coverage_enhanced.R     # Enhanced metadata validation
+├── run_separate_analyses.R                # Run separate trimester analyses
+└── README.md                              # This file
 ```
 
 ## Installation
@@ -83,17 +105,44 @@ install.packages(c(
 
 ## Quick Start
 
-### 1. Prepare Your Data
+### 1. Setup (First Time Only)
 
-Place your mapped expression files in `data/mapped/`:
-- Files should be tab-separated with genes as rows, samples as columns
-- First column should be gene IDs (ENTREZID)
+```bash
+Rscript setup.R
+```
 
-Place your phenodata file in `data/phenodata/samples.csv`:
-- Must include column `arraydatafile_exprscolumnnames` with sample IDs matching expression files
-- Should include batch variable (e.g., `secondaryaccession`) and biological variables
+This installs all required packages and verifies the installation.
 
-### 2. Configure Pipeline
+### 2. Prepare Your Data
+
+**Expression Files** (`data/mapped/`):
+- Tab-separated values
+- Genes as rows (ENTREZID), samples as columns
+- First column must be named "ENTREZID"
+- Example: `GSE73374_mapped_affymetrix.tsv`
+
+**Phenodata** (`data/phenodata/samples.csv`):
+- CSV format with required columns:
+  - `arraydatafile_exprscolumnnames` - Sample IDs matching expression file column names
+  - `secondaryaccession` - Study/batch ID
+  - Biological variables (e.g., `trim_term`, `Diagnosis`, `estimated_sex`)
+
+See `data/phenodata/example_phenodata.csv` for format.
+
+### Validate Your Data
+
+Before running the pipeline, validate metadata coverage:
+
+```bash
+Rscript check_metadata_coverage_enhanced.R
+```
+
+This checks:
+- Metadata completeness (Diagnosis, Gestational Category, Biological Specimen)
+- Column name matching between expression files and metadata
+- Sample count consistency
+
+### 3. Configure Pipeline
 
 Edit `config/config.yaml` to set:
 - Input/output paths
@@ -120,7 +169,7 @@ differential_expression:
     - "trim_termSecond Trimester - trim_termFirst Trimester"
 ```
 
-### 3. Run Pipeline
+### 4. Run Pipeline
 
 Open and run the RMarkdown notebook:
 
@@ -219,6 +268,30 @@ Each cluster has a subdirectory in `output/clusters/[cluster_id]/`:
 
 - `reports/pipeline_summary.csv` - Summary statistics
 
+## Core Algorithms
+
+### ComBat Batch Correction
+- Method: Empirical Bayes batch effect correction
+- Preserves biological variation while removing technical batches
+- Reference: Johnson et al. (2007) Biostatistics
+
+### Differential Expression
+- Method: Linear models with empirical Bayes (limma)
+- Multiple contrast support
+- Reference: Ritchie et al. (2015) NAR
+
+### Network Clustering
+- Database: STRING v11 protein-protein interactions
+- Algorithm: Fastgreedy community detection
+- Recursive sub-clustering of communities
+- Reference: Clauset et al. (2004) Phys Rev E
+
+### Functional Enrichment
+- STRING enrichment API
+- Cluster-by-cluster analysis
+- Coverage metrics
+- REVIGO-ready output
+
 ## Configuration Options
 
 ### Key Parameters
@@ -235,6 +308,54 @@ Each cluster has a subdirectory in `output/clusters/[cluster_id]/`:
 | | `recursive` | Enable recursive clustering | `TRUE` |
 | **enrichment** | `max_pvalue` | P-value threshold | `0.05` |
 
+## Use Case Examples
+
+### Example 1: Trimester Comparison
+Compare placental gene expression across trimesters:
+```yaml
+differential_expression:
+  design_formula: "~0 + trim_term"
+  contrasts:
+    - "trim_termSecond Trimester - trim_termFirst Trimester"
+    - "trim_termThird Trimester - trim_termSecond Trimester"
+```
+
+### Example 2: Disease vs. Healthy
+Compare disease to healthy samples:
+```yaml
+differential_expression:
+  design_formula: "~0 + Diagnosis"
+  contrasts:
+    - "DiagnosisPre-Eclampsia - DiagnosisHealthy"
+```
+
+### Example 3: Sex Differences
+Identify sex-specific genes:
+```yaml
+differential_expression:
+  design_formula: "~0 + estimated_sex"
+  contrasts:
+    - "estimated_sexMale - estimated_sexFemale"
+```
+
+## Performance
+
+### Memory Requirements
+- Small dataset (<50 samples): 4-8 GB RAM
+- Medium dataset (50-200 samples): 8-16 GB RAM
+- Large dataset (>200 samples): 16-32 GB RAM
+
+### Runtime Estimates
+- Data merging: < 1 min
+- Batch correction: 1-5 min
+- PCA: < 1 min
+- Differential expression: 1-3 min
+- STRING mapping: 2-5 min
+- Network clustering: 5-15 min
+- Enrichment analysis: 5-30 min
+
+**Total: ~15-60 minutes** depending on dataset size and cluster count
+
 ## Troubleshooting
 
 ### Common Issues
@@ -243,6 +364,7 @@ Each cluster has a subdirectory in `output/clusters/[cluster_id]/`:
 2. **Memory errors**: Reduce dataset size or increase memory limit in config
 3. **No genes on network**: Lower STRING score_threshold
 4. **Empty enrichment**: Increase max_pvalue or check gene IDs
+5. **Sample mismatch**: Verify `arraydatafile_exprscolumnnames` matches expression column names exactly
 
 ### Check Input Data
 
@@ -255,6 +377,16 @@ validate_input(exprs, pdata)
 # Check configuration
 config <- load_config("config/config.yaml")
 validate_config(config)
+```
+
+### Debug Mode
+
+```r
+# Load specific module
+source("R/05_network_clustering.R")
+
+# Test function
+string_db <- initialize_stringdb(species = 9606, score_threshold = 400)
 ```
 
 ## Citation
@@ -274,6 +406,27 @@ This pipeline is provided as-is for research purposes.
 
 For questions or issues, please open an issue in the repository or contact the maintainer.
 
+## Recent Updates
+
+### 2025-10-16: Illumina Preprocessing & Metadata Validation
+- **Added Illumina preprocessing pipeline** (`preprocessing_illumina/`)
+  - Download raw data from GEO/ArrayExpress
+  - Background correction and quantile normalization
+  - Probe-to-gene mapping using max-mean strategy
+  - Annotation database version checking
+- **Metadata validation improvements**
+  - Enhanced check script (`check_metadata_coverage_enhanced.R`)
+  - Column name matching validation (expression file vs metadata)
+  - Fixed GSE93520 metadata issues
+  - Added ENTREZID header requirement for preprocessed files
+- **Documentation updates**
+  - Clarified log transformation workflow (offset = min_positive / 10)
+  - Added use case examples
+  - Added performance metrics
+  - Updated project structure
+
 ---
 
-**Last updated**: 2025-10-04
+**Created**: 2025-10-04
+**Last Updated**: 2025-10-16
+**Version**: 1.1

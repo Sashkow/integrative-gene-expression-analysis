@@ -11,7 +11,7 @@
 
 <meta name="author" content="Expression Integration Pipeline" />
 
-<meta name="date" content="2025-10-05" />
+<meta name="date" content="2025-10-09" />
 
 <title>Expression Data Integration Pipeline</title>
 
@@ -1739,7 +1739,7 @@ div.tocify {
 <h1 class="title toc-ignore">Expression Data Integration Pipeline</h1>
 <h3 class="subtitle">Multi-dataset integration with batch correction, PCA, differential expression, and network clustering</h3>
 <h4 class="author">Expression Integration Pipeline</h4>
-<h4 class="date">2025-10-05</h4>
+<h4 class="date">2025-10-09</h4>
 
 </div>
 
@@ -1798,9 +1798,9 @@ div.tocify {
 ##   Date: 2025-10-05 
 ## 
 ## Input Paths:
-##   Mapped data: /home/shivers/a/r/igea-r/scripts/exprs_integration_pipeline/data/mapped 
-##   Phenodata: /home/shivers/a/r/igea-r/scripts/exprs_integration_pipeline/data/phenodata/samples.csv 
-##   Output: /home/shivers/a/r/igea-r/scripts/exprs_integration_pipeline/output 
+##   Mapped data: /home/shivers/a/r/igea-r/scripts/integrative-gene-expression-analysis/data/mapped 
+##   Phenodata: /home/shivers/a/r/igea-r/scripts/integrative-gene-expression-analysis/data/phenodata/samples.csv 
+##   Output: /home/shivers/a/r/igea-r/scripts/integrative-gene-expression-analysis/output 
 ## 
 ## Batch Correction:
 ##   Batch column: secondaryaccession 
@@ -1819,7 +1819,7 @@ div.tocify {
 ## ==============================</code></pre>
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true"></a><span class="co"># Create output directories</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true"></a>output_dirs &lt;-<span class="st"> </span><span class="kw">create_output_dirs</span>(config<span class="op">$</span>paths<span class="op">$</span>output)</span></code></pre></div>
-<pre><code>## Created output directory structure at: /home/shivers/a/r/igea-r/scripts/exprs_integration_pipeline/output</code></pre>
+<pre><code>## Created output directory structure at: /home/shivers/a/r/igea-r/scripts/integrative-gene-expression-analysis/output</code></pre>
 <hr />
 </div>
 </div>
@@ -1827,7 +1827,7 @@ div.tocify {
 <h1>2. Data Merging</h1>
 <p>Merge expression data from multiple datasets, keeping only genes common to all studies.</p>
 <div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true"></a><span class="kw">log_msg</span>(<span class="st">&quot;Starting data merging...&quot;</span>)</span></code></pre></div>
-<pre><code>## [2025-10-05 13:42:17] Starting data merging...</code></pre>
+<pre><code>## [2025-10-09 23:26:31] Starting data merging...</code></pre>
 <div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true"></a><span class="co"># Merge expression matrices</span></span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true"></a>merged_exprs &lt;-<span class="st"> </span><span class="kw">merge_expression_data</span>(</span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true"></a>  <span class="dt">mapped_path =</span> config<span class="op">$</span>paths<span class="op">$</span>mapped_data,</span>
@@ -1837,12 +1837,12 @@ div.tocify {
 <pre><code>## Starting with 20261 genes from E-GEOD-22490_mapped_affymetrix.tsv</code></pre>
 <pre><code>##   Merged E-GEOD-35574_preprocessed__illumina_mapped_nobatch.tsv - 17015 common genes</code></pre>
 <pre><code>##   Merged E-GEOD-37901_mapped_affymetrix.tsv - 17015 common genes</code></pre>
-<pre><code>##   Merged E-GEOD-55439_preprocessed_illumina4db_mapped_exprs.tsv - 13528 common genes</code></pre>
-<pre><code>##   Merged E-GEOD-6573_mapped_affymetrix_no_adipose.tsv - 13528 common genes</code></pre>
-<pre><code>##   Merged E-GEOD-73374_mapped_affymetrix.tsv - 13475 common genes</code></pre>
-<pre><code>##   Merged E-GEOD-73685_mapped_affymetrix_full_filtered.tsv - 13366 common genes</code></pre>
-<pre><code>##   Merged E-GEOD-9984_mapped_affymetrix.tsv - 13366 common genes</code></pre>
-<pre><code>## Final merged data: 13366 genes x 359 samples</code></pre>
+<pre><code>##   Merged E-GEOD-6573_mapped_affymetrix_no_adipose.tsv - 17015 common genes</code></pre>
+<pre><code>##   Merged E-GEOD-73374_mapped_affymetrix.tsv - 16914 common genes</code></pre>
+<pre><code>##   Merged E-GEOD-73685_mapped_affymetrix_full_filtered.tsv - 16673 common genes</code></pre>
+<pre><code>##   Merged E-GEOD-9984_mapped_affymetrix.tsv - 16673 common genes</code></pre>
+<pre><code>##   Merged E-GEOD-GSE93520_mapped_agilent.tsv - 8328 common genes</code></pre>
+<pre><code>## Final merged data: 8328 genes x 371 samples</code></pre>
 <div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true"></a><span class="co"># Load phenodata</span></span>
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true"></a>pdata &lt;-<span class="st"> </span><span class="kw">read.csv</span>(config<span class="op">$</span>paths<span class="op">$</span>phenodata, <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)</span>
 <span id="cb24-3"><a href="#cb24-3" aria-hidden="true"></a></span>
@@ -1852,43 +1852,45 @@ div.tocify {
 <span id="cb24-7"><a href="#cb24-7" aria-hidden="true"></a>  <span class="dt">pdata =</span> pdata,</span>
 <span id="cb24-8"><a href="#cb24-8" aria-hidden="true"></a>  <span class="dt">sample_col =</span> config<span class="op">$</span>merging<span class="op">$</span>sample_column</span>
 <span id="cb24-9"><a href="#cb24-9" aria-hidden="true"></a>)</span></code></pre></div>
-<pre><code>## Aligned 359 samples between expression and phenodata</code></pre>
-<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true"></a><span class="co"># Display dimensions</span></span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;</span><span class="ch">\n</span><span class="st">Merged expression data:</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<pre><code>## Aligned 335 samples between expression and phenodata</code></pre>
+<pre><code>## Warning in align_phenodata(mrgd = merged_exprs, pdata = pdata, sample_col =
+## config$merging$sample_column): Missing metadata for 36 expression samples</code></pre>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true"></a><span class="co"># Display dimensions</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;</span><span class="ch">\n</span><span class="st">Merged expression data:</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
 <pre><code>## 
 ## Merged expression data:</code></pre>
-<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;  Genes:&quot;</span>, <span class="kw">nrow</span>(merged_exprs), <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
-<pre><code>##   Genes: 13366</code></pre>
-<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;  Samples:&quot;</span>, <span class="kw">ncol</span>(merged_exprs), <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
-<pre><code>##   Samples: 359</code></pre>
-<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;  Phenodata samples:&quot;</span>, <span class="kw">nrow</span>(pdata_aligned), <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
-<pre><code>##   Phenodata samples: 359</code></pre>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;  Genes:&quot;</span>, <span class="kw">nrow</span>(merged_exprs), <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<pre><code>##   Genes: 8328</code></pre>
+<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;  Samples:&quot;</span>, <span class="kw">ncol</span>(merged_exprs), <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<pre><code>##   Samples: 371</code></pre>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;  Phenodata samples:&quot;</span>, <span class="kw">nrow</span>(pdata_aligned), <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<pre><code>##   Phenodata samples: 335</code></pre>
 <div id="apply-filters-optional" class="section level2">
 <h2>Apply Filters (Optional)</h2>
-<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true"></a><span class="co"># Apply sample filters if defined in config</span></span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true"></a><span class="cf">if</span> (<span class="op">!</span><span class="kw">is.null</span>(config<span class="op">$</span>filtering) <span class="op">&amp;&amp;</span><span class="st"> </span><span class="kw">length</span>(config<span class="op">$</span>filtering) <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>) {</span>
-<span id="cb34-3"><a href="#cb34-3" aria-hidden="true"></a></span>
-<span id="cb34-4"><a href="#cb34-4" aria-hidden="true"></a>  <span class="kw">log_msg</span>(<span class="st">&quot;Applying sample filters...&quot;</span>)</span>
-<span id="cb34-5"><a href="#cb34-5" aria-hidden="true"></a></span>
-<span id="cb34-6"><a href="#cb34-6" aria-hidden="true"></a>  filtered_data &lt;-<span class="st"> </span><span class="kw">filter_samples</span>(</span>
-<span id="cb34-7"><a href="#cb34-7" aria-hidden="true"></a>    <span class="dt">mrgd =</span> merged_exprs,</span>
-<span id="cb34-8"><a href="#cb34-8" aria-hidden="true"></a>    <span class="dt">pdata =</span> pdata_aligned,</span>
-<span id="cb34-9"><a href="#cb34-9" aria-hidden="true"></a>    <span class="dt">filters =</span> config<span class="op">$</span>filtering</span>
-<span id="cb34-10"><a href="#cb34-10" aria-hidden="true"></a>  )</span>
-<span id="cb34-11"><a href="#cb34-11" aria-hidden="true"></a></span>
-<span id="cb34-12"><a href="#cb34-12" aria-hidden="true"></a>  merged_exprs &lt;-<span class="st"> </span>filtered_data<span class="op">$</span>exprs</span>
-<span id="cb34-13"><a href="#cb34-13" aria-hidden="true"></a>  pdata_aligned &lt;-<span class="st"> </span>filtered_data<span class="op">$</span>pdata</span>
-<span id="cb34-14"><a href="#cb34-14" aria-hidden="true"></a></span>
-<span id="cb34-15"><a href="#cb34-15" aria-hidden="true"></a>} <span class="cf">else</span> {</span>
-<span id="cb34-16"><a href="#cb34-16" aria-hidden="true"></a>  <span class="kw">log_msg</span>(<span class="st">&quot;No filters defined, using all samples&quot;</span>)</span>
-<span id="cb34-17"><a href="#cb34-17" aria-hidden="true"></a>}</span></code></pre></div>
-<pre><code>## [2025-10-05 13:42:30] Applying sample filters...</code></pre>
-<pre><code>## Filter &#39;Biological.Specimen&#39; in [Placenta]: 203 samples</code></pre>
-<pre><code>## Filter &#39;Diagnosis&#39; in [Healthy]: 122 samples</code></pre>
-<pre><code>## Filter &#39;Gestational.Age.Category&#39; in [First Trimester, Second Trimester, Term]: 97 samples</code></pre>
-<pre><code>## Final filtered data: 97 samples</code></pre>
-<div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true"></a><span class="co"># Validate input data</span></span>
-<span id="cb40-2"><a href="#cb40-2" aria-hidden="true"></a><span class="kw">validate_input</span>(merged_exprs, pdata_aligned)</span></code></pre></div>
+<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true"></a><span class="co"># Apply sample filters if defined in config</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true"></a><span class="cf">if</span> (<span class="op">!</span><span class="kw">is.null</span>(config<span class="op">$</span>filtering) <span class="op">&amp;&amp;</span><span class="st"> </span><span class="kw">length</span>(config<span class="op">$</span>filtering) <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>) {</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true"></a></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true"></a>  <span class="kw">log_msg</span>(<span class="st">&quot;Applying sample filters...&quot;</span>)</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true"></a></span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true"></a>  filtered_data &lt;-<span class="st"> </span><span class="kw">filter_samples</span>(</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true"></a>    <span class="dt">mrgd =</span> merged_exprs,</span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true"></a>    <span class="dt">pdata =</span> pdata_aligned,</span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true"></a>    <span class="dt">filters =</span> config<span class="op">$</span>filtering</span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true"></a>  )</span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true"></a></span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true"></a>  merged_exprs &lt;-<span class="st"> </span>filtered_data<span class="op">$</span>exprs</span>
+<span id="cb35-13"><a href="#cb35-13" aria-hidden="true"></a>  pdata_aligned &lt;-<span class="st"> </span>filtered_data<span class="op">$</span>pdata</span>
+<span id="cb35-14"><a href="#cb35-14" aria-hidden="true"></a></span>
+<span id="cb35-15"><a href="#cb35-15" aria-hidden="true"></a>} <span class="cf">else</span> {</span>
+<span id="cb35-16"><a href="#cb35-16" aria-hidden="true"></a>  <span class="kw">log_msg</span>(<span class="st">&quot;No filters defined, using all samples&quot;</span>)</span>
+<span id="cb35-17"><a href="#cb35-17" aria-hidden="true"></a>}</span></code></pre></div>
+<pre><code>## [2025-10-09 23:26:44] Applying sample filters...</code></pre>
+<pre><code>## Filter &#39;Biological.Specimen&#39; in [Placenta]: 179 samples</code></pre>
+<pre><code>## Filter &#39;Diagnosis&#39; in [Healthy]: 98 samples</code></pre>
+<pre><code>## Filter &#39;Gestational.Age.Category&#39; in [First Trimester, Second Trimester, Term]: 73 samples</code></pre>
+<pre><code>## Final filtered data: 73 samples</code></pre>
+<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true"></a><span class="co"># Validate input data</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true"></a><span class="kw">validate_input</span>(merged_exprs, pdata_aligned)</span></code></pre></div>
 <pre><code>## Input validation passed</code></pre>
 <hr />
 </div>
@@ -1896,45 +1898,45 @@ div.tocify {
 <div id="batch-correction" class="section level1">
 <h1>3. Batch Correction</h1>
 <p>Remove technical batch effects using ComBat while preserving biological variation.</p>
-<div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true"></a><span class="kw">log_msg</span>(<span class="st">&quot;Preparing for batch correction...&quot;</span>)</span></code></pre></div>
-<pre><code>## [2025-10-05 13:42:30] Preparing for batch correction...</code></pre>
-<div class="sourceCode" id="cb44"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true"></a><span class="co"># Add trimester variable if needed</span></span>
-<span id="cb44-2"><a href="#cb44-2" aria-hidden="true"></a><span class="cf">if</span> (<span class="st">&quot;trim_term&quot;</span> <span class="op">%in%</span><span class="st"> </span><span class="kw">all.vars</span>(<span class="kw">as.formula</span>(config<span class="op">$</span>batch_correction<span class="op">$</span>model_formula))) {</span>
-<span id="cb44-3"><a href="#cb44-3" aria-hidden="true"></a>  pdata_aligned &lt;-<span class="st"> </span><span class="kw">add_trimester_variable</span>(pdata_aligned)</span>
-<span id="cb44-4"><a href="#cb44-4" aria-hidden="true"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb43"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true"></a><span class="kw">log_msg</span>(<span class="st">&quot;Preparing for batch correction...&quot;</span>)</span></code></pre></div>
+<pre><code>## [2025-10-09 23:26:44] Preparing for batch correction...</code></pre>
+<div class="sourceCode" id="cb45"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true"></a><span class="co"># Add trimester variable if needed</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true"></a><span class="cf">if</span> (<span class="st">&quot;trim_term&quot;</span> <span class="op">%in%</span><span class="st"> </span><span class="kw">all.vars</span>(<span class="kw">as.formula</span>(config<span class="op">$</span>batch_correction<span class="op">$</span>model_formula))) {</span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true"></a>  pdata_aligned &lt;-<span class="st"> </span><span class="kw">add_trimester_variable</span>(pdata_aligned)</span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true"></a>}</span></code></pre></div>
 <pre><code>## Created trim_term from Gestational.Age.Category</code></pre>
 <pre><code>## Trimester distribution:</code></pre>
 <pre><code>## 
 ##  First Trimester Second Trimester             Term             &lt;NA&gt; 
-##               18                9               70                0</code></pre>
-<div class="sourceCode" id="cb48"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true"></a><span class="co"># Check batch distribution</span></span>
-<span id="cb48-2"><a href="#cb48-2" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;</span><span class="ch">\n</span><span class="st">Batch distribution:</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+##                9                9               55                0</code></pre>
+<div class="sourceCode" id="cb49"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true"></a><span class="co"># Check batch distribution</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;</span><span class="ch">\n</span><span class="st">Batch distribution:</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
 <pre><code>## 
 ## Batch distribution:</code></pre>
-<div class="sourceCode" id="cb50"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true"></a><span class="kw">print</span>(<span class="kw">table</span>(pdata_aligned[[config<span class="op">$</span>batch_correction<span class="op">$</span>batch_column]]))</span></code></pre></div>
+<div class="sourceCode" id="cb51"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true"></a><span class="kw">print</span>(<span class="kw">table</span>(pdata_aligned[[config<span class="op">$</span>batch_correction<span class="op">$</span>batch_column]]))</span></code></pre></div>
 <pre><code>## 
-## GSE22490 GSE35574 GSE37901 GSE55439  GSE6573 GSE73374 GSE73685  GSE9984 
-##        6       26        4       24        1       12       12       12</code></pre>
-<div class="sourceCode" id="cb52"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true"></a><span class="kw">log_msg</span>(<span class="st">&quot;Applying ComBat batch correction...&quot;</span>)</span></code></pre></div>
-<pre><code>## [2025-10-05 13:42:30] Applying ComBat batch correction...</code></pre>
-<div class="sourceCode" id="cb54"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true"></a><span class="co"># Apply batch correction</span></span>
-<span id="cb54-2"><a href="#cb54-2" aria-hidden="true"></a>exprs_corrected &lt;-<span class="st"> </span><span class="kw">apply_combat_correction</span>(</span>
-<span id="cb54-3"><a href="#cb54-3" aria-hidden="true"></a>  <span class="dt">exprs =</span> merged_exprs,</span>
-<span id="cb54-4"><a href="#cb54-4" aria-hidden="true"></a>  <span class="dt">pdata =</span> pdata_aligned,</span>
-<span id="cb54-5"><a href="#cb54-5" aria-hidden="true"></a>  <span class="dt">batch_col =</span> config<span class="op">$</span>batch_correction<span class="op">$</span>batch_column,</span>
-<span id="cb54-6"><a href="#cb54-6" aria-hidden="true"></a>  <span class="dt">mod_formula =</span> <span class="kw">as.formula</span>(config<span class="op">$</span>batch_correction<span class="op">$</span>model_formula),</span>
-<span id="cb54-7"><a href="#cb54-7" aria-hidden="true"></a>  <span class="dt">par_prior =</span> config<span class="op">$</span>batch_correction<span class="op">$</span>par_prior,</span>
-<span id="cb54-8"><a href="#cb54-8" aria-hidden="true"></a>  <span class="dt">prior_plots =</span> config<span class="op">$</span>batch_correction<span class="op">$</span>prior_plots</span>
-<span id="cb54-9"><a href="#cb54-9" aria-hidden="true"></a>)</span></code></pre></div>
-<pre><code>## Batch correction using &#39;secondaryaccession&#39;: 8 batches</code></pre>
-<pre><code>##   Batch sizes: 6, 26, 4, 24, 1, 12, 12, 12</code></pre>
+## GSE22490 GSE35574 GSE37901  GSE6573 GSE73374 GSE73685  GSE9984 
+##        6       26        4        1       12       12       12</code></pre>
+<div class="sourceCode" id="cb53"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true"></a><span class="kw">log_msg</span>(<span class="st">&quot;Applying ComBat batch correction...&quot;</span>)</span></code></pre></div>
+<pre><code>## [2025-10-09 23:26:44] Applying ComBat batch correction...</code></pre>
+<div class="sourceCode" id="cb55"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true"></a><span class="co"># Apply batch correction</span></span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true"></a>exprs_corrected &lt;-<span class="st"> </span><span class="kw">apply_combat_correction</span>(</span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true"></a>  <span class="dt">exprs =</span> merged_exprs,</span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true"></a>  <span class="dt">pdata =</span> pdata_aligned,</span>
+<span id="cb55-5"><a href="#cb55-5" aria-hidden="true"></a>  <span class="dt">batch_col =</span> config<span class="op">$</span>batch_correction<span class="op">$</span>batch_column,</span>
+<span id="cb55-6"><a href="#cb55-6" aria-hidden="true"></a>  <span class="dt">mod_formula =</span> <span class="kw">as.formula</span>(config<span class="op">$</span>batch_correction<span class="op">$</span>model_formula),</span>
+<span id="cb55-7"><a href="#cb55-7" aria-hidden="true"></a>  <span class="dt">par_prior =</span> config<span class="op">$</span>batch_correction<span class="op">$</span>par_prior,</span>
+<span id="cb55-8"><a href="#cb55-8" aria-hidden="true"></a>  <span class="dt">prior_plots =</span> config<span class="op">$</span>batch_correction<span class="op">$</span>prior_plots</span>
+<span id="cb55-9"><a href="#cb55-9" aria-hidden="true"></a>)</span></code></pre></div>
+<pre><code>## Batch correction using &#39;secondaryaccession&#39;: 7 batches</code></pre>
+<pre><code>##   Batch sizes: 6, 26, 4, 1, 12, 12, 12</code></pre>
 <pre><code>##   Adjusting for 3 covariate(s)</code></pre>
 <pre><code>##   Fisher test (secondaryaccession vs trim_term): p = 5e-04</code></pre>
 <pre><code>## Warning in check_confounding(pdata, batch_col, mod_formula): Potential
 ## confounding between secondaryaccession and trim_term</code></pre>
 <pre><code>## Found 1 genes with uniform expression within a single batch (all zeros); these will not be adjusted for batch.</code></pre>
 <pre><code>## Using the &#39;mean only&#39; version of ComBat</code></pre>
-<pre><code>## Found8batches</code></pre>
+<pre><code>## Found7batches</code></pre>
 <pre><code>## Note: one batch has only one sample, setting mean.only=TRUE</code></pre>
 <pre><code>## Adjusting for2covariate(s) or covariate level(s)</code></pre>
 <pre><code>## Standardizing Data across genes</code></pre>
@@ -1942,44 +1944,44 @@ div.tocify {
 <pre><code>## Finding parametric adjustments</code></pre>
 <pre><code>## Adjusting the Data</code></pre>
 <pre><code>## Batch correction completed</code></pre>
-<div class="sourceCode" id="cb70"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true"></a><span class="co"># Save corrected data</span></span>
-<span id="cb70-2"><a href="#cb70-2" aria-hidden="true"></a><span class="kw">save_data</span>(exprs_corrected,</span>
-<span id="cb70-3"><a href="#cb70-3" aria-hidden="true"></a>          <span class="kw">file.path</span>(output_dirs<span class="op">$</span>base, <span class="st">&quot;exprs_corrected.tsv&quot;</span>),</span>
-<span id="cb70-4"><a href="#cb70-4" aria-hidden="true"></a>          <span class="dt">format =</span> <span class="st">&quot;tsv&quot;</span>)</span></code></pre></div>
-<pre><code>## Saved: /home/shivers/a/r/igea-r/scripts/exprs_integration_pipeline/output/exprs_corrected.tsv</code></pre>
-<div class="sourceCode" id="cb72"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true"></a><span class="kw">save_data</span>(pdata_aligned,</span>
-<span id="cb72-2"><a href="#cb72-2" aria-hidden="true"></a>          <span class="kw">file.path</span>(output_dirs<span class="op">$</span>base, <span class="st">&quot;pdata_aligned.tsv&quot;</span>),</span>
-<span id="cb72-3"><a href="#cb72-3" aria-hidden="true"></a>          <span class="dt">format =</span> <span class="st">&quot;tsv&quot;</span>)</span></code></pre></div>
-<pre><code>## Saved: /home/shivers/a/r/igea-r/scripts/exprs_integration_pipeline/output/pdata_aligned.tsv</code></pre>
+<div class="sourceCode" id="cb71"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true"></a><span class="co"># Save corrected data</span></span>
+<span id="cb71-2"><a href="#cb71-2" aria-hidden="true"></a><span class="kw">save_data</span>(exprs_corrected,</span>
+<span id="cb71-3"><a href="#cb71-3" aria-hidden="true"></a>          <span class="kw">file.path</span>(output_dirs<span class="op">$</span>base, <span class="st">&quot;exprs_corrected.tsv&quot;</span>),</span>
+<span id="cb71-4"><a href="#cb71-4" aria-hidden="true"></a>          <span class="dt">format =</span> <span class="st">&quot;tsv&quot;</span>)</span></code></pre></div>
+<pre><code>## Saved: /home/shivers/a/r/igea-r/scripts/integrative-gene-expression-analysis/output/exprs_corrected.tsv</code></pre>
+<div class="sourceCode" id="cb73"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true"></a><span class="kw">save_data</span>(pdata_aligned,</span>
+<span id="cb73-2"><a href="#cb73-2" aria-hidden="true"></a>          <span class="kw">file.path</span>(output_dirs<span class="op">$</span>base, <span class="st">&quot;pdata_aligned.tsv&quot;</span>),</span>
+<span id="cb73-3"><a href="#cb73-3" aria-hidden="true"></a>          <span class="dt">format =</span> <span class="st">&quot;tsv&quot;</span>)</span></code></pre></div>
+<pre><code>## Saved: /home/shivers/a/r/igea-r/scripts/integrative-gene-expression-analysis/output/pdata_aligned.tsv</code></pre>
 <hr />
 </div>
 <div id="pca-analysis" class="section level1">
 <h1>4. PCA Analysis</h1>
 <p>Perform principal component analysis to visualize data structure.</p>
-<div class="sourceCode" id="cb74"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true"></a><span class="kw">log_msg</span>(<span class="st">&quot;Performing PCA...&quot;</span>)</span></code></pre></div>
-<pre><code>## [2025-10-05 13:42:32] Performing PCA...</code></pre>
-<div class="sourceCode" id="cb76"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true"></a><span class="co"># Perform PCA</span></span>
-<span id="cb76-2"><a href="#cb76-2" aria-hidden="true"></a>pca &lt;-<span class="st"> </span><span class="kw">perform_pca</span>(exprs_corrected,</span>
-<span id="cb76-3"><a href="#cb76-3" aria-hidden="true"></a>                   <span class="dt">center =</span> config<span class="op">$</span>pca<span class="op">$</span>center,</span>
-<span id="cb76-4"><a href="#cb76-4" aria-hidden="true"></a>                   <span class="dt">scale =</span> config<span class="op">$</span>pca<span class="op">$</span>scale)</span></code></pre></div>
-<pre><code>## Variance explained by first 10 PCs: 27.8%, 11.4%, 5.2%, 4.3%, 3.9%, 3.5%, 2.9%, 2.6%, 2%, 1.9%</code></pre>
-<div class="sourceCode" id="cb78"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true"></a><span class="co"># Create scree plot</span></span>
-<span id="cb78-2"><a href="#cb78-2" aria-hidden="true"></a><span class="kw">plot_pca_scree</span>(pca,</span>
-<span id="cb78-3"><a href="#cb78-3" aria-hidden="true"></a>               <span class="dt">output_dir =</span> output_dirs<span class="op">$</span>plots,</span>
-<span id="cb78-4"><a href="#cb78-4" aria-hidden="true"></a>               <span class="dt">n_pcs =</span> config<span class="op">$</span>pca<span class="op">$</span>n_pcs)</span></code></pre></div>
+<div class="sourceCode" id="cb75"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true"></a><span class="kw">log_msg</span>(<span class="st">&quot;Performing PCA...&quot;</span>)</span></code></pre></div>
+<pre><code>## [2025-10-09 23:26:47] Performing PCA...</code></pre>
+<div class="sourceCode" id="cb77"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true"></a><span class="co"># Perform PCA</span></span>
+<span id="cb77-2"><a href="#cb77-2" aria-hidden="true"></a>pca &lt;-<span class="st"> </span><span class="kw">perform_pca</span>(exprs_corrected,</span>
+<span id="cb77-3"><a href="#cb77-3" aria-hidden="true"></a>                   <span class="dt">center =</span> config<span class="op">$</span>pca<span class="op">$</span>center,</span>
+<span id="cb77-4"><a href="#cb77-4" aria-hidden="true"></a>                   <span class="dt">scale =</span> config<span class="op">$</span>pca<span class="op">$</span>scale)</span></code></pre></div>
+<pre><code>## Variance explained by first 10 PCs: 34%, 10.6%, 6.8%, 4.2%, 3.7%, 3.3%, 2.2%, 1.8%, 1.6%, 1.4%</code></pre>
+<div class="sourceCode" id="cb79"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true"></a><span class="co"># Create scree plot</span></span>
+<span id="cb79-2"><a href="#cb79-2" aria-hidden="true"></a><span class="kw">plot_pca_scree</span>(pca,</span>
+<span id="cb79-3"><a href="#cb79-3" aria-hidden="true"></a>               <span class="dt">output_dir =</span> output_dirs<span class="op">$</span>plots,</span>
+<span id="cb79-4"><a href="#cb79-4" aria-hidden="true"></a>               <span class="dt">n_pcs =</span> config<span class="op">$</span>pca<span class="op">$</span>n_pcs)</span></code></pre></div>
 <pre><code>## Warning in geom_bar(stat = &quot;identity&quot;, fill = barfill, color = barcolor, :
 ## Ignoring empty aesthetic: `width`.</code></pre>
-<pre><code>## Saved: /home/shivers/a/r/igea-r/scripts/exprs_integration_pipeline/output/plots/pca_scree.svg</code></pre>
+<pre><code>## Saved: /home/shivers/a/r/igea-r/scripts/integrative-gene-expression-analysis/output/plots/pca_scree.svg</code></pre>
 <div id="pca-plots-by-metadata" class="section level2">
 <h2>PCA Plots by Metadata</h2>
-<div class="sourceCode" id="cb81"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true"></a><span class="kw">log_msg</span>(<span class="st">&quot;Creating PCA plots...&quot;</span>)</span></code></pre></div>
-<pre><code>## [2025-10-05 13:42:33] Creating PCA plots...</code></pre>
-<div class="sourceCode" id="cb83"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true"></a><span class="co"># Plot PCA colored by different variables</span></span>
-<span id="cb83-2"><a href="#cb83-2" aria-hidden="true"></a><span class="kw">plot_pca_metadata</span>(pca,</span>
-<span id="cb83-3"><a href="#cb83-3" aria-hidden="true"></a>                  <span class="dt">pdata =</span> pdata_aligned,</span>
-<span id="cb83-4"><a href="#cb83-4" aria-hidden="true"></a>                  <span class="dt">variables =</span> config<span class="op">$</span>pca<span class="op">$</span>color_by,</span>
-<span id="cb83-5"><a href="#cb83-5" aria-hidden="true"></a>                  <span class="dt">output_dir =</span> output_dirs<span class="op">$</span>plots,</span>
-<span id="cb83-6"><a href="#cb83-6" aria-hidden="true"></a>                  <span class="dt">axes =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb82"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true"></a><span class="kw">log_msg</span>(<span class="st">&quot;Creating PCA plots...&quot;</span>)</span></code></pre></div>
+<pre><code>## [2025-10-09 23:26:47] Creating PCA plots...</code></pre>
+<div class="sourceCode" id="cb84"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true"></a><span class="co"># Plot PCA colored by different variables</span></span>
+<span id="cb84-2"><a href="#cb84-2" aria-hidden="true"></a><span class="kw">plot_pca_metadata</span>(pca,</span>
+<span id="cb84-3"><a href="#cb84-3" aria-hidden="true"></a>                  <span class="dt">pdata =</span> pdata_aligned,</span>
+<span id="cb84-4"><a href="#cb84-4" aria-hidden="true"></a>                  <span class="dt">variables =</span> config<span class="op">$</span>pca<span class="op">$</span>color_by,</span>
+<span id="cb84-5"><a href="#cb84-5" aria-hidden="true"></a>                  <span class="dt">output_dir =</span> output_dirs<span class="op">$</span>plots,</span>
+<span id="cb84-6"><a href="#cb84-6" aria-hidden="true"></a>                  <span class="dt">axes =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span></code></pre></div>
 <pre><code>## New names:
 ## • `x` -&gt; `x...1`
 ## • `y` -&gt; `y...2`
@@ -2001,44 +2003,44 @@ div.tocify {
 <pre><code>## Warning: Computation failed in `stat_conf_ellipse()`.
 ## Caused by error in `if (scale[1] &gt; 0) ...`:
 ## ! missing value where TRUE/FALSE needed</code></pre>
-<pre><code>## Saved: /home/shivers/a/r/igea-r/scripts/exprs_integration_pipeline/output/plots/pca_secondaryaccession_PC1_PC2.svg
+<pre><code>## Saved: /home/shivers/a/r/igea-r/scripts/integrative-gene-expression-analysis/output/plots/pca_secondaryaccession_PC1_PC2.svg
 ## New names:</code></pre>
 <pre><code>## Warning: The following aesthetics were dropped during statistical transformation: x and y.
 ## ℹ This can happen when ggplot fails to infer the correct grouping structure in the data.
 ## ℹ Did you forget to specify a `group` aesthetic or to convert a numerical variable into a factor?</code></pre>
 <pre><code>## Warning in value[[3L]](cond): Failed to create PCA plot for
 ## &#39;Biological.Specimen&#39;: Problem while setting up geom.</code></pre>
-<div class="sourceCode" id="cb93"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true"></a><span class="co"># Create biplot if specified</span></span>
-<span id="cb93-2"><a href="#cb93-2" aria-hidden="true"></a><span class="cf">if</span> (<span class="op">!</span><span class="kw">is.null</span>(config<span class="op">$</span>pca<span class="op">$</span>biplot_genes) <span class="op">&amp;&amp;</span><span class="st"> </span>config<span class="op">$</span>pca<span class="op">$</span>biplot_genes <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>) {</span>
-<span id="cb93-3"><a href="#cb93-3" aria-hidden="true"></a>  <span class="kw">plot_pca_biplot</span>(pca,</span>
-<span id="cb93-4"><a href="#cb93-4" aria-hidden="true"></a>                  <span class="dt">pdata =</span> pdata_aligned,</span>
-<span id="cb93-5"><a href="#cb93-5" aria-hidden="true"></a>                  <span class="dt">color_by =</span> config<span class="op">$</span>pca<span class="op">$</span>color_by[<span class="dv">1</span>],</span>
-<span id="cb93-6"><a href="#cb93-6" aria-hidden="true"></a>                  <span class="dt">n_genes =</span> config<span class="op">$</span>pca<span class="op">$</span>biplot_genes,</span>
-<span id="cb93-7"><a href="#cb93-7" aria-hidden="true"></a>                  <span class="dt">output_dir =</span> output_dirs<span class="op">$</span>plots)</span>
-<span id="cb93-8"><a href="#cb93-8" aria-hidden="true"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb94"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb94-1"><a href="#cb94-1" aria-hidden="true"></a><span class="co"># Create biplot if specified</span></span>
+<span id="cb94-2"><a href="#cb94-2" aria-hidden="true"></a><span class="cf">if</span> (<span class="op">!</span><span class="kw">is.null</span>(config<span class="op">$</span>pca<span class="op">$</span>biplot_genes) <span class="op">&amp;&amp;</span><span class="st"> </span>config<span class="op">$</span>pca<span class="op">$</span>biplot_genes <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>) {</span>
+<span id="cb94-3"><a href="#cb94-3" aria-hidden="true"></a>  <span class="kw">plot_pca_biplot</span>(pca,</span>
+<span id="cb94-4"><a href="#cb94-4" aria-hidden="true"></a>                  <span class="dt">pdata =</span> pdata_aligned,</span>
+<span id="cb94-5"><a href="#cb94-5" aria-hidden="true"></a>                  <span class="dt">color_by =</span> config<span class="op">$</span>pca<span class="op">$</span>color_by[<span class="dv">1</span>],</span>
+<span id="cb94-6"><a href="#cb94-6" aria-hidden="true"></a>                  <span class="dt">n_genes =</span> config<span class="op">$</span>pca<span class="op">$</span>biplot_genes,</span>
+<span id="cb94-7"><a href="#cb94-7" aria-hidden="true"></a>                  <span class="dt">output_dir =</span> output_dirs<span class="op">$</span>plots)</span>
+<span id="cb94-8"><a href="#cb94-8" aria-hidden="true"></a>}</span></code></pre></div>
 <pre><code>## Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
 ## ℹ Please use `linewidth` instead.
 ## ℹ The deprecated feature was likely used in the ggpubr package.
 ##   Please report the issue at &lt;https://github.com/kassambara/ggpubr/issues&gt;.
 ## This warning is displayed once every 8 hours.
 ## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was generated.</code></pre>
-<pre><code>## Saved: /home/shivers/a/r/igea-r/scripts/exprs_integration_pipeline/output/plots/pca_biplot_trim_term_PC1_PC2.svg</code></pre>
+<pre><code>## Saved: /home/shivers/a/r/igea-r/scripts/integrative-gene-expression-analysis/output/plots/pca_biplot_trim_term_PC1_PC2.svg</code></pre>
 <hr />
 </div>
 </div>
 <div id="differential-expression-analysis" class="section level1">
 <h1>5. Differential Expression Analysis</h1>
 <p>Identify differentially expressed genes using limma.</p>
-<div class="sourceCode" id="cb96"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb96-1"><a href="#cb96-1" aria-hidden="true"></a><span class="kw">log_msg</span>(<span class="st">&quot;Performing differential expression analysis...&quot;</span>)</span></code></pre></div>
-<pre><code>## [2025-10-05 13:42:35] Performing differential expression analysis...</code></pre>
-<div class="sourceCode" id="cb98"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb98-1"><a href="#cb98-1" aria-hidden="true"></a><span class="co"># Perform differential expression</span></span>
-<span id="cb98-2"><a href="#cb98-2" aria-hidden="true"></a>de_results &lt;-<span class="st"> </span><span class="kw">differential_expression</span>(</span>
-<span id="cb98-3"><a href="#cb98-3" aria-hidden="true"></a>  <span class="dt">exprs =</span> exprs_corrected,</span>
-<span id="cb98-4"><a href="#cb98-4" aria-hidden="true"></a>  <span class="dt">pdata =</span> pdata_aligned,</span>
-<span id="cb98-5"><a href="#cb98-5" aria-hidden="true"></a>  <span class="dt">design_formula =</span> <span class="kw">as.formula</span>(config<span class="op">$</span>differential_expression<span class="op">$</span>design_formula),</span>
-<span id="cb98-6"><a href="#cb98-6" aria-hidden="true"></a>  <span class="dt">contrasts =</span> config<span class="op">$</span>differential_expression<span class="op">$</span>contrasts,</span>
-<span id="cb98-7"><a href="#cb98-7" aria-hidden="true"></a>  <span class="dt">method =</span> config<span class="op">$</span>differential_expression<span class="op">$</span>decide_method</span>
-<span id="cb98-8"><a href="#cb98-8" aria-hidden="true"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb97"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb97-1"><a href="#cb97-1" aria-hidden="true"></a><span class="kw">log_msg</span>(<span class="st">&quot;Performing differential expression analysis...&quot;</span>)</span></code></pre></div>
+<pre><code>## [2025-10-09 23:26:49] Performing differential expression analysis...</code></pre>
+<div class="sourceCode" id="cb99"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb99-1"><a href="#cb99-1" aria-hidden="true"></a><span class="co"># Perform differential expression</span></span>
+<span id="cb99-2"><a href="#cb99-2" aria-hidden="true"></a>de_results &lt;-<span class="st"> </span><span class="kw">differential_expression</span>(</span>
+<span id="cb99-3"><a href="#cb99-3" aria-hidden="true"></a>  <span class="dt">exprs =</span> exprs_corrected,</span>
+<span id="cb99-4"><a href="#cb99-4" aria-hidden="true"></a>  <span class="dt">pdata =</span> pdata_aligned,</span>
+<span id="cb99-5"><a href="#cb99-5" aria-hidden="true"></a>  <span class="dt">design_formula =</span> <span class="kw">as.formula</span>(config<span class="op">$</span>differential_expression<span class="op">$</span>design_formula),</span>
+<span id="cb99-6"><a href="#cb99-6" aria-hidden="true"></a>  <span class="dt">contrasts =</span> config<span class="op">$</span>differential_expression<span class="op">$</span>contrasts,</span>
+<span id="cb99-7"><a href="#cb99-7" aria-hidden="true"></a>  <span class="dt">method =</span> config<span class="op">$</span>differential_expression<span class="op">$</span>decide_method</span>
+<span id="cb99-8"><a href="#cb99-8" aria-hidden="true"></a>)</span></code></pre></div>
 <pre><code>## Design matrix: 3 coefficients</code></pre>
 <pre><code>##   Original columns: trim_termFirst Trimester, trim_termSecond Trimester, trim_termTerm</code></pre>
 <pre><code>##   Simplified to: C1, C2, C3</code></pre>
@@ -2053,20 +2055,20 @@ div.tocify {
 <pre><code>## 
 ## Differentially expressed genes (method: global):</code></pre>
 <pre><code>##        trim_termSecond Trimester - trim_termFirst Trimester
-## Down                                                   1007
-## NotSig                                                11172
-## Up                                                     1187
+## Down                                                    566
+## NotSig                                                 7280
+## Up                                                      482
 ##        trim_termTerm - trim_termSecond Trimester
-## Down                                        2990
-## NotSig                                      7956
-## Up                                          2420</code></pre>
-<div class="sourceCode" id="cb110"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb110-1"><a href="#cb110-1" aria-hidden="true"></a><span class="co"># Extract and annotate results</span></span>
-<span id="cb110-2"><a href="#cb110-2" aria-hidden="true"></a>difexp &lt;-<span class="st"> </span><span class="kw">extract_difexp_results</span>(</span>
-<span id="cb110-3"><a href="#cb110-3" aria-hidden="true"></a>  <span class="dt">efit =</span> de_results<span class="op">$</span>efit,</span>
-<span id="cb110-4"><a href="#cb110-4" aria-hidden="true"></a>  <span class="dt">results =</span> de_results<span class="op">$</span>results,</span>
-<span id="cb110-5"><a href="#cb110-5" aria-hidden="true"></a>  <span class="dt">exprs =</span> exprs_corrected,</span>
-<span id="cb110-6"><a href="#cb110-6" aria-hidden="true"></a>  <span class="dt">pdata =</span> pdata_aligned</span>
-<span id="cb110-7"><a href="#cb110-7" aria-hidden="true"></a>)</span></code></pre></div>
+## Down                                        1720
+## NotSig                                      5438
+## Up                                          1170</code></pre>
+<div class="sourceCode" id="cb111"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb111-1"><a href="#cb111-1" aria-hidden="true"></a><span class="co"># Extract and annotate results</span></span>
+<span id="cb111-2"><a href="#cb111-2" aria-hidden="true"></a>difexp &lt;-<span class="st"> </span><span class="kw">extract_difexp_results</span>(</span>
+<span id="cb111-3"><a href="#cb111-3" aria-hidden="true"></a>  <span class="dt">efit =</span> de_results<span class="op">$</span>efit,</span>
+<span id="cb111-4"><a href="#cb111-4" aria-hidden="true"></a>  <span class="dt">results =</span> de_results<span class="op">$</span>results,</span>
+<span id="cb111-5"><a href="#cb111-5" aria-hidden="true"></a>  <span class="dt">exprs =</span> exprs_corrected,</span>
+<span id="cb111-6"><a href="#cb111-6" aria-hidden="true"></a>  <span class="dt">pdata =</span> pdata_aligned</span>
+<span id="cb111-7"><a href="#cb111-7" aria-hidden="true"></a>)</span></code></pre></div>
 <pre><code>## Loading required package: AnnotationDbi</code></pre>
 <pre><code>## Loading required package: stats4</code></pre>
 <pre><code>## Loading required package: BiocGenerics</code></pre>
@@ -2125,109 +2127,108 @@ div.tocify {
 <pre><code>##   Added column: Term_Average</code></pre>
 <pre><code>##   Added column: First Trimester_Average</code></pre>
 <pre><code>##   Added column: Second Trimester_Average</code></pre>
-<pre><code>## Differential expression results: 13364 genes annotated</code></pre>
-<div class="sourceCode" id="cb138"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb138-1"><a href="#cb138-1" aria-hidden="true"></a><span class="co"># Filter by thresholds</span></span>
-<span id="cb138-2"><a href="#cb138-2" aria-hidden="true"></a>difexp_filtered &lt;-<span class="st"> </span><span class="kw">filter_difexp</span>(</span>
-<span id="cb138-3"><a href="#cb138-3" aria-hidden="true"></a>  difexp,</span>
-<span id="cb138-4"><a href="#cb138-4" aria-hidden="true"></a>  <span class="dt">logfc_threshold =</span> config<span class="op">$</span>differential_expression<span class="op">$</span>logfc_threshold,</span>
-<span id="cb138-5"><a href="#cb138-5" aria-hidden="true"></a>  <span class="dt">pvalue_threshold =</span> config<span class="op">$</span>differential_expression<span class="op">$</span>pvalue_threshold</span>
-<span id="cb138-6"><a href="#cb138-6" aria-hidden="true"></a>)</span></code></pre></div>
+<pre><code>## Differential expression results: 8328 genes annotated</code></pre>
+<div class="sourceCode" id="cb139"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb139-1"><a href="#cb139-1" aria-hidden="true"></a><span class="co"># Filter by thresholds</span></span>
+<span id="cb139-2"><a href="#cb139-2" aria-hidden="true"></a>difexp_filtered &lt;-<span class="st"> </span><span class="kw">filter_difexp</span>(</span>
+<span id="cb139-3"><a href="#cb139-3" aria-hidden="true"></a>  difexp,</span>
+<span id="cb139-4"><a href="#cb139-4" aria-hidden="true"></a>  <span class="dt">logfc_threshold =</span> config<span class="op">$</span>differential_expression<span class="op">$</span>logfc_threshold,</span>
+<span id="cb139-5"><a href="#cb139-5" aria-hidden="true"></a>  <span class="dt">pvalue_threshold =</span> config<span class="op">$</span>differential_expression<span class="op">$</span>pvalue_threshold</span>
+<span id="cb139-6"><a href="#cb139-6" aria-hidden="true"></a>)</span></code></pre></div>
 <pre><code>## Warning in filter_difexp(difexp, logfc_threshold =
 ## config$differential_expression$logfc_threshold, : No logFC column found</code></pre>
-<div class="sourceCode" id="cb140"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb140-1"><a href="#cb140-1" aria-hidden="true"></a><span class="co"># Save results</span></span>
-<span id="cb140-2"><a href="#cb140-2" aria-hidden="true"></a><span class="kw">save_data</span>(difexp,</span>
-<span id="cb140-3"><a href="#cb140-3" aria-hidden="true"></a>          <span class="kw">file.path</span>(output_dirs<span class="op">$</span>difexp, <span class="st">&quot;difexp_all.csv&quot;</span>))</span></code></pre></div>
-<pre><code>## Saved: /home/shivers/a/r/igea-r/scripts/exprs_integration_pipeline/output/difexp/difexp_all.csv</code></pre>
-<div class="sourceCode" id="cb142"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb142-1"><a href="#cb142-1" aria-hidden="true"></a><span class="kw">save_data</span>(difexp_filtered,</span>
-<span id="cb142-2"><a href="#cb142-2" aria-hidden="true"></a>          <span class="kw">file.path</span>(output_dirs<span class="op">$</span>difexp, <span class="st">&quot;difexp_filtered.csv&quot;</span>))</span></code></pre></div>
-<pre><code>## Saved: /home/shivers/a/r/igea-r/scripts/exprs_integration_pipeline/output/difexp/difexp_filtered.csv</code></pre>
-<div class="sourceCode" id="cb144"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb144-1"><a href="#cb144-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;</span><span class="ch">\n</span><span class="st">Differential expression summary:</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb141"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb141-1"><a href="#cb141-1" aria-hidden="true"></a><span class="co"># Save results</span></span>
+<span id="cb141-2"><a href="#cb141-2" aria-hidden="true"></a><span class="kw">save_data</span>(difexp,</span>
+<span id="cb141-3"><a href="#cb141-3" aria-hidden="true"></a>          <span class="kw">file.path</span>(output_dirs<span class="op">$</span>difexp, <span class="st">&quot;difexp_all.csv&quot;</span>))</span></code></pre></div>
+<pre><code>## Saved: /home/shivers/a/r/igea-r/scripts/integrative-gene-expression-analysis/output/difexp/difexp_all.csv</code></pre>
+<div class="sourceCode" id="cb143"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb143-1"><a href="#cb143-1" aria-hidden="true"></a><span class="kw">save_data</span>(difexp_filtered,</span>
+<span id="cb143-2"><a href="#cb143-2" aria-hidden="true"></a>          <span class="kw">file.path</span>(output_dirs<span class="op">$</span>difexp, <span class="st">&quot;difexp_filtered.csv&quot;</span>))</span></code></pre></div>
+<pre><code>## Saved: /home/shivers/a/r/igea-r/scripts/integrative-gene-expression-analysis/output/difexp/difexp_filtered.csv</code></pre>
+<div class="sourceCode" id="cb145"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb145-1"><a href="#cb145-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;</span><span class="ch">\n</span><span class="st">Differential expression summary:</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
 <pre><code>## 
 ## Differential expression summary:</code></pre>
-<div class="sourceCode" id="cb146"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb146-1"><a href="#cb146-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;  Total genes tested:&quot;</span>, <span class="kw">nrow</span>(difexp), <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
-<pre><code>##   Total genes tested: 13364</code></pre>
-<div class="sourceCode" id="cb148"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb148-1"><a href="#cb148-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;  Significant genes:&quot;</span>, <span class="kw">nrow</span>(difexp_filtered), <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
-<pre><code>##   Significant genes: 13364</code></pre>
+<div class="sourceCode" id="cb147"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb147-1"><a href="#cb147-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;  Total genes tested:&quot;</span>, <span class="kw">nrow</span>(difexp), <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<pre><code>##   Total genes tested: 8328</code></pre>
+<div class="sourceCode" id="cb149"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb149-1"><a href="#cb149-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;  Significant genes:&quot;</span>, <span class="kw">nrow</span>(difexp_filtered), <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<pre><code>##   Significant genes: 8328</code></pre>
 <div id="volcano-plot" class="section level2">
 <h2>Volcano Plot</h2>
-<div class="sourceCode" id="cb150"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb150-1"><a href="#cb150-1" aria-hidden="true"></a><span class="kw">log_msg</span>(<span class="st">&quot;Creating volcano plot...&quot;</span>)</span></code></pre></div>
-<pre><code>## [2025-10-05 13:42:35] Creating volcano plot...</code></pre>
-<div class="sourceCode" id="cb152"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb152-1"><a href="#cb152-1" aria-hidden="true"></a><span class="kw">plot_volcano</span>(</span>
-<span id="cb152-2"><a href="#cb152-2" aria-hidden="true"></a>  difexp,</span>
-<span id="cb152-3"><a href="#cb152-3" aria-hidden="true"></a>  <span class="dt">output_file =</span> <span class="kw">file.path</span>(output_dirs<span class="op">$</span>plots, <span class="st">&quot;volcano_plot.png&quot;</span>),</span>
-<span id="cb152-4"><a href="#cb152-4" aria-hidden="true"></a>  <span class="dt">logfc_threshold =</span> config<span class="op">$</span>differential_expression<span class="op">$</span>logfc_threshold,</span>
-<span id="cb152-5"><a href="#cb152-5" aria-hidden="true"></a>  <span class="dt">pval_threshold =</span> config<span class="op">$</span>differential_expression<span class="op">$</span>pvalue_threshold,</span>
-<span id="cb152-6"><a href="#cb152-6" aria-hidden="true"></a>  <span class="dt">label_top =</span> config<span class="op">$</span>visualization<span class="op">$</span>volcano_top_genes</span>
-<span id="cb152-7"><a href="#cb152-7" aria-hidden="true"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb151"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb151-1"><a href="#cb151-1" aria-hidden="true"></a><span class="kw">log_msg</span>(<span class="st">&quot;Creating volcano plot...&quot;</span>)</span></code></pre></div>
+<pre><code>## [2025-10-09 23:26:50] Creating volcano plot...</code></pre>
+<div class="sourceCode" id="cb153"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb153-1"><a href="#cb153-1" aria-hidden="true"></a><span class="kw">plot_volcano</span>(</span>
+<span id="cb153-2"><a href="#cb153-2" aria-hidden="true"></a>  difexp,</span>
+<span id="cb153-3"><a href="#cb153-3" aria-hidden="true"></a>  <span class="dt">output_file =</span> <span class="kw">file.path</span>(output_dirs<span class="op">$</span>plots, <span class="st">&quot;volcano_plot.png&quot;</span>),</span>
+<span id="cb153-4"><a href="#cb153-4" aria-hidden="true"></a>  <span class="dt">logfc_threshold =</span> config<span class="op">$</span>differential_expression<span class="op">$</span>logfc_threshold,</span>
+<span id="cb153-5"><a href="#cb153-5" aria-hidden="true"></a>  <span class="dt">pval_threshold =</span> config<span class="op">$</span>differential_expression<span class="op">$</span>pvalue_threshold,</span>
+<span id="cb153-6"><a href="#cb153-6" aria-hidden="true"></a>  <span class="dt">label_top =</span> config<span class="op">$</span>visualization<span class="op">$</span>volcano_top_genes</span>
+<span id="cb153-7"><a href="#cb153-7" aria-hidden="true"></a>)</span></code></pre></div>
 <pre><code>## Warning in plot_volcano(difexp, output_file = file.path(output_dirs$plots, :
 ## Missing required columns for volcano plot</code></pre>
 </div>
 <div id="heatmap" class="section level2">
 <h2>Heatmap</h2>
-<div class="sourceCode" id="cb154"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb154-1"><a href="#cb154-1" aria-hidden="true"></a><span class="kw">log_msg</span>(<span class="st">&quot;Creating differential expression heatmap...&quot;</span>)</span></code></pre></div>
-<pre><code>## [2025-10-05 13:42:35] Creating differential expression heatmap...</code></pre>
-<div class="sourceCode" id="cb156"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb156-1"><a href="#cb156-1" aria-hidden="true"></a><span class="kw">plot_difexp_heatmap</span>(</span>
-<span id="cb156-2"><a href="#cb156-2" aria-hidden="true"></a>  <span class="dt">exprs =</span> exprs_corrected,</span>
-<span id="cb156-3"><a href="#cb156-3" aria-hidden="true"></a>  <span class="dt">difexp =</span> difexp_filtered,</span>
-<span id="cb156-4"><a href="#cb156-4" aria-hidden="true"></a>  <span class="dt">pdata =</span> pdata_aligned,</span>
-<span id="cb156-5"><a href="#cb156-5" aria-hidden="true"></a>  <span class="dt">top_n =</span> config<span class="op">$</span>visualization<span class="op">$</span>heatmap_top_genes,</span>
-<span id="cb156-6"><a href="#cb156-6" aria-hidden="true"></a>  <span class="dt">output_file =</span> <span class="kw">file.path</span>(output_dirs<span class="op">$</span>plots, <span class="st">&quot;difexp_heatmap.png&quot;</span>)</span>
-<span id="cb156-7"><a href="#cb156-7" aria-hidden="true"></a>)</span></code></pre></div>
-<pre><code>## Top genes ENTREZID (first 5): 4922, 79071, 3038, 634, 27346</code></pre>
-<pre><code>## Expression matrix rownames (first 5): 10, 100, 1000, 10000, 10001</code></pre>
+<div class="sourceCode" id="cb155"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb155-1"><a href="#cb155-1" aria-hidden="true"></a><span class="kw">log_msg</span>(<span class="st">&quot;Creating differential expression heatmap...&quot;</span>)</span></code></pre></div>
+<pre><code>## [2025-10-09 23:26:50] Creating differential expression heatmap...</code></pre>
+<div class="sourceCode" id="cb157"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb157-1"><a href="#cb157-1" aria-hidden="true"></a><span class="kw">plot_difexp_heatmap</span>(</span>
+<span id="cb157-2"><a href="#cb157-2" aria-hidden="true"></a>  <span class="dt">exprs =</span> exprs_corrected,</span>
+<span id="cb157-3"><a href="#cb157-3" aria-hidden="true"></a>  <span class="dt">difexp =</span> difexp_filtered,</span>
+<span id="cb157-4"><a href="#cb157-4" aria-hidden="true"></a>  <span class="dt">pdata =</span> pdata_aligned,</span>
+<span id="cb157-5"><a href="#cb157-5" aria-hidden="true"></a>  <span class="dt">top_n =</span> config<span class="op">$</span>visualization<span class="op">$</span>heatmap_top_genes,</span>
+<span id="cb157-6"><a href="#cb157-6" aria-hidden="true"></a>  <span class="dt">output_file =</span> <span class="kw">file.path</span>(output_dirs<span class="op">$</span>plots, <span class="st">&quot;difexp_heatmap.png&quot;</span>)</span>
+<span id="cb157-7"><a href="#cb157-7" aria-hidden="true"></a>)</span></code></pre></div>
+<pre><code>## Top genes ENTREZID (first 5): 250, 4192, 51673, 1392, 81706</code></pre>
+<pre><code>## Expression matrix rownames (first 5): 1, 100, 10000, 10004, 10008</code></pre>
 <pre><code>## Expression matrix class: matrixarray</code></pre>
 <pre><code>## Plotting heatmap for 50 out of 50 top genes</code></pre>
-<pre><code>## Saved heatmap: /home/shivers/a/r/igea-r/scripts/exprs_integration_pipeline/output/plots/difexp_heatmap.png</code></pre>
+<pre><code>## Saved heatmap: /home/shivers/a/r/igea-r/scripts/integrative-gene-expression-analysis/output/plots/difexp_heatmap.png</code></pre>
 <hr />
 </div>
 </div>
 <div id="network-clustering" class="section level1">
 <h1>6. Network Clustering</h1>
 <p>Build protein-protein interaction network and detect communities using fastgreedy algorithm.</p>
-<div class="sourceCode" id="cb162"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb162-1"><a href="#cb162-1" aria-hidden="true"></a><span class="kw">log_msg</span>(<span class="st">&quot;Initializing STRING database...&quot;</span>)</span></code></pre></div>
-<pre><code>## [2025-10-05 13:42:35] Initializing STRING database...</code></pre>
-<div class="sourceCode" id="cb164"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb164-1"><a href="#cb164-1" aria-hidden="true"></a><span class="co"># Initialize STRING database</span></span>
-<span id="cb164-2"><a href="#cb164-2" aria-hidden="true"></a>string_db &lt;-<span class="st"> </span><span class="kw">initialize_stringdb</span>(</span>
-<span id="cb164-3"><a href="#cb164-3" aria-hidden="true"></a>  <span class="dt">version =</span> config<span class="op">$</span>stringdb<span class="op">$</span>version,</span>
-<span id="cb164-4"><a href="#cb164-4" aria-hidden="true"></a>  <span class="dt">species =</span> config<span class="op">$</span>stringdb<span class="op">$</span>species,</span>
-<span id="cb164-5"><a href="#cb164-5" aria-hidden="true"></a>  <span class="dt">score_threshold =</span> config<span class="op">$</span>stringdb<span class="op">$</span>score_threshold,</span>
-<span id="cb164-6"><a href="#cb164-6" aria-hidden="true"></a>  <span class="dt">use_cache =</span> config<span class="op">$</span>stringdb<span class="op">$</span>use_cache,</span>
-<span id="cb164-7"><a href="#cb164-7" aria-hidden="true"></a>  <span class="dt">cache_dir =</span> config<span class="op">$</span>stringdb<span class="op">$</span>cache_dir</span>
-<span id="cb164-8"><a href="#cb164-8" aria-hidden="true"></a>)</span></code></pre></div>
-<pre><code>## Created cache directory: data/stringdb_cache</code></pre>
+<div class="sourceCode" id="cb163"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb163-1"><a href="#cb163-1" aria-hidden="true"></a><span class="kw">log_msg</span>(<span class="st">&quot;Initializing STRING database...&quot;</span>)</span></code></pre></div>
+<pre><code>## [2025-10-09 23:26:50] Initializing STRING database...</code></pre>
+<div class="sourceCode" id="cb165"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb165-1"><a href="#cb165-1" aria-hidden="true"></a><span class="co"># Initialize STRING database</span></span>
+<span id="cb165-2"><a href="#cb165-2" aria-hidden="true"></a>string_db &lt;-<span class="st"> </span><span class="kw">initialize_stringdb</span>(</span>
+<span id="cb165-3"><a href="#cb165-3" aria-hidden="true"></a>  <span class="dt">version =</span> config<span class="op">$</span>stringdb<span class="op">$</span>version,</span>
+<span id="cb165-4"><a href="#cb165-4" aria-hidden="true"></a>  <span class="dt">species =</span> config<span class="op">$</span>stringdb<span class="op">$</span>species,</span>
+<span id="cb165-5"><a href="#cb165-5" aria-hidden="true"></a>  <span class="dt">score_threshold =</span> config<span class="op">$</span>stringdb<span class="op">$</span>score_threshold,</span>
+<span id="cb165-6"><a href="#cb165-6" aria-hidden="true"></a>  <span class="dt">use_cache =</span> config<span class="op">$</span>stringdb<span class="op">$</span>use_cache,</span>
+<span id="cb165-7"><a href="#cb165-7" aria-hidden="true"></a>  <span class="dt">cache_dir =</span> config<span class="op">$</span>stringdb<span class="op">$</span>cache_dir</span>
+<span id="cb165-8"><a href="#cb165-8" aria-hidden="true"></a>)</span></code></pre></div>
 <pre><code>## Cache not found - will download to: data/stringdb_cache</code></pre>
 <pre><code>## Initialized STRING database:</code></pre>
 <pre><code>##   Version: 11</code></pre>
 <pre><code>##   Species: 9606</code></pre>
 <pre><code>##   Score threshold: 400</code></pre>
 <div class="sourceCode" id="cb171"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb171-1"><a href="#cb171-1" aria-hidden="true"></a><span class="kw">log_msg</span>(<span class="st">&quot;Mapping genes to STRING database...&quot;</span>)</span></code></pre></div>
-<pre><code>## [2025-10-05 13:42:36] Mapping genes to STRING database...</code></pre>
+<pre><code>## [2025-10-09 23:26:51] Mapping genes to STRING database...</code></pre>
 <div class="sourceCode" id="cb173"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb173-1"><a href="#cb173-1" aria-hidden="true"></a><span class="co"># Map genes to STRING</span></span>
 <span id="cb173-2"><a href="#cb173-2" aria-hidden="true"></a>mapped &lt;-<span class="st"> </span><span class="kw">map_to_stringdb</span>(</span>
 <span id="cb173-3"><a href="#cb173-3" aria-hidden="true"></a>  <span class="dt">difexp =</span> difexp_filtered,</span>
 <span id="cb173-4"><a href="#cb173-4" aria-hidden="true"></a>  <span class="dt">background_exprs =</span> exprs_corrected,</span>
 <span id="cb173-5"><a href="#cb173-5" aria-hidden="true"></a>  <span class="dt">string_db =</span> string_db</span>
 <span id="cb173-6"><a href="#cb173-6" aria-hidden="true"></a>)</span></code></pre></div>
-<pre><code>## Warning:  we couldn&#39;t map to STRING 3% of your identifiers</code></pre>
-<pre><code>## Mapped differential genes: 13364 -&gt; 13116 STRING IDs</code></pre>
+<pre><code>## Warning:  we couldn&#39;t map to STRING 2% of your identifiers</code></pre>
+<pre><code>## Mapped differential genes: 8328 -&gt; 8396 STRING IDs</code></pre>
 <pre><code>## &#39;select()&#39; returned 1:1 mapping between keys and columns</code></pre>
-<pre><code>## Warning:  we couldn&#39;t map to STRING 3% of your identifiers</code></pre>
-<pre><code>## Set background: 13116 genes</code></pre>
+<pre><code>## Warning:  we couldn&#39;t map to STRING 2% of your identifiers</code></pre>
+<pre><code>## Set background: 8396 genes</code></pre>
 <div class="sourceCode" id="cb179"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb179-1"><a href="#cb179-1" aria-hidden="true"></a>difexp_mapped &lt;-<span class="st"> </span>mapped<span class="op">$</span>difexp</span></code></pre></div>
 <div class="sourceCode" id="cb180"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb180-1"><a href="#cb180-1" aria-hidden="true"></a><span class="kw">log_msg</span>(<span class="st">&quot;Building protein-protein interaction network...&quot;</span>)</span></code></pre></div>
-<pre><code>## [2025-10-05 13:43:28] Building protein-protein interaction network...</code></pre>
+<pre><code>## [2025-10-09 23:27:26] Building protein-protein interaction network...</code></pre>
 <div class="sourceCode" id="cb182"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb182-1"><a href="#cb182-1" aria-hidden="true"></a><span class="co"># Build PPI network</span></span>
 <span id="cb182-2"><a href="#cb182-2" aria-hidden="true"></a>G &lt;-<span class="st"> </span><span class="kw">build_ppi_network</span>(</span>
 <span id="cb182-3"><a href="#cb182-3" aria-hidden="true"></a>  <span class="dt">string_ids =</span> difexp_mapped<span class="op">$</span>STRING_id,</span>
 <span id="cb182-4"><a href="#cb182-4" aria-hidden="true"></a>  <span class="dt">string_db =</span> string_db</span>
 <span id="cb182-5"><a href="#cb182-5" aria-hidden="true"></a>)</span></code></pre></div>
-<pre><code>## Built PPI network: 13088 nodes, 613616 edges</code></pre>
+<pre><code>## Built PPI network: 8368 nodes, 246164 edges</code></pre>
 <div class="sourceCode" id="cb184"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb184-1"><a href="#cb184-1" aria-hidden="true"></a><span class="co"># Perform fastgreedy clustering</span></span>
 <span id="cb184-2"><a href="#cb184-2" aria-hidden="true"></a>fgreedy &lt;-<span class="st"> </span><span class="kw">fastgreedy_clustering</span>(G)</span></code></pre></div>
 <pre><code>## Fastgreedy clustering:</code></pre>
-<pre><code>##   Communities: 12</code></pre>
-<pre><code>##   Modularity: 0.394</code></pre>
-<pre><code>##   Sizes: 561, 5609, 4159, 2738, 3, 4, 3, 2, 2, 2, 3, 2</code></pre>
+<pre><code>##   Communities: 15</code></pre>
+<pre><code>##   Modularity: 0.37</code></pre>
+<pre><code>##   Sizes: 2591, 2575, 3142, 13, 6, 7, 6, 7, 3, 4, 6, 2, 2, 2, 2</code></pre>
 <div class="sourceCode" id="cb189"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb189-1"><a href="#cb189-1" aria-hidden="true"></a><span class="co"># Add cluster assignments</span></span>
 <span id="cb189-2"><a href="#cb189-2" aria-hidden="true"></a>difexp_clustered &lt;-<span class="st"> </span><span class="kw">add_cluster_column</span>(</span>
 <span id="cb189-3"><a href="#cb189-3" aria-hidden="true"></a>  <span class="dt">difexp =</span> difexp_mapped,</span>
@@ -2235,16 +2236,16 @@ div.tocify {
 <span id="cb189-5"><a href="#cb189-5" aria-hidden="true"></a>  <span class="dt">G =</span> G</span>
 <span id="cb189-6"><a href="#cb189-6" aria-hidden="true"></a>)</span></code></pre></div>
 <pre><code>## Cluster assignment:</code></pre>
-<pre><code>##   Genes on graph: 13088</code></pre>
-<pre><code>##   Clusters: 56156094159273834322232</code></pre>
+<pre><code>##   Genes on graph: 8368</code></pre>
+<pre><code>##   Clusters: 2591257531421367673462222</code></pre>
 <div class="sourceCode" id="cb193"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb193-1"><a href="#cb193-1" aria-hidden="true"></a><span class="co"># Save clustered results</span></span>
 <span id="cb193-2"><a href="#cb193-2" aria-hidden="true"></a><span class="kw">save_data</span>(difexp_clustered,</span>
 <span id="cb193-3"><a href="#cb193-3" aria-hidden="true"></a>          <span class="kw">file.path</span>(output_dirs<span class="op">$</span>clusters, <span class="st">&quot;difexp_clustered.csv&quot;</span>))</span></code></pre></div>
-<pre><code>## Saved: /home/shivers/a/r/igea-r/scripts/exprs_integration_pipeline/output/clusters/difexp_clustered.csv</code></pre>
+<pre><code>## Saved: /home/shivers/a/r/igea-r/scripts/integrative-gene-expression-analysis/output/clusters/difexp_clustered.csv</code></pre>
 <div id="network-visualization" class="section level2">
 <h2>Network Visualization</h2>
 <div class="sourceCode" id="cb195"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb195-1"><a href="#cb195-1" aria-hidden="true"></a><span class="kw">log_msg</span>(<span class="st">&quot;Creating network visualization...&quot;</span>)</span></code></pre></div>
-<pre><code>## [2025-10-05 13:43:59] Creating network visualization...</code></pre>
+<pre><code>## [2025-10-09 23:27:40] Creating network visualization...</code></pre>
 <div class="sourceCode" id="cb197"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb197-1"><a href="#cb197-1" aria-hidden="true"></a><span class="kw">plot_network</span>(</span>
 <span id="cb197-2"><a href="#cb197-2" aria-hidden="true"></a>  <span class="dt">G =</span> G,</span>
 <span id="cb197-3"><a href="#cb197-3" aria-hidden="true"></a>  <span class="dt">difexp =</span> difexp_clustered,</span>
@@ -2253,7 +2254,7 @@ div.tocify {
 <span id="cb197-6"><a href="#cb197-6" aria-hidden="true"></a>  <span class="dt">layout_algo =</span> config<span class="op">$</span>visualization<span class="op">$</span>network_layout</span>
 <span id="cb197-7"><a href="#cb197-7" aria-hidden="true"></a>)</span></code></pre></div>
 <pre><code>## Warning in length(eattrs[[name]]) &lt;- ec: length of NULL cannot be changed</code></pre>
-<pre><code>## Saved network plot: /home/shivers/a/r/igea-r/scripts/exprs_integration_pipeline/output/plots/network_clusters.png</code></pre>
+<pre><code>## Saved network plot: /home/shivers/a/r/igea-r/scripts/integrative-gene-expression-analysis/output/plots/network_clusters.png</code></pre>
 </div>
 <div id="recursive-clustering-optional" class="section level2">
 <h2>Recursive Clustering (Optional)</h2>
@@ -2267,49 +2268,89 @@ div.tocify {
 <span id="cb200-8"><a href="#cb200-8" aria-hidden="true"></a>    <span class="dt">min_cluster_size =</span> config<span class="op">$</span>clustering<span class="op">$</span>min_cluster_size</span>
 <span id="cb200-9"><a href="#cb200-9" aria-hidden="true"></a>  )</span>
 <span id="cb200-10"><a href="#cb200-10" aria-hidden="true"></a>}</span></code></pre></div>
-<pre><code>## [2025-10-05 13:44:11] Performing recursive sub-clustering...</code></pre>
+<pre><code>## [2025-10-09 23:27:46] Performing recursive sub-clustering...</code></pre>
 <pre><code>## 
-## Processing cluster 1 (589 genes)</code></pre>
-<pre><code>## Built PPI network: 561 nodes, 2171 edges</code></pre>
-<pre><code>## Fastgreedy clustering:</code></pre>
-<pre><code>##   Communities: 17</code></pre>
-<pre><code>##   Modularity: 0.574</code></pre>
-<pre><code>##   Sizes: 53, 42, 47, 47, 123, 32, 21, 41, 42, 55, 6, 7, 34, 3, 3, 3, 2</code></pre>
-<pre><code>## Cluster assignment:</code></pre>
-<pre><code>##   Genes on graph: 561</code></pre>
-<pre><code>##   Clusters: 53424747123322141425567343332</code></pre>
-<pre><code>## 
-## Processing cluster 2 (5637 genes)</code></pre>
-<pre><code>## Built PPI network: 5609 nodes, 202281 edges</code></pre>
-<pre><code>## Fastgreedy clustering:</code></pre>
-<pre><code>##   Communities: 11</code></pre>
-<pre><code>##   Modularity: 0.346</code></pre>
-<pre><code>##   Sizes: 2536, 2119, 367, 540, 22, 5, 5, 4, 3, 4, 4</code></pre>
-<pre><code>## Cluster assignment:</code></pre>
-<pre><code>##   Genes on graph: 5609</code></pre>
-<pre><code>##   Clusters: 2536211936754022554344</code></pre>
-<pre><code>## 
-## Processing cluster 3 (4187 genes)</code></pre>
-<pre><code>## Built PPI network: 4159 nodes, 167518 edges</code></pre>
+## Processing cluster 1 (2619 genes)</code></pre>
+<pre><code>## Built PPI network: 2591 nodes, 21460 edges</code></pre>
 <pre><code>## Fastgreedy clustering:</code></pre>
 <pre><code>##   Communities: 8</code></pre>
-<pre><code>##   Modularity: 0.439</code></pre>
-<pre><code>##   Sizes: 741, 2266, 1064, 40, 23, 18, 5, 2</code></pre>
+<pre><code>##   Modularity: 0.552</code></pre>
+<pre><code>##   Sizes: 212, 1271, 68, 109, 642, 187, 96, 6</code></pre>
 <pre><code>## Cluster assignment:</code></pre>
-<pre><code>##   Genes on graph: 4159</code></pre>
-<pre><code>##   Clusters: 7412266106440231852</code></pre>
+<pre><code>##   Genes on graph: 2591</code></pre>
+<pre><code>##   Clusters: 212127168109642187966</code></pre>
 <pre><code>## 
-## Processing cluster 4 (2766 genes)</code></pre>
-<pre><code>## Built PPI network: 2738 nodes, 84356 edges</code></pre>
+## Processing cluster 2 (2603 genes)</code></pre>
+<pre><code>## Built PPI network: 2575 nodes, 72891 edges</code></pre>
+<pre><code>## Fastgreedy clustering:</code></pre>
+<pre><code>##   Communities: 12</code></pre>
+<pre><code>##   Modularity: 0.435</code></pre>
+<pre><code>##   Sizes: 828, 690, 1006, 11, 7, 6, 14, 3, 3, 3, 2, 2</code></pre>
+<pre><code>## Cluster assignment:</code></pre>
+<pre><code>##   Genes on graph: 2575</code></pre>
+<pre><code>##   Clusters: 828690100611761433322</code></pre>
+<pre><code>## 
+## Processing cluster 3 (3170 genes)</code></pre>
+<pre><code>## Built PPI network: 3142 nodes, 90271 edges</code></pre>
+<pre><code>## Fastgreedy clustering:</code></pre>
+<pre><code>##   Communities: 7</code></pre>
+<pre><code>##   Modularity: 0.349</code></pre>
+<pre><code>##   Sizes: 379, 48, 1250, 1198, 247, 18, 2</code></pre>
+<pre><code>## Cluster assignment:</code></pre>
+<pre><code>##   Genes on graph: 3142</code></pre>
+<pre><code>##   Clusters: 3794812501198247182</code></pre>
+<pre><code>## 
+## Processing cluster 4 (41 genes)</code></pre>
+<pre><code>## Built PPI network: 13 nodes, 12 edges</code></pre>
 <pre><code>## Fastgreedy clustering:</code></pre>
 <pre><code>##   Communities: 3</code></pre>
-<pre><code>##   Modularity: 0.481</code></pre>
-<pre><code>##   Sizes: 1347, 349, 1042</code></pre>
+<pre><code>##   Modularity: 0.49</code></pre>
+<pre><code>##   Sizes: 5, 4, 4</code></pre>
 <pre><code>## Cluster assignment:</code></pre>
-<pre><code>##   Genes on graph: 2738</code></pre>
-<pre><code>##   Clusters: 13473491042</code></pre>
+<pre><code>##   Genes on graph: 13</code></pre>
+<pre><code>##   Clusters: 544</code></pre>
 <pre><code>## 
-## Processing cluster 5 (31 genes)</code></pre>
+## Processing cluster 5 (34 genes)</code></pre>
+<pre><code>## Built PPI network: 6 nodes, 5 edges</code></pre>
+<pre><code>## Fastgreedy clustering:</code></pre>
+<pre><code>##   Communities: 3</code></pre>
+<pre><code>##   Modularity: 0.26</code></pre>
+<pre><code>##   Sizes: 2, 2, 2</code></pre>
+<pre><code>## Cluster assignment:</code></pre>
+<pre><code>##   Genes on graph: 6</code></pre>
+<pre><code>##   Clusters: 222</code></pre>
+<pre><code>## 
+## Processing cluster 6 (35 genes)</code></pre>
+<pre><code>## Built PPI network: 7 nodes, 16 edges</code></pre>
+<pre><code>## Fastgreedy clustering:</code></pre>
+<pre><code>##   Communities: 2</code></pre>
+<pre><code>##   Modularity: 0.029</code></pre>
+<pre><code>##   Sizes: 5, 2</code></pre>
+<pre><code>## Cluster assignment:</code></pre>
+<pre><code>##   Genes on graph: 7</code></pre>
+<pre><code>##   Clusters: 52</code></pre>
+<pre><code>## 
+## Processing cluster 7 (34 genes)</code></pre>
+<pre><code>## Built PPI network: 6 nodes, 8 edges</code></pre>
+<pre><code>## Fastgreedy clustering:</code></pre>
+<pre><code>##   Communities: 2</code></pre>
+<pre><code>##   Modularity: 0.055</code></pre>
+<pre><code>##   Sizes: 4, 2</code></pre>
+<pre><code>## Cluster assignment:</code></pre>
+<pre><code>##   Genes on graph: 6</code></pre>
+<pre><code>##   Clusters: 42</code></pre>
+<pre><code>## 
+## Processing cluster 8 (35 genes)</code></pre>
+<pre><code>## Built PPI network: 7 nodes, 7 edges</code></pre>
+<pre><code>## Fastgreedy clustering:</code></pre>
+<pre><code>##   Communities: 3</code></pre>
+<pre><code>##   Modularity: 0.296</code></pre>
+<pre><code>##   Sizes: 3, 2, 2</code></pre>
+<pre><code>## Cluster assignment:</code></pre>
+<pre><code>##   Genes on graph: 7</code></pre>
+<pre><code>##   Clusters: 322</code></pre>
+<pre><code>## 
+## Processing cluster 9 (31 genes)</code></pre>
 <pre><code>## Built PPI network: 3 nodes, 2 edges</code></pre>
 <pre><code>## Fastgreedy clustering:</code></pre>
 <pre><code>##   Communities: 2</code></pre>
@@ -2319,7 +2360,7 @@ div.tocify {
 <pre><code>##   Genes on graph: 3</code></pre>
 <pre><code>##   Clusters: 21</code></pre>
 <pre><code>## 
-## Processing cluster 6 (32 genes)</code></pre>
+## Processing cluster 10 (32 genes)</code></pre>
 <pre><code>## Built PPI network: 4 nodes, 3 edges</code></pre>
 <pre><code>## Fastgreedy clustering:</code></pre>
 <pre><code>##   Communities: 2</code></pre>
@@ -2329,39 +2370,29 @@ div.tocify {
 <pre><code>##   Genes on graph: 4</code></pre>
 <pre><code>##   Clusters: 22</code></pre>
 <pre><code>## 
-## Processing cluster 7 (31 genes)</code></pre>
-<pre><code>## Built PPI network: 3 nodes, 2 edges</code></pre>
+## Processing cluster 11 (34 genes)</code></pre>
+<pre><code>## Built PPI network: 6 nodes, 6 edges</code></pre>
 <pre><code>## Fastgreedy clustering:</code></pre>
 <pre><code>##   Communities: 2</code></pre>
-<pre><code>##   Modularity: 0</code></pre>
-<pre><code>##   Sizes: 2, 1</code></pre>
+<pre><code>##   Modularity: 0.208</code></pre>
+<pre><code>##   Sizes: 4, 2</code></pre>
 <pre><code>## Cluster assignment:</code></pre>
-<pre><code>##   Genes on graph: 3</code></pre>
-<pre><code>##   Clusters: 21</code></pre>
-<pre><code>## 
-## Processing cluster 8 (30 genes)</code></pre>
-<pre><code>## Built PPI network: 2 nodes, 1 edges</code></pre>
-<pre><code>##   Subnetwork too small for clustering</code></pre>
-<pre><code>## 
-## Processing cluster 9 (30 genes)</code></pre>
-<pre><code>## Built PPI network: 2 nodes, 1 edges</code></pre>
-<pre><code>##   Subnetwork too small for clustering</code></pre>
-<pre><code>## 
-## Processing cluster 10 (30 genes)</code></pre>
-<pre><code>## Built PPI network: 2 nodes, 1 edges</code></pre>
-<pre><code>##   Subnetwork too small for clustering</code></pre>
-<pre><code>## 
-## Processing cluster 11 (31 genes)</code></pre>
-<pre><code>## Built PPI network: 3 nodes, 2 edges</code></pre>
-<pre><code>## Fastgreedy clustering:</code></pre>
-<pre><code>##   Communities: 2</code></pre>
-<pre><code>##   Modularity: 0</code></pre>
-<pre><code>##   Sizes: 2, 1</code></pre>
-<pre><code>## Cluster assignment:</code></pre>
-<pre><code>##   Genes on graph: 3</code></pre>
-<pre><code>##   Clusters: 21</code></pre>
+<pre><code>##   Genes on graph: 6</code></pre>
+<pre><code>##   Clusters: 42</code></pre>
 <pre><code>## 
 ## Processing cluster 12 (30 genes)</code></pre>
+<pre><code>## Built PPI network: 2 nodes, 1 edges</code></pre>
+<pre><code>##   Subnetwork too small for clustering</code></pre>
+<pre><code>## 
+## Processing cluster 13 (30 genes)</code></pre>
+<pre><code>## Built PPI network: 2 nodes, 1 edges</code></pre>
+<pre><code>##   Subnetwork too small for clustering</code></pre>
+<pre><code>## 
+## Processing cluster 14 (30 genes)</code></pre>
+<pre><code>## Built PPI network: 2 nodes, 1 edges</code></pre>
+<pre><code>##   Subnetwork too small for clustering</code></pre>
+<pre><code>## 
+## Processing cluster 15 (30 genes)</code></pre>
 <pre><code>## Built PPI network: 2 nodes, 1 edges</code></pre>
 <pre><code>##   Subnetwork too small for clustering</code></pre>
 <pre><code>## 
@@ -2372,89 +2403,99 @@ div.tocify {
 <div id="functional-enrichment-analysis" class="section level1">
 <h1>7. Functional Enrichment Analysis</h1>
 <p>Perform pathway enrichment analysis for each cluster.</p>
-<div class="sourceCode" id="cb287"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb287-1"><a href="#cb287-1" aria-hidden="true"></a><span class="kw">log_msg</span>(<span class="st">&quot;Performing functional enrichment analysis...&quot;</span>)</span></code></pre></div>
-<pre><code>## [2025-10-05 13:44:18] Performing functional enrichment analysis...</code></pre>
-<div class="sourceCode" id="cb289"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb289-1"><a href="#cb289-1" aria-hidden="true"></a><span class="co"># Cluster-by-cluster enrichment</span></span>
-<span id="cb289-2"><a href="#cb289-2" aria-hidden="true"></a>enrichment_summary &lt;-<span class="st"> </span><span class="kw">cluster_enrichment</span>(</span>
-<span id="cb289-3"><a href="#cb289-3" aria-hidden="true"></a>  <span class="dt">difexp =</span> difexp_clustered,</span>
-<span id="cb289-4"><a href="#cb289-4" aria-hidden="true"></a>  <span class="dt">string_db =</span> string_db,</span>
-<span id="cb289-5"><a href="#cb289-5" aria-hidden="true"></a>  <span class="dt">output_dir =</span> output_dirs<span class="op">$</span>base,</span>
-<span id="cb289-6"><a href="#cb289-6" aria-hidden="true"></a>  <span class="dt">max_pvalue =</span> config<span class="op">$</span>enrichment<span class="op">$</span>max_pvalue</span>
-<span id="cb289-7"><a href="#cb289-7" aria-hidden="true"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb314"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb314-1"><a href="#cb314-1" aria-hidden="true"></a><span class="kw">log_msg</span>(<span class="st">&quot;Performing functional enrichment analysis...&quot;</span>)</span></code></pre></div>
+<pre><code>## [2025-10-09 23:27:48] Performing functional enrichment analysis...</code></pre>
+<div class="sourceCode" id="cb316"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb316-1"><a href="#cb316-1" aria-hidden="true"></a><span class="co"># Cluster-by-cluster enrichment</span></span>
+<span id="cb316-2"><a href="#cb316-2" aria-hidden="true"></a>enrichment_summary &lt;-<span class="st"> </span><span class="kw">cluster_enrichment</span>(</span>
+<span id="cb316-3"><a href="#cb316-3" aria-hidden="true"></a>  <span class="dt">difexp =</span> difexp_clustered,</span>
+<span id="cb316-4"><a href="#cb316-4" aria-hidden="true"></a>  <span class="dt">string_db =</span> string_db,</span>
+<span id="cb316-5"><a href="#cb316-5" aria-hidden="true"></a>  <span class="dt">output_dir =</span> output_dirs<span class="op">$</span>base,</span>
+<span id="cb316-6"><a href="#cb316-6" aria-hidden="true"></a>  <span class="dt">max_pvalue =</span> config<span class="op">$</span>enrichment<span class="op">$</span>max_pvalue</span>
+<span id="cb316-7"><a href="#cb316-7" aria-hidden="true"></a>)</span></code></pre></div>
 <pre><code>## 
-## Enriching cluster 1 (561 genes)</code></pre>
-<pre><code>## Enrichment results: 68 terms (Process, p &lt; 0.05)</code></pre>
-<pre><code>## Enrichment coverage: 190/561 genes (33.9%)</code></pre>
+## Enriching cluster 1 (2591 genes)</code></pre>
+<pre><code>## Enrichment results: 22 terms (Process, p &lt; 0.05)</code></pre>
+<pre><code>## Enrichment coverage: 766/2591 genes (29.6%)</code></pre>
 <pre><code>## 
-## Enriching cluster 2 (5609 genes)</code></pre>
-<pre><code>## Enrichment results: 1609 terms (Process, p &lt; 0.05)</code></pre>
-<pre><code>## Enrichment coverage: 5272/5609 genes (94%)</code></pre>
+## Enriching cluster 2 (2575 genes)</code></pre>
+<pre><code>## Enrichment results: 453 terms (Process, p &lt; 0.05)</code></pre>
+<pre><code>## Enrichment coverage: 2319/2575 genes (90.1%)</code></pre>
 <pre><code>## 
-## Enriching cluster 3 (4159 genes)</code></pre>
-<pre><code>## Enrichment results: 563 terms (Process, p &lt; 0.05)</code></pre>
-<pre><code>## Enrichment coverage: 3744/4159 genes (90%)</code></pre>
+## Enriching cluster 3 (3142 genes)</code></pre>
+<pre><code>## Enrichment results: 1742 terms (Process, p &lt; 0.05)</code></pre>
+<pre><code>## Enrichment coverage: 3035/3142 genes (96.6%)</code></pre>
 <pre><code>## 
-## Enriching cluster 4 (2738 genes)</code></pre>
-<pre><code>## Enrichment results: 457 terms (Process, p &lt; 0.05)</code></pre>
-<pre><code>## Enrichment coverage: 2243/2738 genes (81.9%)</code></pre>
+## Enriching cluster 4 (13 genes)</code></pre>
+<pre><code>## Enrichment results: 3 terms (Process, p &lt; 0.05)</code></pre>
+<pre><code>## Enrichment coverage: 3/13 genes (23.1%)</code></pre>
 <pre><code>## 
-## Enriching cluster 5 (3 genes)</code></pre>
+## Enriching cluster 5 (6 genes)</code></pre>
 <pre><code>## Enrichment results: 0 terms (Process, p &lt; 0.05)</code></pre>
 <pre><code>## 
-## Enriching cluster 6 (4 genes)</code></pre>
+## Enriching cluster 6 (7 genes)</code></pre>
+<pre><code>## Enrichment results: 2 terms (Process, p &lt; 0.05)</code></pre>
+<pre><code>## Enrichment coverage: 6/7 genes (85.7%)</code></pre>
+<pre><code>## 
+## Enriching cluster 7 (6 genes)</code></pre>
 <pre><code>## Enrichment results: 0 terms (Process, p &lt; 0.05)</code></pre>
 <pre><code>## 
-## Enriching cluster 7 (3 genes)</code></pre>
+## Enriching cluster 8 (7 genes)</code></pre>
 <pre><code>## Enrichment results: 0 terms (Process, p &lt; 0.05)</code></pre>
 <pre><code>## 
-## Enriching cluster 8 (2 genes)</code></pre>
+## Enriching cluster 9 (3 genes)</code></pre>
 <pre><code>## Enrichment results: 0 terms (Process, p &lt; 0.05)</code></pre>
 <pre><code>## 
-## Enriching cluster 9 (2 genes)</code></pre>
-<pre><code>## No enrichment results found</code></pre>
-<pre><code>## 
-## Enriching cluster 10 (2 genes)</code></pre>
+## Enriching cluster 10 (4 genes)</code></pre>
 <pre><code>## Enrichment results: 0 terms (Process, p &lt; 0.05)</code></pre>
 <pre><code>## 
-## Enriching cluster 11 (3 genes)</code></pre>
+## Enriching cluster 11 (6 genes)</code></pre>
 <pre><code>## Enrichment results: 0 terms (Process, p &lt; 0.05)</code></pre>
 <pre><code>## 
 ## Enriching cluster 12 (2 genes)</code></pre>
 <pre><code>## Enrichment results: 0 terms (Process, p &lt; 0.05)</code></pre>
 <pre><code>## 
+## Enriching cluster 13 (2 genes)</code></pre>
+<pre><code>## No enrichment results found</code></pre>
+<pre><code>## 
+## Enriching cluster 14 (2 genes)</code></pre>
+<pre><code>## Enrichment results: 0 terms (Process, p &lt; 0.05)</code></pre>
+<pre><code>## 
+## Enriching cluster 15 (2 genes)</code></pre>
+<pre><code>## Enrichment results: 0 terms (Process, p &lt; 0.05)</code></pre>
+<pre><code>## 
 ## Cluster enrichment completed</code></pre>
-<div class="sourceCode" id="cb319"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb319-1"><a href="#cb319-1" aria-hidden="true"></a><span class="co"># Add term membership to genes</span></span>
-<span id="cb319-2"><a href="#cb319-2" aria-hidden="true"></a>difexp_final &lt;-<span class="st"> </span><span class="kw">add_term_membership</span>(</span>
-<span id="cb319-3"><a href="#cb319-3" aria-hidden="true"></a>  <span class="dt">difexp =</span> difexp_clustered,</span>
-<span id="cb319-4"><a href="#cb319-4" aria-hidden="true"></a>  <span class="dt">enrichment =</span> <span class="kw">string_enrichment</span>(</span>
-<span id="cb319-5"><a href="#cb319-5" aria-hidden="true"></a>    difexp_clustered<span class="op">$</span>STRING_id,</span>
-<span id="cb319-6"><a href="#cb319-6" aria-hidden="true"></a>    string_db,</span>
-<span id="cb319-7"><a href="#cb319-7" aria-hidden="true"></a>    <span class="dt">max_pvalue =</span> config<span class="op">$</span>enrichment<span class="op">$</span>max_pvalue</span>
-<span id="cb319-8"><a href="#cb319-8" aria-hidden="true"></a>  )</span>
-<span id="cb319-9"><a href="#cb319-9" aria-hidden="true"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb353"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb353-1"><a href="#cb353-1" aria-hidden="true"></a><span class="co"># Add term membership to genes</span></span>
+<span id="cb353-2"><a href="#cb353-2" aria-hidden="true"></a>difexp_final &lt;-<span class="st"> </span><span class="kw">add_term_membership</span>(</span>
+<span id="cb353-3"><a href="#cb353-3" aria-hidden="true"></a>  <span class="dt">difexp =</span> difexp_clustered,</span>
+<span id="cb353-4"><a href="#cb353-4" aria-hidden="true"></a>  <span class="dt">enrichment =</span> <span class="kw">string_enrichment</span>(</span>
+<span id="cb353-5"><a href="#cb353-5" aria-hidden="true"></a>    difexp_clustered<span class="op">$</span>STRING_id,</span>
+<span id="cb353-6"><a href="#cb353-6" aria-hidden="true"></a>    string_db,</span>
+<span id="cb353-7"><a href="#cb353-7" aria-hidden="true"></a>    <span class="dt">max_pvalue =</span> config<span class="op">$</span>enrichment<span class="op">$</span>max_pvalue</span>
+<span id="cb353-8"><a href="#cb353-8" aria-hidden="true"></a>  )</span>
+<span id="cb353-9"><a href="#cb353-9" aria-hidden="true"></a>)</span></code></pre></div>
 <pre><code>## Warning in value[[3L]](cond): Enrichment analysis failed: </code></pre>
 <pre><code>## No enrichment results found</code></pre>
 <pre><code>## No enrichment data - term_count set to 0</code></pre>
-<div class="sourceCode" id="cb323"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb323-1"><a href="#cb323-1" aria-hidden="true"></a><span class="co"># Save final results</span></span>
-<span id="cb323-2"><a href="#cb323-2" aria-hidden="true"></a><span class="kw">save_data</span>(difexp_final,</span>
-<span id="cb323-3"><a href="#cb323-3" aria-hidden="true"></a>          <span class="kw">file.path</span>(output_dirs<span class="op">$</span>base, <span class="st">&quot;difexp_final.csv&quot;</span>))</span></code></pre></div>
-<pre><code>## Saved: /home/shivers/a/r/igea-r/scripts/exprs_integration_pipeline/output/difexp_final.csv</code></pre>
+<div class="sourceCode" id="cb357"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb357-1"><a href="#cb357-1" aria-hidden="true"></a><span class="co"># Save final results</span></span>
+<span id="cb357-2"><a href="#cb357-2" aria-hidden="true"></a><span class="kw">save_data</span>(difexp_final,</span>
+<span id="cb357-3"><a href="#cb357-3" aria-hidden="true"></a>          <span class="kw">file.path</span>(output_dirs<span class="op">$</span>base, <span class="st">&quot;difexp_final.csv&quot;</span>))</span></code></pre></div>
+<pre><code>## Saved: /home/shivers/a/r/igea-r/scripts/integrative-gene-expression-analysis/output/difexp_final.csv</code></pre>
 <div id="enrichment-visualizations" class="section level2">
 <h2>Enrichment Visualizations</h2>
-<div class="sourceCode" id="cb325"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb325-1"><a href="#cb325-1" aria-hidden="true"></a><span class="kw">log_msg</span>(<span class="st">&quot;Creating enrichment visualizations...&quot;</span>)</span></code></pre></div>
-<pre><code>## [2025-10-05 13:51:37] Creating enrichment visualizations...</code></pre>
-<div class="sourceCode" id="cb327"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb327-1"><a href="#cb327-1" aria-hidden="true"></a><span class="co"># Cluster sizes</span></span>
-<span id="cb327-2"><a href="#cb327-2" aria-hidden="true"></a><span class="kw">plot_cluster_sizes</span>(</span>
-<span id="cb327-3"><a href="#cb327-3" aria-hidden="true"></a>  <span class="dt">summary_data =</span> enrichment_summary,</span>
-<span id="cb327-4"><a href="#cb327-4" aria-hidden="true"></a>  <span class="dt">output_file =</span> <span class="kw">file.path</span>(output_dirs<span class="op">$</span>plots, <span class="st">&quot;cluster_sizes.png&quot;</span>)</span>
-<span id="cb327-5"><a href="#cb327-5" aria-hidden="true"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb359"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb359-1"><a href="#cb359-1" aria-hidden="true"></a><span class="kw">log_msg</span>(<span class="st">&quot;Creating enrichment visualizations...&quot;</span>)</span></code></pre></div>
+<pre><code>## [2025-10-09 23:34:20] Creating enrichment visualizations...</code></pre>
+<div class="sourceCode" id="cb361"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb361-1"><a href="#cb361-1" aria-hidden="true"></a><span class="co"># Cluster sizes</span></span>
+<span id="cb361-2"><a href="#cb361-2" aria-hidden="true"></a><span class="kw">plot_cluster_sizes</span>(</span>
+<span id="cb361-3"><a href="#cb361-3" aria-hidden="true"></a>  <span class="dt">summary_data =</span> enrichment_summary,</span>
+<span id="cb361-4"><a href="#cb361-4" aria-hidden="true"></a>  <span class="dt">output_file =</span> <span class="kw">file.path</span>(output_dirs<span class="op">$</span>plots, <span class="st">&quot;cluster_sizes.png&quot;</span>)</span>
+<span id="cb361-5"><a href="#cb361-5" aria-hidden="true"></a>)</span></code></pre></div>
 <pre><code>## Warning in value[[3L]](cond): Failed to save cluster size plot: Graphics API
 ## version mismatch</code></pre>
-<div class="sourceCode" id="cb329"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb329-1"><a href="#cb329-1" aria-hidden="true"></a><span class="co"># Enrichment coverage</span></span>
-<span id="cb329-2"><a href="#cb329-2" aria-hidden="true"></a><span class="kw">plot_enrichment_coverage</span>(</span>
-<span id="cb329-3"><a href="#cb329-3" aria-hidden="true"></a>  <span class="dt">summary_data =</span> enrichment_summary,</span>
-<span id="cb329-4"><a href="#cb329-4" aria-hidden="true"></a>  <span class="dt">output_file =</span> <span class="kw">file.path</span>(output_dirs<span class="op">$</span>plots, <span class="st">&quot;enrichment_coverage.png&quot;</span>)</span>
-<span id="cb329-5"><a href="#cb329-5" aria-hidden="true"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb363"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb363-1"><a href="#cb363-1" aria-hidden="true"></a><span class="co"># Enrichment coverage</span></span>
+<span id="cb363-2"><a href="#cb363-2" aria-hidden="true"></a><span class="kw">plot_enrichment_coverage</span>(</span>
+<span id="cb363-3"><a href="#cb363-3" aria-hidden="true"></a>  <span class="dt">summary_data =</span> enrichment_summary,</span>
+<span id="cb363-4"><a href="#cb363-4" aria-hidden="true"></a>  <span class="dt">output_file =</span> <span class="kw">file.path</span>(output_dirs<span class="op">$</span>plots, <span class="st">&quot;enrichment_coverage.png&quot;</span>)</span>
+<span id="cb363-5"><a href="#cb363-5" aria-hidden="true"></a>)</span></code></pre></div>
 <pre><code>## Warning in value[[3L]](cond): Failed to save enrichment coverage plot: Graphics
 ## API version mismatch</code></pre>
 <hr />
@@ -2462,66 +2503,66 @@ div.tocify {
 </div>
 <div id="summary-and-results" class="section level1">
 <h1>8. Summary and Results</h1>
-<div class="sourceCode" id="cb331"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb331-1"><a href="#cb331-1" aria-hidden="true"></a><span class="kw">log_msg</span>(<span class="st">&quot;Generating pipeline summary...&quot;</span>)</span></code></pre></div>
-<pre><code>## [2025-10-05 13:51:37] Generating pipeline summary...</code></pre>
-<div class="sourceCode" id="cb333"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb333-1"><a href="#cb333-1" aria-hidden="true"></a><span class="co"># Collect summary statistics</span></span>
-<span id="cb333-2"><a href="#cb333-2" aria-hidden="true"></a>summary_stats &lt;-<span class="st"> </span><span class="kw">list</span>(</span>
-<span id="cb333-3"><a href="#cb333-3" aria-hidden="true"></a>  <span class="dt">total_genes =</span> <span class="kw">nrow</span>(merged_exprs),</span>
-<span id="cb333-4"><a href="#cb333-4" aria-hidden="true"></a>  <span class="dt">total_samples =</span> <span class="kw">ncol</span>(merged_exprs),</span>
-<span id="cb333-5"><a href="#cb333-5" aria-hidden="true"></a>  <span class="dt">filtered_samples =</span> <span class="kw">ncol</span>(exprs_corrected),</span>
-<span id="cb333-6"><a href="#cb333-6" aria-hidden="true"></a>  <span class="dt">difexp_genes_all =</span> <span class="kw">nrow</span>(difexp),</span>
-<span id="cb333-7"><a href="#cb333-7" aria-hidden="true"></a>  <span class="dt">difexp_genes_filtered =</span> <span class="kw">nrow</span>(difexp_filtered),</span>
-<span id="cb333-8"><a href="#cb333-8" aria-hidden="true"></a>  <span class="dt">genes_on_network =</span> <span class="kw">sum</span>(difexp_clustered<span class="op">$</span>on_graph),</span>
-<span id="cb333-9"><a href="#cb333-9" aria-hidden="true"></a>  <span class="dt">num_clusters =</span> <span class="kw">length</span>(<span class="kw">unique</span>(difexp_clustered<span class="op">$</span>cluster[<span class="op">!</span><span class="kw">is.na</span>(difexp_clustered<span class="op">$</span>cluster)])),</span>
-<span id="cb333-10"><a href="#cb333-10" aria-hidden="true"></a>  <span class="dt">avg_cluster_size =</span> <span class="kw">mean</span>(<span class="kw">table</span>(difexp_clustered<span class="op">$</span>cluster)),</span>
-<span id="cb333-11"><a href="#cb333-11" aria-hidden="true"></a>  <span class="dt">total_enrichment_terms =</span> <span class="kw">sum</span>(enrichment_summary<span class="op">$</span>enrichment_terms),</span>
-<span id="cb333-12"><a href="#cb333-12" aria-hidden="true"></a>  <span class="dt">avg_coverage =</span> <span class="kw">mean</span>(enrichment_summary<span class="op">$</span>coverage)</span>
-<span id="cb333-13"><a href="#cb333-13" aria-hidden="true"></a>)</span>
-<span id="cb333-14"><a href="#cb333-14" aria-hidden="true"></a></span>
-<span id="cb333-15"><a href="#cb333-15" aria-hidden="true"></a><span class="co"># Write summary</span></span>
-<span id="cb333-16"><a href="#cb333-16" aria-hidden="true"></a><span class="kw">write_summary</span>(</span>
-<span id="cb333-17"><a href="#cb333-17" aria-hidden="true"></a>  <span class="dt">stats =</span> summary_stats,</span>
-<span id="cb333-18"><a href="#cb333-18" aria-hidden="true"></a>  <span class="dt">output_file =</span> <span class="kw">file.path</span>(output_dirs<span class="op">$</span>reports, <span class="st">&quot;pipeline_summary.csv&quot;</span>)</span>
-<span id="cb333-19"><a href="#cb333-19" aria-hidden="true"></a>)</span></code></pre></div>
-<pre><code>## Saved summary: /home/shivers/a/r/igea-r/scripts/exprs_integration_pipeline/output/reports/pipeline_summary.csv</code></pre>
-<div class="sourceCode" id="cb335"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb335-1"><a href="#cb335-1" aria-hidden="true"></a><span class="co"># Print summary</span></span>
-<span id="cb335-2"><a href="#cb335-2" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;</span><span class="ch">\n</span><span class="st">=== Pipeline Summary ===</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb365"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb365-1"><a href="#cb365-1" aria-hidden="true"></a><span class="kw">log_msg</span>(<span class="st">&quot;Generating pipeline summary...&quot;</span>)</span></code></pre></div>
+<pre><code>## [2025-10-09 23:34:20] Generating pipeline summary...</code></pre>
+<div class="sourceCode" id="cb367"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb367-1"><a href="#cb367-1" aria-hidden="true"></a><span class="co"># Collect summary statistics</span></span>
+<span id="cb367-2"><a href="#cb367-2" aria-hidden="true"></a>summary_stats &lt;-<span class="st"> </span><span class="kw">list</span>(</span>
+<span id="cb367-3"><a href="#cb367-3" aria-hidden="true"></a>  <span class="dt">total_genes =</span> <span class="kw">nrow</span>(merged_exprs),</span>
+<span id="cb367-4"><a href="#cb367-4" aria-hidden="true"></a>  <span class="dt">total_samples =</span> <span class="kw">ncol</span>(merged_exprs),</span>
+<span id="cb367-5"><a href="#cb367-5" aria-hidden="true"></a>  <span class="dt">filtered_samples =</span> <span class="kw">ncol</span>(exprs_corrected),</span>
+<span id="cb367-6"><a href="#cb367-6" aria-hidden="true"></a>  <span class="dt">difexp_genes_all =</span> <span class="kw">nrow</span>(difexp),</span>
+<span id="cb367-7"><a href="#cb367-7" aria-hidden="true"></a>  <span class="dt">difexp_genes_filtered =</span> <span class="kw">nrow</span>(difexp_filtered),</span>
+<span id="cb367-8"><a href="#cb367-8" aria-hidden="true"></a>  <span class="dt">genes_on_network =</span> <span class="kw">sum</span>(difexp_clustered<span class="op">$</span>on_graph),</span>
+<span id="cb367-9"><a href="#cb367-9" aria-hidden="true"></a>  <span class="dt">num_clusters =</span> <span class="kw">length</span>(<span class="kw">unique</span>(difexp_clustered<span class="op">$</span>cluster[<span class="op">!</span><span class="kw">is.na</span>(difexp_clustered<span class="op">$</span>cluster)])),</span>
+<span id="cb367-10"><a href="#cb367-10" aria-hidden="true"></a>  <span class="dt">avg_cluster_size =</span> <span class="kw">mean</span>(<span class="kw">table</span>(difexp_clustered<span class="op">$</span>cluster)),</span>
+<span id="cb367-11"><a href="#cb367-11" aria-hidden="true"></a>  <span class="dt">total_enrichment_terms =</span> <span class="kw">sum</span>(enrichment_summary<span class="op">$</span>enrichment_terms),</span>
+<span id="cb367-12"><a href="#cb367-12" aria-hidden="true"></a>  <span class="dt">avg_coverage =</span> <span class="kw">mean</span>(enrichment_summary<span class="op">$</span>coverage)</span>
+<span id="cb367-13"><a href="#cb367-13" aria-hidden="true"></a>)</span>
+<span id="cb367-14"><a href="#cb367-14" aria-hidden="true"></a></span>
+<span id="cb367-15"><a href="#cb367-15" aria-hidden="true"></a><span class="co"># Write summary</span></span>
+<span id="cb367-16"><a href="#cb367-16" aria-hidden="true"></a><span class="kw">write_summary</span>(</span>
+<span id="cb367-17"><a href="#cb367-17" aria-hidden="true"></a>  <span class="dt">stats =</span> summary_stats,</span>
+<span id="cb367-18"><a href="#cb367-18" aria-hidden="true"></a>  <span class="dt">output_file =</span> <span class="kw">file.path</span>(output_dirs<span class="op">$</span>reports, <span class="st">&quot;pipeline_summary.csv&quot;</span>)</span>
+<span id="cb367-19"><a href="#cb367-19" aria-hidden="true"></a>)</span></code></pre></div>
+<pre><code>## Saved summary: /home/shivers/a/r/igea-r/scripts/integrative-gene-expression-analysis/output/reports/pipeline_summary.csv</code></pre>
+<div class="sourceCode" id="cb369"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb369-1"><a href="#cb369-1" aria-hidden="true"></a><span class="co"># Print summary</span></span>
+<span id="cb369-2"><a href="#cb369-2" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;</span><span class="ch">\n</span><span class="st">=== Pipeline Summary ===</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
 <pre><code>## 
 ## === Pipeline Summary ===</code></pre>
-<div class="sourceCode" id="cb337"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb337-1"><a href="#cb337-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;Total genes analyzed:&quot;</span>, summary_stats<span class="op">$</span>total_genes, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
-<pre><code>## Total genes analyzed: 13366</code></pre>
-<div class="sourceCode" id="cb339"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb339-1"><a href="#cb339-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;Total samples:&quot;</span>, summary_stats<span class="op">$</span>total_samples, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
-<pre><code>## Total samples: 97</code></pre>
-<div class="sourceCode" id="cb341"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb341-1"><a href="#cb341-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;Filtered samples:&quot;</span>, summary_stats<span class="op">$</span>filtered_samples, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
-<pre><code>## Filtered samples: 97</code></pre>
-<div class="sourceCode" id="cb343"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb343-1"><a href="#cb343-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;</span><span class="ch">\n</span><span class="st">Differential Expression:</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb371"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb371-1"><a href="#cb371-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;Total genes analyzed:&quot;</span>, summary_stats<span class="op">$</span>total_genes, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<pre><code>## Total genes analyzed: 8328</code></pre>
+<div class="sourceCode" id="cb373"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb373-1"><a href="#cb373-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;Total samples:&quot;</span>, summary_stats<span class="op">$</span>total_samples, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<pre><code>## Total samples: 73</code></pre>
+<div class="sourceCode" id="cb375"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb375-1"><a href="#cb375-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;Filtered samples:&quot;</span>, summary_stats<span class="op">$</span>filtered_samples, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<pre><code>## Filtered samples: 73</code></pre>
+<div class="sourceCode" id="cb377"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb377-1"><a href="#cb377-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;</span><span class="ch">\n</span><span class="st">Differential Expression:</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
 <pre><code>## 
 ## Differential Expression:</code></pre>
-<div class="sourceCode" id="cb345"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb345-1"><a href="#cb345-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;  All genes:&quot;</span>, summary_stats<span class="op">$</span>difexp_genes_all, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
-<pre><code>##   All genes: 13364</code></pre>
-<div class="sourceCode" id="cb347"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb347-1"><a href="#cb347-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;  Filtered genes:&quot;</span>, summary_stats<span class="op">$</span>difexp_genes_filtered, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
-<pre><code>##   Filtered genes: 13364</code></pre>
-<div class="sourceCode" id="cb349"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb349-1"><a href="#cb349-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;</span><span class="ch">\n</span><span class="st">Network Clustering:</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb379"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb379-1"><a href="#cb379-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;  All genes:&quot;</span>, summary_stats<span class="op">$</span>difexp_genes_all, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<pre><code>##   All genes: 8328</code></pre>
+<div class="sourceCode" id="cb381"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb381-1"><a href="#cb381-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;  Filtered genes:&quot;</span>, summary_stats<span class="op">$</span>difexp_genes_filtered, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<pre><code>##   Filtered genes: 8328</code></pre>
+<div class="sourceCode" id="cb383"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb383-1"><a href="#cb383-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;</span><span class="ch">\n</span><span class="st">Network Clustering:</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
 <pre><code>## 
 ## Network Clustering:</code></pre>
-<div class="sourceCode" id="cb351"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb351-1"><a href="#cb351-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;  Genes on network:&quot;</span>, summary_stats<span class="op">$</span>genes_on_network, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
-<pre><code>##   Genes on network: 13088</code></pre>
-<div class="sourceCode" id="cb353"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb353-1"><a href="#cb353-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;  Number of clusters:&quot;</span>, summary_stats<span class="op">$</span>num_clusters, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
-<pre><code>##   Number of clusters: 12</code></pre>
-<div class="sourceCode" id="cb355"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb355-1"><a href="#cb355-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;  Average cluster size:&quot;</span>, <span class="kw">round</span>(summary_stats<span class="op">$</span>avg_cluster_size, <span class="dv">1</span>), <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
-<pre><code>##   Average cluster size: 1090.7</code></pre>
-<div class="sourceCode" id="cb357"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb357-1"><a href="#cb357-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;</span><span class="ch">\n</span><span class="st">Enrichment:</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb385"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb385-1"><a href="#cb385-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;  Genes on network:&quot;</span>, summary_stats<span class="op">$</span>genes_on_network, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<pre><code>##   Genes on network: 8368</code></pre>
+<div class="sourceCode" id="cb387"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb387-1"><a href="#cb387-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;  Number of clusters:&quot;</span>, summary_stats<span class="op">$</span>num_clusters, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<pre><code>##   Number of clusters: 15</code></pre>
+<div class="sourceCode" id="cb389"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb389-1"><a href="#cb389-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;  Average cluster size:&quot;</span>, <span class="kw">round</span>(summary_stats<span class="op">$</span>avg_cluster_size, <span class="dv">1</span>), <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<pre><code>##   Average cluster size: 557.9</code></pre>
+<div class="sourceCode" id="cb391"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb391-1"><a href="#cb391-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;</span><span class="ch">\n</span><span class="st">Enrichment:</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
 <pre><code>## 
 ## Enrichment:</code></pre>
-<div class="sourceCode" id="cb359"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb359-1"><a href="#cb359-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;  Total enrichment terms:&quot;</span>, summary_stats<span class="op">$</span>total_enrichment_terms, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
-<pre><code>##   Total enrichment terms: 2697</code></pre>
-<div class="sourceCode" id="cb361"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb361-1"><a href="#cb361-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;  Average coverage:&quot;</span>, <span class="kw">round</span>(summary_stats<span class="op">$</span>avg_coverage <span class="op">*</span><span class="st"> </span><span class="dv">100</span>, <span class="dv">1</span>), <span class="st">&quot;%</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
-<pre><code>##   Average coverage: 25 %</code></pre>
-<div class="sourceCode" id="cb363"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb363-1"><a href="#cb363-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;========================</span><span class="ch">\n\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb393"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb393-1"><a href="#cb393-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;  Total enrichment terms:&quot;</span>, summary_stats<span class="op">$</span>total_enrichment_terms, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<pre><code>##   Total enrichment terms: 2222</code></pre>
+<div class="sourceCode" id="cb395"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb395-1"><a href="#cb395-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;  Average coverage:&quot;</span>, <span class="kw">round</span>(summary_stats<span class="op">$</span>avg_coverage <span class="op">*</span><span class="st"> </span><span class="dv">100</span>, <span class="dv">1</span>), <span class="st">&quot;%</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<pre><code>##   Average coverage: 21.7 %</code></pre>
+<div class="sourceCode" id="cb397"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb397-1"><a href="#cb397-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;========================</span><span class="ch">\n\n</span><span class="st">&quot;</span>)</span></code></pre></div>
 <pre><code>## ========================</code></pre>
 <div id="session-information" class="section level2">
 <h2>Session Information</h2>
-<div class="sourceCode" id="cb365"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb365-1"><a href="#cb365-1" aria-hidden="true"></a><span class="kw">print_session_info</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb399"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb399-1"><a href="#cb399-1" aria-hidden="true"></a><span class="kw">print_session_info</span>()</span></code></pre></div>
 <pre><code>## 
 ## === Session Information ===</code></pre>
 <pre><code>## R version 4.5.0 (2025-04-11)
@@ -2593,7 +2634,7 @@ div.tocify {
 </div>
 <div id="outputs" class="section level1">
 <h1>Outputs</h1>
-<p>All results have been saved to: <strong>/home/shivers/a/r/igea-r/scripts/exprs_integration_pipeline/output</strong></p>
+<p>All results have been saved to: <strong>/home/shivers/a/r/igea-r/scripts/integrative-gene-expression-analysis/output</strong></p>
 <ul>
 <li><strong>Corrected expression data</strong>: <code>exprs_corrected.tsv</code></li>
 <li><strong>Phenodata</strong>: <code>pdata_aligned.tsv</code></li>
@@ -2605,7 +2646,7 @@ div.tocify {
 </ul>
 <p>For cluster-specific enrichment results, see the <code>clusters/</code> directory where each cluster has its own subdirectory with: - <code>cluster_genes.csv</code> - Genes in the cluster - <code>cluster_enrichment.csv</code> - Enrichment results - <code>cluster_to_revigo.tsv</code> - Input for REVIGO analysis</p>
 <hr />
-<p><strong>Pipeline completed successfully!</strong> 2025-10-05 13:51:37.989782</p>
+<p><strong>Pipeline completed successfully!</strong> 2025-10-09 23:34:20.506993</p>
 </div>
 
 

@@ -8,6 +8,10 @@
 #' @author Expression Integration Pipeline
 #' @date 2025-10-05
 
+# Set working directory (RStudio only - commented out for command line)
+# setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+# getwd()
+
 cat("\n=== Separate Analyses Pipeline ===\n\n")
 
 # Load required libraries
@@ -39,7 +43,7 @@ string_db <- initialize_stringdb(
 
 # Storage for results
 all_results <- list()
-
+names(config$separate_analyses)1
 # Loop through each separate analysis
 for (analysis_id in names(config$separate_analyses)) {
 
@@ -55,40 +59,82 @@ for (analysis_id in names(config$separate_analyses)) {
   output_base <- file.path(config$paths$output, analysis$output_subdir)
   output_dirs <- create_output_dirs(output_base)
 
-  # ===== 1. DATA MERGING =====
-  cat("\n--- Step 1: Data Merging ---\n")
+  # ===== 1. FILTER PHENODATA =====
+  cat("\n--- Step 1: Filter Phenodata (Analysis-Specific) ---\n")
 
-  merged_exprs <- merge_expression_data(
-    mapped_path = config$paths$mapped_data,
-    pattern = config$merging$pattern
-  )
-
-  # Load phenodata
+  # Load full phenodata
   pdata <- read.csv(config$paths$phenodata, stringsAsFactors = FALSE)
+  cat("Total samples in phenodata:", nrow(pdata), "\n")
 
-  # Align phenodata
-  pdata_aligned <- align_phenodata(
-    mrgd = merged_exprs,
+  # Filter phenodata by analysis criteria
+  pdata_filtered <- filter_phenodata(
     pdata = pdata,
-    sample_col = config$merging$sample_column
-  )
-
-  # ===== 2. FILTERING =====
-  cat("\n--- Step 2: Filtering (Analysis-Specific) ---\n")
-
-  filtered <- filter_samples(
-    mrgd = merged_exprs,
-    pdata = pdata_aligned,
     filters = analysis$filtering
   )
 
-  merged_exprs <- filtered$exprs
-  pdata_aligned <- filtered$pdata
+  # Apply dataset exclusions
+  all_exclusions <- c()
+  if (!is.null(config$global_exclusions$datasets)) {
+    all_exclusions <- c(all_exclusions, config$global_exclusions$datasets)
+  }
+  if (!is.null(analysis$exclude_datasets)) {
+    all_exclusions <- c(all_exclusions, analysis$exclude_datasets)
+  }
+  all_exclusions <- unique(all_exclusions)
 
-  cat("Filtered to:", ncol(merged_exprs), "samples\n")
+  if (length(all_exclusions) > 0) {
+    cat("\nExcluding datasets:", paste(all_exclusions, collapse = ", "), "\n")
+    batch_col <- analysis$batch_correction$batch_column
+    before_count <- nrow(pdata_filtered)
+    pdata_filtered <- pdata_filtered[!(pdata_filtered[[batch_col]] %in% all_exclusions), ]
+    excluded_count <- before_count - nrow(pdata_filtered)
+    cat("Removed", excluded_count, "samples from excluded datasets\n")
+  }
 
-  # ===== 3. BATCH CORRECTION =====
-  cat("\n--- Step 3: Batch Correction ---\n")
+  # ===== 2. IDENTIFY DATASETS =====
+  cat("\n--- Step 2: Identify Required Datasets ---\n")
+
+  required_datasets <- identify_datasets(
+    pdata_filtered = pdata_filtered,
+    batch_col = analysis$batch_correction$batch_column
+  )
+
+  # Print metadata summary before merging
+  print_metadata_summary(
+    pdata_filtered = pdata_filtered,
+    batch_col = analysis$batch_correction$batch_column,
+    group_col = "Gestational.Age.Category"
+  )
+
+  # ===== 3. MERGE SELECTED DATASETS =====
+  cat("\n--- Step 3: Merge Expression Data from Selected Datasets ---\n")
+
+  merged_exprs <- merge_selected_datasets(
+    mapped_path = config$paths$mapped_data,
+    datasets = required_datasets,
+    pattern = config$merging$pattern
+  )
+
+  # ===== 4. SUBSET EXPRESSION DATA =====
+  cat("\n--- Step 4: Subset Expression Data by Filtered Samples ---\n")
+
+  # Align phenodata with merged expression
+  pdata_aligned <- pdata_filtered[
+    make.names(pdata_filtered[[config$merging$sample_column]]) %in% colnames(merged_exprs),
+  ]
+
+  # Subset expression to only include filtered samples
+  merged_exprs <- subset_expression_by_phenodata(
+    mrgd = merged_exprs,
+    pdata_filtered = pdata_aligned,
+    sample_col = config$merging$sample_column
+  )
+
+  cat("Final dataset for analysis:", ncol(merged_exprs), "samples from",
+      length(required_datasets), "datasets\n")
+
+  # ===== 5. BATCH CORRECTION =====
+  cat("\n--- Step 5: Batch Correction ---\n")
 
   # Add trimester variable
   pdata_aligned <- add_trimester_variable(pdata_aligned)
@@ -107,8 +153,8 @@ for (analysis_id in names(config$separate_analyses)) {
   save_data(exprs_corrected, file.path(output_base, "exprs_corrected.tsv"))
   save_data(pdata_aligned, file.path(output_base, "pdata_aligned.tsv"))
 
-  # ===== 4. PCA =====
-  cat("\n--- Step 4: PCA Analysis ---\n")
+  # ===== 6. PCA =====
+  cat("\n--- Step 6: PCA Analysis ---\n")
 
   pca <- perform_pca(exprs_corrected, center = config$pca$center, scale = config$pca$scale)
 
@@ -120,8 +166,8 @@ for (analysis_id in names(config$separate_analyses)) {
     prefix = paste0("pca_", analysis_id)
   )
 
-  # ===== 5. DIFFERENTIAL EXPRESSION =====
-  cat("\n--- Step 5: Differential Expression ---\n")
+  # ===== 7. DIFFERENTIAL EXPRESSION =====
+  cat("\n--- Step 7: Differential Expression ---\n")
 
   de_results <- differential_expression(
     exprs = exprs_corrected,
@@ -153,8 +199,8 @@ for (analysis_id in names(config$separate_analyses)) {
 
   cat("Significant genes:", nrow(difexp_filtered), "\n")
 
-  # ===== 6. NETWORK CLUSTERING =====
-  cat("\n--- Step 6: Network Clustering ---\n")
+  # ===== 8. NETWORK CLUSTERING =====
+  cat("\n--- Step 8: Network Clustering ---\n")
 
   if (nrow(difexp_filtered) > 0) {
     # Map to STRING
@@ -194,8 +240,8 @@ for (analysis_id in names(config$separate_analyses)) {
     difexp_clustered$cluster <- NA
   }
 
-  # ===== 7. ENRICHMENT =====
-  cat("\n--- Step 7: Enrichment Analysis ---\n")
+  # ===== 9. ENRICHMENT =====
+  cat("\n--- Step 9: Enrichment Analysis ---\n")
 
   if (nrow(difexp_clustered) > 0 && !all(is.na(difexp_clustered$cluster))) {
     enrichment_summary <- cluster_enrichment(

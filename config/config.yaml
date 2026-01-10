@@ -30,7 +30,7 @@ filtering:
 # Batch Correction Parameters
 batch_correction:
   batch_column: "secondaryaccession"   # Column defining batches
-  model_formula: "~trim_term"          # R formula for biological covariates
+  model_formula: "~trim_term + Combined.Fetus.Sex"  # R formula for biological covariates
   par_prior: TRUE                      # Use parametric priors
   prior_plots: FALSE                   # Generate diagnostic plots
 
@@ -40,7 +40,7 @@ pca:
   scale: FALSE
   color_by:                            # Variables for PCA coloring
     - "trim_term"
-    - "estimated_sex"
+    - "Combined.Fetus.Sex"             # Now all samples have sex data
     - "secondaryaccession"
     - "Biological.Specimen"
   n_pcs: 20                           # Number of PCs for scree plot
@@ -48,7 +48,7 @@ pca:
 
 # Differential Expression Parameters
 differential_expression:
-  design_formula: "~0 + trim_term"    # Design matrix formula
+  design_formula: "~0 + trim_term + Combined.Fetus.Sex"  # Design matrix formula
   contrasts:                           # Contrasts to test
     - "trim_termSecond Trimester - trim_termFirst Trimester"
     - "trim_termTerm - trim_termSecond Trimester"

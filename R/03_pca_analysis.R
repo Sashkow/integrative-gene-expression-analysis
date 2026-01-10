@@ -28,8 +28,9 @@ perform_pca <- function(exprs, center = TRUE, scale = FALSE) {
   pca <- prcomp(t(exprs_clean), center = center, scale. = scale)
 
   # Calculate variance explained
-  var_explained <- summary(pca)$importance[2, 1:10] * 100
-  message("Variance explained by first 10 PCs: ",
+  n_pcs <- min(10, ncol(pca$x))
+  var_explained <- summary(pca)$importance[2, 1:n_pcs] * 100
+  message("Variance explained by first ", n_pcs, " PCs: ",
           paste(round(var_explained, 1), collapse = "%, "), "%")
 
   return(pca)
@@ -112,11 +113,12 @@ plot_pca_metadata <- function(pca, pdata, variables,
 #' Create scree plot
 #'
 #' @param pca PCA object
-#' @param output_dir Output directory
+#' @param output_dir Output directory (for SVG)
+#' @param output_dir_png Output directory for PNG (optional)
 #' @param prefix Filename prefix
 #' @param n_pcs Number of PCs to show (default: 20)
 #' @export
-plot_pca_scree <- function(pca, output_dir, prefix = "pca", n_pcs = 20) {
+plot_pca_scree <- function(pca, output_dir, output_dir_png = NULL, prefix = "pca", n_pcs = 20) {
 
   library(factoextra)
 
@@ -127,12 +129,21 @@ plot_pca_scree <- function(pca, output_dir, prefix = "pca", n_pcs = 20) {
   p <- fviz_eig(pca, addlabels = TRUE, ncp = n_pcs,
                 title = "Scree Plot - Variance Explained")
 
-  filename <- file.path(output_dir, paste0(prefix, "_scree.svg"))
-  svg(filename, width = 12, height = 8)
+  filename_svg <- file.path(output_dir, paste0(prefix, "_scree.svg"))
+  svg(filename_svg, width = 12, height = 8)
   print(p)
   dev.off()
 
-  message("Saved: ", filename)
+  if (!is.null(output_dir_png)) {
+    filename_png <- file.path(output_dir_png, paste0(prefix, "_scree.png"))
+  } else {
+    filename_png <- file.path(output_dir, paste0(prefix, "_scree.png"))
+  }
+  png(filename_png, width = 12, height = 8, units = "in", res = 300)
+  print(p)
+  dev.off()
+
+  message("Saved: ", filename_svg, " and ", filename_png)
 
   invisible(NULL)
 }

@@ -1,6 +1,11 @@
 # Expression Integration Pipeline Configuration - Separate Analyses
 # This config runs separate analyses for different trimester comparisons
 
+# Global Dataset Exclusions
+# Datasets listed here will be excluded from ALL analyses
+global_exclusions:
+  datasets: ["GSE43942", "GSE74341"]  # No mapped expression data files
+
 # Project Information
 project:
   name: "Trimester Comparison Analysis"
@@ -31,22 +36,26 @@ separate_analyses:
     name: "First vs Second Trimester"
     output_subdir: "trim_1_2"
 
+    # Dataset exclusions (specific to this analysis)
+    # These will be added to global_exclusions
+    exclude_datasets: ["GSE43942", "GSE74341"]  # No mapped expression data files
+
     # Filtering - only samples from First and Second trimester
     filtering:
-      Biological.Specimen: ["Placenta"]
+      Biological.Specimen: ["Placenta", "Chorionic villi"]
       Diagnosis: ["Healthy"]
       Gestational.Age.Category: ["First Trimester", "Second Trimester"]
 
     # Batch correction
     batch_correction:
       batch_column: "secondaryaccession"
-      model_formula: "~trim_term"
+      model_formula: "~trim_term + Combined.Fetus.Sex"
       par_prior: TRUE
       prior_plots: FALSE
 
     # Differential expression
     differential_expression:
-      design_formula: "~0 + trim_term"
+      design_formula: "~0 + trim_term + Combined.Fetus.Sex"
       contrasts:
         - "trim_termSecond Trimester - trim_termFirst Trimester"
       decide_method: "global"
@@ -58,22 +67,26 @@ separate_analyses:
     name: "Second Trimester vs Term"
     output_subdir: "trim_2_3"
 
+    # Dataset exclusions (specific to this analysis)
+    # Exclude datasets with no Second Trimester samples
+    exclude_datasets: ["GSE43942", "GSE74341"]  # No mapped expression data files
+
     # Filtering - only samples from Second trimester and Term
     filtering:
-      Biological.Specimen: ["Placenta"]
+      Biological.Specimen: ["Placenta", "Chorionic villi"]
       Diagnosis: ["Healthy"]
       Gestational.Age.Category: ["Second Trimester", "Term"]
 
     # Batch correction
     batch_correction:
       batch_column: "secondaryaccession"
-      model_formula: "~trim_term"
+      model_formula: "~trim_term + Combined.Fetus.Sex"
       par_prior: TRUE
       prior_plots: FALSE
 
     # Differential expression
     differential_expression:
-      design_formula: "~0 + trim_term"
+      design_formula: "~0 + trim_term + Combined.Fetus.Sex"
       contrasts:
         - "trim_termTerm - trim_termSecond Trimester"
       decide_method: "global"
@@ -86,7 +99,7 @@ pca:
   scale: FALSE
   color_by:
     - "trim_term"
-    - "estimated_sex"
+    - "Combined.Fetus.Sex"  # Now all samples have sex data
     - "secondaryaccession"
   n_pcs: 20
   biplot_genes: 10
@@ -95,7 +108,7 @@ pca:
 stringdb:
   version: "11"
   species: 9606
-  score_threshold: 400
+  score_threshold: 100
   use_cache: TRUE
   cache_dir: "data/stringdb_cache"
 

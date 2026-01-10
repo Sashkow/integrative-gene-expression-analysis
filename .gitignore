@@ -4,10 +4,13 @@ data/mapped/
 data/merged/
 data/temp/
 data/stringdb_cache/
+data/preprocessed_illumina/
+data/phenodata/old/
 
 # But keep phenodata and examples
 !data/phenodata/
-!data/phenodata/example*
+!data/phenodata/example*.csv
+!data/README.md
 
 # Output files
 output/
@@ -35,3 +38,5 @@ Thumbs.db
 # Keep .gitkeep and example files
 !.gitkeep
 !*example*
+
+metadata_coverage_detailed.csv

@@ -1,0 +1,80 @@
+# Configuration for Testing Term (2_3) Datasets
+# This config is for test_term_datasets.R script
+
+# Project Information
+project:
+  name: "Term Dataset Testing (2_3)"
+  description: "Test which Term dataset gives most DE genes when added to baseline"
+  author: "Olexandr Lykhenko"
+  date: "2025-01-08"
+
+# Input Paths
+paths:
+  mapped_data: "/home/shivers/a/r/igea-r/scripts/integrative-gene-expression-analysis/data/mapped"
+  phenodata: "/home/shivers/a/r/igea-r/scripts/integrative-gene-expression-analysis/data/phenodata/samples.csv"
+  output: "/home/shivers/a/r/igea-r/scripts/integrative-gene-expression-analysis/output/test_term_datasets"
+
+# Data Merging Parameters
+merging:
+  pattern: ".tsv"
+  sample_column: "arraydatafile_exprscolumnnames"
+
+# Baseline Datasets (core datasets with both Second Trimester and Term samples)
+baseline:
+  datasets: ["GSE9984", "GSE37901", "GSE22490", "GSE100051"]
+  description: "Core datasets with Second Trimester and Term samples"
+
+# Term Datasets to Test (additional datasets)
+term_datasets:
+  datasets: ["GSE55439", "GSE73374", "GSE73685", "GSE35574"]
+  description: "Additional datasets to test one by one with baseline"
+
+# Testing Mode
+testing:
+  test_all_subsets: true
+  description: |
+    If false: Test each Term dataset individually added to baseline
+    If true: Test all possible combinations of Term datasets (2^n combinations)
+
+# Global Exclusions
+global_exclusions:
+  datasets: ["GSE43942", "GSE74341", "GSE6573"]
+  reason: "GSE43942, GSE74341: No mapped expression data files; GSE6573: Only 2 healthy placenta samples"
+
+# Filtering
+filtering:
+  Biological.Specimen: ["Placenta", "Chorionic villi"]
+  Diagnosis: ["Healthy"]
+  Gestational.Age.Category: ["Second Trimester", "Term"]
+
+# Batch Correction Parameters
+batch_correction:
+  batch_column: "secondaryaccession"
+  model_formula: "~trim_term + Combined.Fetus.Sex"
+  par_prior: TRUE
+  prior_plots: FALSE
+
+# Differential Expression Parameters
+differential_expression:
+  design_formula: "~0 + trim_term + Combined.Fetus.Sex"
+  contrasts:
+    - "trim_termTerm - trim_termSecond Trimester"
+  decide_method: "global"
+  logfc_threshold: 1
+  pvalue_threshold: 0.05
+  filter_by_stringdb: true
+  normalize_fdr_to_baseline: true
+
+# Single Dataset Analysis Parameters
+single_dataset_analysis:
+  enabled: TRUE
+  min_samples_per_group: 3
+
+# Output Settings
+output:
+  save_gene_lists: TRUE
+  save_summary_tables: TRUE
+  gene_list_prefix: "term_"
+  summary_file: "term_dataset_comparison_summary.csv"
+  single_dataset_summary_file: "term_single_dataset_summary.csv"
+  max_genes_to_print: 50

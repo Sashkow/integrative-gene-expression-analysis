@@ -1,0 +1,86 @@
+# Configuration for Testing First Trimester Datasets
+# This config is for test_first_datasets.R script
+
+# Project Information
+project:
+  name: "First Trimester Dataset Testing"
+  description: "Test which First Trimester dataset gives most DE genes when added to baseline"
+  author: "Olexandr Lykhenko"
+  date: "2025-10-14"
+
+# Input Paths
+paths:
+  mapped_data: "/home/shivers/a/r/igea-r/scripts/integrative-gene-expression-analysis/data/mapped"
+  phenodata: "/home/shivers/a/r/igea-r/scripts/integrative-gene-expression-analysis/data/phenodata/samples.csv"
+  output: "/home/shivers/a/r/igea-r/scripts/integrative-gene-expression-analysis/output/ye"
+
+# Data Merging Parameters
+merging:
+  pattern: ".tsv"
+  sample_column: "arraydatafile_exprscolumnnames"
+
+# Baseline Datasets (old baseline with 4 datasets)
+baseline:
+  datasets: ["GSE122214", "GSE22490", "GSE37901", "GSE9984"]
+  description: "Old baseline datasets (GSE122214, GSE22490, GSE37901, GSE9984)"
+
+# First Trimester Datasets to Test (rest of datasets)
+first_trimester_datasets:
+  datasets: ["GSE55439", "GSE93520", "GSE28551", "GSE100051"]
+  description: "Additional datasets to test one by one with baseline"
+
+# Testing Mode
+testing:
+  test_all_subsets: true
+  description: |
+    If false: Test each First Trimester dataset individually added to baseline
+    If true: Test all possible combinations of First Trimester datasets (2^n combinations)
+
+# Global Exclusions
+# These datasets will be excluded from ALL analyses
+global_exclusions:
+  datasets: ["GSE43942", "GSE74341"]
+  reason: "No mapped expression data files"
+
+# Filtering
+filtering:
+  Biological.Specimen: ["Placenta", "Chorionic villi"]
+  Diagnosis: ["Healthy"]
+  Gestational.Age.Category: ["First Trimester", "Second Trimester"]
+
+# Batch Correction Parameters
+batch_correction:
+  batch_column: "secondaryaccession"
+  model_formula: "~trim_term + Combined.Fetus.Sex"
+  par_prior: TRUE
+  prior_plots: FALSE
+
+# Differential Expression Parameters
+differential_expression:
+  design_formula: "~0 + trim_term + Combined.Fetus.Sex"
+  contrasts:
+    - "trim_termSecond Trimester - trim_termFirst Trimester"
+  decide_method: "global"
+  logfc_threshold: 1
+  pvalue_threshold: 0.05
+  filter_by_stringdb: true
+  normalize_fdr_to_baseline: true
+  description: |
+    If filter_by_stringdb is true: Only genes with corresponding proteins in STRING database will be included
+    If false: All genes will be included in output
+    If normalize_fdr_to_baseline is true: FDR values will be recalculated as if all iterations had the same gene count as baseline (makes FDR comparable across iterations)
+
+# Single Dataset Analysis Parameters
+single_dataset_analysis:
+  enabled: TRUE
+  min_samples_per_group: 3
+  description: "Analyze datasets with both trimesters individually"
+
+# Output Settings
+output:
+  save_gene_lists: TRUE
+  save_summary_tables: TRUE
+  gene_list_prefix: "first_"
+  summary_file: "first_dataset_comparison_summary.csv"
+  single_dataset_summary_file: "first_single_dataset_summary.csv"
+  max_genes_to_print: 50

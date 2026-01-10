@@ -40,7 +40,12 @@ bioc_packages <- c(
   "sva",
   "org.Hs.eg.db",
   "STRINGdb",
-  "AnnotationDbi"
+  "AnnotationDbi",
+  "lumi",
+  "ArrayExpress",
+  "illuminaHumanv3.db",
+  "illuminaHumanv4.db",
+  "beadarray"
 )
 
 # Required CRAN packages
@@ -54,7 +59,9 @@ cran_packages <- c(
   "enrichR",
   "writexl",
   "rmarkdown",
-  "knitr"
+  "knitr",
+  "VennDiagram",
+  "readxl"
 )
 
 # Function to check and install packages
