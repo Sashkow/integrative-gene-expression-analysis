@@ -33,7 +33,7 @@ suppressPackageStartupMessages({
 # Define paths
 phenodata_file <- "data/phenodata/samples.csv"
 mapped_dir <- "data/mapped"
-output_dir <- "output/sex_estimation"
+output_dir <- "output/estimate_fetus_sex"
 
 # Create output directory
 dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)

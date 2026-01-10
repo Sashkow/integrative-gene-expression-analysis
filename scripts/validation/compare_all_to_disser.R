@@ -41,7 +41,7 @@ cat("#                    2_3 COMPARISON (Sheet 2)                        #\n")
 cat("######################################################################\n")
 
 summary_2_3 <- run_dissertation_comparison(
-  results_dir = "output/trim_2_3",
+  results_dir = "output/test_term_datasets/archive/2026-01-10_214735/BASELINE",
   disser_file = disser_file,
   disser_sheet = 2,
   output_dir = "output/comparison_2_3_vs_disser",
