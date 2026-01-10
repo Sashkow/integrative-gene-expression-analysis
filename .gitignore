@@ -4,6 +4,7 @@ data/mapped/
 data/merged/
 data/temp/
 data/stringdb_cache/
+notebooks/data/stringdb_cache/
 data/preprocessed_illumina/
 data/preprocessed_operon/
 data/phenodata/old/
