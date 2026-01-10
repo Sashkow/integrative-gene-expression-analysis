@@ -36,17 +36,26 @@ source("R/05_network_clustering.R")
 #' @param difexp Differential expression results data frame
 #' @param string_db STRINGdb object
 #' @param gene_col Column name containing gene symbols (default: "SYMBOL")
+#' @param log_excluded If TRUE, returns list with filtered data and excluded genes
 #' @return Filtered difexp data frame with only STRING-mappable genes
-filter_difexp_by_stringdb <- function(difexp, string_db, gene_col = "SYMBOL") {
+filter_difexp_by_stringdb <- function(difexp, string_db, gene_col = "SYMBOL",
+                                       log_excluded = FALSE) {
 
   if (!gene_col %in% colnames(difexp)) {
     stop("Column ", gene_col, " not found in difexp data")
   }
 
-  # Map to STRING DB
-  difexp_mapped <- string_db$map(difexp, gene_col,
-                                  removeUnmappedRows = TRUE,
-                                  takeFirst = TRUE)
+  # Map to STRING DB (keep unmapped to identify them)
+  difexp_with_mapping <- string_db$map(difexp, gene_col,
+                                        removeUnmappedRows = FALSE,
+                                        takeFirst = TRUE)
+
+  # Identify unmapped genes (no STRING ID assigned)
+  unmapped_mask <- is.na(difexp_with_mapping$STRING_id)
+  excluded_genes <- difexp_with_mapping[[gene_col]][unmapped_mask]
+
+  # Filter to only mapped genes
+  difexp_mapped <- difexp_with_mapping[!unmapped_mask, ]
 
   n_before <- nrow(difexp)
   n_after <- nrow(difexp_mapped)
@@ -55,6 +64,16 @@ filter_difexp_by_stringdb <- function(difexp, string_db, gene_col = "SYMBOL") {
 
   cat("  STRING DB filtering: ", n_before, " -> ", n_after,
       " genes (", pct_retained, "% retained, ", n_lost, " lost)\n", sep = "")
+
+  if (log_excluded && n_lost > 0) {
+    cat("  Excluded genes: ", paste(head(excluded_genes, 20), collapse = ", "),
+        if (n_lost > 20) paste0(" ... and ", n_lost - 20, " more") else "",
+        "\n", sep = "")
+  }
+
+  if (log_excluded) {
+    return(list(filtered = difexp_mapped, excluded = excluded_genes))
+  }
 
   return(difexp_mapped)
 }
@@ -372,8 +391,10 @@ tryCatch({
   # Conditionally filter by STRING DB
   if (filter_by_stringdb) {
     cat("Filtering for STRING DB proteins...\n")
-    difexp_logfc1_final <- filter_difexp_by_stringdb(difexp_logfc1, string_db, gene_col = "SYMBOL")
-    difexp_all_final <- filter_difexp_by_stringdb(difexp_all, string_db, gene_col = "SYMBOL")
+    difexp_logfc1_final <- filter_difexp_by_stringdb(
+      difexp_logfc1, string_db, gene_col = "SYMBOL", log_excluded = TRUE)$filtered
+    difexp_all_final <- filter_difexp_by_stringdb(
+      difexp_all, string_db, gene_col = "SYMBOL")  # Don't log for all genes
 
     n_degs_logfc1_final <- nrow(difexp_logfc1_final)
     cat("✓ DEGs with STRING proteins (|logFC| > 1):", n_degs_logfc1_final, "\n")
@@ -664,8 +685,10 @@ for (test_datasets in datasets_to_test) {
     # Conditionally filter by STRING DB
     if (filter_by_stringdb) {
       cat("Filtering for STRING DB proteins...\n")
-      difexp_logfc1_final <- filter_difexp_by_stringdb(difexp_logfc1, string_db, gene_col = "SYMBOL")
-      difexp_all_final <- filter_difexp_by_stringdb(difexp_all, string_db, gene_col = "SYMBOL")
+      difexp_logfc1_final <- filter_difexp_by_stringdb(
+        difexp_logfc1, string_db, gene_col = "SYMBOL", log_excluded = TRUE)$filtered
+      difexp_all_final <- filter_difexp_by_stringdb(
+        difexp_all, string_db, gene_col = "SYMBOL")  # Don't log for all genes
 
       n_degs_logfc1_final <- nrow(difexp_logfc1_final)
       cat("✓ DEGs with STRING proteins (|logFC| > 1):", n_degs_logfc1_final, "\n")
