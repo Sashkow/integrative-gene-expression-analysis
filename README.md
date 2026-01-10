@@ -17,7 +17,7 @@ A comprehensive R pipeline for integrating gene expression data from multiple st
 
 ```
 integrative-gene-expression-analysis/
-├── R/                                     # Core pipeline modules
+├── R/                                     # Core pipeline modules (source these)
 │   ├── 01_data_merging.R                  # Merge expression matrices
 │   ├── 02_batch_correction.R              # ComBat batch correction
 │   ├── 03_pca_analysis.R                  # PCA and visualization
@@ -28,12 +28,23 @@ integrative-gene-expression-analysis/
 │   ├── config.R                           # Configuration management
 │   └── utils.R                            # Utility functions
 │
-├── preprocessing_illumina/                # Illumina preprocessing pipeline
-│   ├── preprocess_illumina_simple.R       # Simple Illumina preprocessing
-│   └── preprocess_illumina_from_sample_tables.R  # Batch preprocessing
+├── scripts/                               # Runnable analysis scripts
+│   ├── analysis/                          # Main analysis scripts
+│   │   ├── run_separate_analyses.R        # Run trim_1_2 and trim_2_3 analyses
+│   │   ├── test_first_datasets.R          # Test dataset combinations (1_2)
+│   │   └── test_term_datasets.R           # Test dataset combinations (2_3)
+│   ├── validation/                        # Validation and comparison scripts
+│   │   └── compare_all_to_disser.R        # Compare results to dissertation
+│   ├── preprocessing/                     # Data preprocessing
+│   │   ├── preprocessing_illumina/        # Illumina array preprocessing
+│   │   └── preprocessing_operon/          # Operon array preprocessing
+│   └── visualization/                     # Plotting scripts
 │
-├── config/
-│   └── config.yaml                        # Pipeline configuration (EDIT THIS)
+├── config/                                # YAML configuration files
+│   ├── config.yaml                        # Main pipeline config
+│   ├── config_separate_analyses.yaml      # Trimester comparison config
+│   ├── config_test_first_datasets.yaml    # First trimester testing config
+│   └── config_test_term_datasets.yaml     # Term testing config
 │
 ├── notebooks/
 │   └── pipeline.Rmd                       # Main analysis notebook (RUN THIS)
@@ -41,32 +52,22 @@ integrative-gene-expression-analysis/
 ├── data/
 │   ├── mapped/                            # INPUT: Mapped expression files
 │   ├── phenodata/                         # INPUT: Sample metadata
-│   │   ├── samples.csv                    # Main sample metadata
-│   │   ├── example_phenodata.csv          # Example phenodata format
-│   │   └── sample_GSE*.csv                # Dataset-specific metadata
+│   │   └── samples.csv                    # Main sample metadata
 │   ├── raw/                               # Raw downloaded data
-│   │   └── raw_illumina/                  # Raw Illumina data
-│   ├── preprocessed_illumina/             # Preprocessed Illumina data
-│   ├── merged/                            # Merged expression data
-│   ├── stringdb_cache/                    # STRING database cache
-│   └── temp/                              # Temporary files
+│   └── stringdb_cache/                    # STRING database cache
 │
-├── output/                                # OUTPUT: All results
-│   ├── difexp/                            # Differential expression results
-│   ├── clusters/                          # Network clustering results
-│   ├── enrichment/                        # Enrichment summaries
-│   ├── plots/                             # All visualizations
-│   ├── reports/                           # Summary reports
+├── output/                                # OUTPUT: All results (gitignored)
+│   ├── test_first_datasets/               # First trimester dataset testing
+│   ├── test_term_datasets/                # Term dataset testing
 │   ├── trim_1_2/                          # First vs Second trimester analysis
-│   ├── trim_2_3/                          # Second vs Third trimester analysis
-│   └── comparison/                        # Cross-analysis comparisons
+│   └── trim_2_3/                          # Second vs Third trimester analysis
 │
+├── one_off_scripts/                       # Temporary/debug scripts (gitignored)
 ├── tests/                                 # Test scripts
-├── docs/                                  # Additional documentation
 │
 ├── setup.R                                # Setup script (RUN FIRST)
-├── check_metadata_coverage_enhanced.R     # Enhanced metadata validation
-├── run_separate_analyses.R                # Run separate trimester analyses
+├── install_packages.R                     # Install required packages
+├── CLAUDE.md                              # Claude Code guidance
 └── README.md                              # This file
 ```
 
@@ -408,25 +409,28 @@ For questions or issues, please open an issue in the repository or contact the m
 
 ## Recent Updates
 
+### 2026-01-10: Project Reorganization
+- **Reorganized project structure**
+  - Moved scripts to `scripts/` subfolders (analysis, validation, preprocessing, visualization)
+  - Added `one_off_scripts/` for temporary/debug scripts (gitignored)
+  - Output folders now match script names
+- **Dataset testing improvements**
+  - Added `test_first_datasets.R` and `test_term_datasets.R` for testing dataset combinations
+  - Scripts now archive previous output before overwriting
+  - Added STRING DB excluded genes logging
+- **Added CLAUDE.md** for Claude Code guidance
+
 ### 2025-10-16: Illumina Preprocessing & Metadata Validation
-- **Added Illumina preprocessing pipeline** (`preprocessing_illumina/`)
+- **Added Illumina preprocessing pipeline** (`scripts/preprocessing/preprocessing_illumina/`)
   - Download raw data from GEO/ArrayExpress
   - Background correction and quantile normalization
   - Probe-to-gene mapping using max-mean strategy
-  - Annotation database version checking
 - **Metadata validation improvements**
   - Enhanced check script (`check_metadata_coverage_enhanced.R`)
-  - Column name matching validation (expression file vs metadata)
-  - Fixed GSE93520 metadata issues
-  - Added ENTREZID header requirement for preprocessed files
-- **Documentation updates**
-  - Clarified log transformation workflow (offset = min_positive / 10)
-  - Added use case examples
-  - Added performance metrics
-  - Updated project structure
+  - Column name matching validation
 
 ---
 
 **Created**: 2025-10-04
-**Last Updated**: 2025-10-16
-**Version**: 1.1
+**Last Updated**: 2026-01-10
+**Version**: 1.2
