@@ -310,6 +310,10 @@ tryCatch({
 
   cat("Expression matrix:", nrow(merged_exprs), "genes x", ncol(merged_exprs), "samples\n")
 
+  # Recalculate sample counts from aligned phenodata (actual samples in analysis)
+  n_second <- sum(pdata_aligned$Gestational.Age.Category == "Second Trimester", na.rm = TRUE)
+  n_term <- sum(pdata_aligned$Gestational.Age.Category == "Term", na.rm = TRUE)
+
   # Save baseline genes
   baseline_genes_merged <- rownames(merged_exprs)
 
@@ -559,6 +563,11 @@ for (test_datasets in datasets_to_test) {
     )
 
     cat("Expression matrix:", nrow(merged_exprs), "genes x", ncol(merged_exprs), "samples\n")
+
+    # Recalculate sample counts from aligned phenodata (actual samples in analysis)
+    n_second <- sum(pdata_aligned$Gestational.Age.Category == "Second Trimester",
+                    na.rm = TRUE)
+    n_term <- sum(pdata_aligned$Gestational.Age.Category == "Term", na.rm = TRUE)
 
     # Compare genes to baseline
     if (!is.null(baseline_genes_merged)) {
@@ -902,6 +911,11 @@ for (single_ds in datasets_with_both) {
     )
 
     cat("Expression matrix:", nrow(merged_exprs), "genes x", ncol(merged_exprs), "samples\n")
+
+    # Recalculate sample counts from aligned phenodata (actual samples in analysis)
+    n_second <- sum(pdata_aligned$Gestational.Age.Category == "Second Trimester",
+                    na.rm = TRUE)
+    n_term <- sum(pdata_aligned$Gestational.Age.Category == "Term", na.rm = TRUE)
 
     # Add trimester variable
     pdata_aligned <- add_trimester_variable(pdata_aligned)
