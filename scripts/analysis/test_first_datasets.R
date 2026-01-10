@@ -175,8 +175,35 @@ config <- load_config("config/config_test_first_datasets.yaml")
 
 # Create output directory for test iterations
 test_output_dir <- "output/test_first_datasets"
+
+# Archive previous results if directory exists and has content
+if (dir.exists(test_output_dir)) {
+  existing_files <- list.files(test_output_dir, pattern = "^[^archive]",
+                                full.names = FALSE)
+  # Exclude archive folder and log files from check
+  existing_files <- existing_files[!grepl("^archive$|^run_log_", existing_files)]
+
+  if (length(existing_files) > 0) {
+    archive_dir <- file.path(test_output_dir, "archive")
+    dir.create(archive_dir, showWarnings = FALSE, recursive = TRUE)
+
+    # Create timestamped archive folder
+    timestamp <- format(Sys.time(), "%Y-%m-%d_%H%M%S")
+    archive_subdir <- file.path(archive_dir, timestamp)
+    dir.create(archive_subdir, showWarnings = FALSE)
+
+    # Move existing content (except archive folder and logs)
+    for (f in existing_files) {
+      src <- file.path(test_output_dir, f)
+      dst <- file.path(archive_subdir, f)
+      file.rename(src, dst)
+    }
+    cat("Archived previous results to:", archive_subdir, "\n")
+  }
+}
+
 dir.create(test_output_dir, showWarnings = FALSE, recursive = TRUE)
-cat("Created output directory:", test_output_dir, "\n\n")
+cat("Output directory:", test_output_dir, "\n\n")
 
 # Check if STRING DB filtering is enabled
 filter_by_stringdb <- config$differential_expression$filter_by_stringdb
