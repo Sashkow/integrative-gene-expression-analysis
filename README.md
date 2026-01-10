@@ -395,9 +395,8 @@ string_db <- initialize_stringdb(species = 9606, score_threshold = 400)
 If you use this pipeline or database, please cite:
 
 ### This Pipeline
-- Lykhenko O., Frolova A., Obolenska M. (2017) **Creation of gene expression database on preeclampsia-affected human placenta.** bioRxiv. DOI: [10.1101/102012](https://doi.org/10.1101/102012)
-- Lykhenko O., Frolova A., Obolenska M. (2017) **Designing the database for microarray experiments metadata.** bioRxiv. DOI: [10.1101/101956](https://doi.org/10.1101/101956)
-- Obolenska M., Lykhenko O., et al. (2025) **Placental immune factors change during the first half of healthy pregnancy.** bioRxiv. DOI: [10.1101/2025.10.16.682794](https://doi.org/10.1101/2025.10.16.682794)
+- Lykhenko O., Frolova A., Obolenska M. (2021) **Consecutive integration of available microarray data for analysis of differential gene expression in human placenta.** Biotechnologia Acta, 14(1), pp. 38–45. DOI: [10.15407/biotech14.01.38](https://doi.org/10.15407/biotech14.01.38)
+- Lykhenko O., Frolova A., Obolenska M. (2017) **Designing the database for microarray experiments metadata.** IEEE International Young Scientists Forum on Applied Physics and Engineering (YSF). DOI: [10.1109/YSF.2017.8126658](https://doi.org/10.1109/YSF.2017.8126658)
 
 ### Dependencies
 - **limma**: Ritchie ME et al. (2015) Nucleic Acids Research
