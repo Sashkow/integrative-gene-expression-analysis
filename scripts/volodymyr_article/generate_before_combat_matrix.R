@@ -14,10 +14,10 @@ cat("\n=== Generating Before-ComBat Expression Matrix ===\n\n")
 library(yaml)
 
 # Source all modules
-source("R/config.R")
-source("R/utils.R")
-source("R/01_data_merging.R")
-source("R/02_batch_correction.R")
+source("scripts/integrative_analysis/integrative_analysis_disser_pipeline/config.R")
+source("scripts/integrative_analysis/integrative_analysis_disser_pipeline/utils.R")
+source("scripts/integrative_analysis/integrative_analysis_disser_pipeline/01_data_merging.R")
+source("scripts/integrative_analysis/integrative_analysis_disser_pipeline/02_batch_correction.R")
 
 # Load configuration
 config <- load_config("config/config_test_first_datasets.yaml")
