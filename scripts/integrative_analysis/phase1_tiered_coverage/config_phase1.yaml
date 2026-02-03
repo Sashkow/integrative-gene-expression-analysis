@@ -1,0 +1,57 @@
+# Phase 1: Tiered Gene Coverage Analysis Configuration
+# ====================================================
+
+# Input paths
+paths:
+  mapped_data: "data/mapped"           # Directory with expression .tsv files
+  phenodata: "data/phenodata/samples.csv"  # Sample metadata (optional)
+  output: "output/phase1_tiered"       # Output directory
+
+# File matching
+files:
+  pattern: "\\.tsv$"                   # Regex pattern for expression files
+  # Dataset presets (uncomment one):
+  # 1_2 comparison (First vs Second Trimester) - excluding Operon
+  datasets: ["GSE122214", "GSE22490", "GSE37901", "GSE9984", "GSE55439", "GSE93520", "GSE100051"]
+  # 2_3 comparison (Second Trimester vs Term)
+  #datasets: ["GSE9984", "GSE37901", "GSE22490", "GSE100051", "GSE55439", "GSE73374", "GSE73685", "GSE35574"]
+
+# Coverage thresholds
+coverage:
+  # Primary threshold for merging (0-1)
+  threshold: 0.875                     # 87.5% = 7/8 datasets
+
+  # Predefined tiers for reporting
+  tiers:
+    tier1: 1.00                        # 100% - all datasets (8/8)
+    tier2: 0.875                       # 87.5% - 7/8 datasets
+    tier3: 0.50                        # 50% - exploratory (4/8)
+
+# Output options
+output:
+  save_coverage_report: true           # Save gene_coverage.tsv
+  save_presence_matrix: true           # Save presence_matrix.tsv
+  save_summary: true                   # Save summary.txt
+  save_merged: true                    # Save merged expression matrix
+
+  # Merged file naming: merged_{threshold}pct.tsv
+  # e.g., merged_75pct.tsv for threshold=0.75
+
+# Analysis options
+analysis:
+  report_only: false                   # If true, skip merging (faster)
+  compare_thresholds: true             # Compare multiple thresholds in report
+  comparison_thresholds: [1.0, 0.9, 0.85, 0.75, 0.65, 0.5, 0.25]
+
+# Gene filtering
+gene_filter:
+  protein_coding_only: true            # If true, keep only protein-coding genes
+  # Gene types to include (if protein_coding_only is false)
+  # Options: protein-coding, ncRNA, pseudo, snoRNA, snRNA, rRNA, other
+  include_types: ["protein-coding"]
+
+# Logging
+logging:
+  verbose: true                        # Print progress messages
+  save_log: true                       # Save log to file
+  log_file: "phase1_log.txt"           # Log filename (in output dir)

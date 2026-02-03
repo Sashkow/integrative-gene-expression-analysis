@@ -1,0 +1,70 @@
+# Phase 2: Meta-Analysis Configuration
+# =====================================
+
+# Input paths
+paths:
+  mapped_data: "data/mapped"              # Directory with expression .tsv files
+  phenodata: "data/phenodata/samples.csv" # Sample metadata
+  output: "output/phase2_meta"            # Output directory
+
+# File matching
+files:
+  pattern: "\\.tsv$"
+  # Dataset presets:
+  # 2_3 comparison (Second Trimester vs Term) - 8 datasets
+  datasets: ["GSE9984", "GSE37901", "GSE22490", "GSE100051", "GSE55439", "GSE73374", "GSE73685", "GSE35574"]
+
+# Phenotype configuration
+phenotype:
+  group_column: "Gestational.Age.Category"  # Column in phenodata defining groups
+  baseline: "Second Trimester"              # Reference group (denominator in logFC)
+  contrast: "Term"                          # Comparison group (numerator in logFC)
+
+# Meta-analysis methods
+methods:
+  # Metafor: Effect-size meta-analysis (limma + random effects)
+  # Works without special system dependencies - recommended default
+  metafor:
+    enabled: true
+
+  # DExMA: Effect-size meta-analysis with imputation
+  # Requires: BiocManager::install("DExMA")
+  dexma:
+    enabled: true                          # DExMA is installed
+    effect_size: "SMD"                    # "SMD" (standardized mean diff) or "MD" (mean diff)
+    missAllow: 0.3                         # Max proportion of missing studies per gene (0-1)
+    # Imputation for missing values
+    imputation:
+      enabled: true
+      method: "knn"                        # "knn" or "none"
+      k: 10                                # Number of neighbors for KNN
+
+  # RankProd: Non-parametric rank-based meta-analysis
+  # Requires: BiocManager::install("RankProd") + system libs (libgmp-dev, libmpfr-dev)
+  rankprod:
+    enabled: true                          # RankProd is installed
+    logged: true                           # Is data already log-transformed?
+    num_perm: 1000                          # Number of permutations for p-value
+    gene_threshold: 0.5                    # Min proportion of studies with gene
+
+# Differential expression thresholds
+thresholds:
+  fdr: 0.05                               # False discovery rate cutoff
+  logfc: 1.0                              # Minimum absolute log fold change
+
+# Gene filtering
+gene_filter:
+  protein_coding_only: true               # Filter to protein-coding genes
+  min_studies: 4                          # Min studies a gene must appear in
+
+# Output options
+output:
+  save_dexma_results: true
+  save_rankprod_results: true
+  save_combined_results: true             # Intersection of both methods
+  save_per_study_de: true                 # Individual study DE results
+
+# Logging
+logging:
+  verbose: true
+  save_log: true

@@ -1,0 +1,82 @@
+# Phase 2B: Direct Merge Improvements Configuration - 2_3 Comparison (Dissertation datasets)
+# ==========================================================================================
+#
+# Second Trimester vs Third Trimester comparison
+# Using dissertation datasets that have Second and/or Third trimester samples
+
+# Input paths
+paths:
+  mapped_data: "data/mapped"
+  phenodata: "data/phenodata/samples.csv"
+  output: "output/phase2b_2_3_disser"
+  baseline_output: "output/baseline_2_3"
+
+# File matching
+files:
+  pattern: "\\.tsv$"
+  # Dissertation datasets with Second and/or Third trimester samples
+  datasets: ["GSE22490", "GSE35574", "GSE37901", "GSE6573", "GSE73374", "GSE73685", "GSE9984"]
+
+# Phenotype configuration
+phenotype:
+  group_column: "Gestational.Age.Category"
+  baseline: "Second Trimester"
+  contrast: "Third Trimester"
+
+# Imputation methods
+imputation:
+  softimpute:
+    enabled: true
+    rank_max: 30
+    lambda: 0
+    thresh: 1e-4
+    maxit: 50
+    type: "als"
+
+  knn:
+    enabled: false
+    k: 10
+
+  none:
+    enabled: true
+
+# Normalization methods
+normalization:
+  combat:
+    enabled: true
+    par_prior: true
+
+  dwd:
+    enabled: true
+
+# Coverage thresholds for merging
+coverage:
+  threshold: 0.75
+  compare_thresholds: [1.0, 0.75, 0.50, 0.25]
+
+# Differential expression
+thresholds:
+  fdr: 0.05
+  logfc: 1.0
+
+# Gene filtering
+gene_filter:
+  protein_coding_only: true
+  min_variance: 0.01
+
+# Validation
+validation:
+  leave_out_fraction: 0.1
+  n_repeats: 3
+
+# Output options
+output:
+  save_imputed_matrices: true
+  save_normalized_matrices: true
+  save_validation_report: true
+  save_comparison_plots: true
+
+# Logging
+logging:
+  verbose: true
+  save_log: true

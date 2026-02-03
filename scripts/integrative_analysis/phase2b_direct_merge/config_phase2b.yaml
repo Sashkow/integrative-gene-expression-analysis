@@ -1,0 +1,94 @@
+# Phase 2B: Direct Merge Improvements Configuration
+# =================================================
+#
+# This phase improves the direct merging approach through:
+# 1. Gene imputation (fill missing genes before merging)
+# 2. Alternative normalization methods (DWD instead of ComBat)
+
+# Input paths
+paths:
+  mapped_data: "data/mapped"              # Directory with expression .tsv files
+  phenodata: "data/phenodata/samples.csv" # Sample metadata
+  output: "output/phase2b_direct_merge"   # Output directory
+  baseline_output: "output/baseline_2_3"  # Baseline output for comparison
+
+# File matching
+files:
+  pattern: "\\.tsv$"
+  # 2_3 comparison (Second Trimester vs Term) - same as Phase 2
+  datasets: ["GSE9984", "GSE37901", "GSE22490", "GSE100051", "GSE55439", "GSE73374", "GSE73685", "GSE35574"]
+
+# Phenotype configuration
+phenotype:
+  group_column: "Gestational.Age.Category"
+  baseline: "Second Trimester"
+  contrast: "Term"
+
+# Imputation methods
+imputation:
+  # softImpute: Nuclear norm regularized matrix completion
+  # Best for data with low-rank structure (typical of expression data)
+  softimpute:
+    enabled: true
+    rank_max: 30          # Maximum rank for approximation (reduced for speed)
+    lambda: 0             # Regularization (0 = auto-select via CV)
+    thresh: 1e-4          # Convergence threshold (relaxed for speed)
+    maxit: 50             # Max iterations (reduced for speed)
+    type: "als"           # Algorithm: "als" (alternating least squares) or "svd"
+
+  # KNN imputation: Simple k-nearest neighbors
+  knn:
+    enabled: false
+    k: 10                 # Number of neighbors
+
+  # No imputation (baseline comparison)
+  none:
+    enabled: true         # Always run for comparison
+
+# Normalization methods
+normalization:
+  # ComBat: Standard batch correction (baseline)
+  combat:
+    enabled: true
+    par_prior: true       # Parametric priors
+
+  # DWD: Distance Weighted Discrimination
+  # Better for unequal group sizes, margin-based approach
+  dwd:
+    enabled: true
+
+# Coverage thresholds for merging
+coverage:
+  # Minimum proportion of datasets a gene must appear in
+  threshold: 0.50         # 50% = 4/8 datasets (allows more genes with imputation)
+
+  # Compare multiple thresholds
+  compare_thresholds: [1.0, 0.75, 0.50, 0.25]
+
+# Differential expression
+thresholds:
+  fdr: 0.05
+  logfc: 1.0
+
+# Gene filtering
+gene_filter:
+  protein_coding_only: true
+  min_variance: 0.01      # Remove low-variance genes
+
+# Validation
+validation:
+  # Leave-out validation: measure imputation accuracy
+  leave_out_fraction: 0.1  # Randomly mask 10% of values, then impute
+  n_repeats: 3             # Number of repetitions for validation (reduced for speed)
+
+# Output options
+output:
+  save_imputed_matrices: true
+  save_normalized_matrices: true
+  save_validation_report: true
+  save_comparison_plots: true
+
+# Logging
+logging:
+  verbose: true
+  save_log: true
