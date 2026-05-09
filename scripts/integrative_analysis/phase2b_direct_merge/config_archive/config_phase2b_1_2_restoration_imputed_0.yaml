@@ -1,0 +1,98 @@
+# Phase 2B: Direct Merge Improvements - 1_2 Comparison (restoration datasets)
+# =============================================================================
+#
+# Same as config_phase2b_1_2_restoration.yaml, but with imputed cells given
+# weight = 0 in the limma DE analysis. This makes per-gene DE effectively
+# use only real samples while still sharing the ComBat fit across the full
+# merged matrix.
+
+# Input paths
+paths:
+  mapped_data: "data/mapped"
+  phenodata: "data/phenodata/samples.csv"
+  output: "output/phase2b_combat/phase2b_1_2_restoration_imputed_0"
+  baseline_output: "output/baseline_1_2"
+
+# File matching
+files:
+  pattern: "\\.tsv$"
+  datasets: ["GSE122214", "GSE22490", "GSE37901", "GSE9984"]
+
+# Sample filter (applied before imputation/ComBat, matches restoration inputs)
+sample_filter:
+  Diagnosis: ["Healthy"]
+  Biological.Specimen: ["Placenta"]
+  Gestational.Age.Category: ["First Trimester", "Second Trimester"]
+
+# Phenotype configuration
+phenotype:
+  group_column: "Gestational.Age.Category"
+  baseline: "First Trimester"
+  contrast: "Second Trimester"
+  covariates: ["Combined.Fetus.Sex"]
+
+# Imputation methods
+imputation:
+  softimpute:
+    enabled: true
+    rank_max: 30
+    lambda: 0
+    thresh: 1e-4
+    maxit: 50
+    type: "als"
+
+  knn:
+    enabled: true
+    k: 10
+
+  none:
+    enabled: true
+
+# Normalization methods
+normalization:
+  combat:
+    enabled: true
+    par_prior: true
+
+  dwd:
+    enabled: false
+
+# Coverage thresholds for merging
+coverage:
+  max_imputation_allowed: 0.20
+  compare_thresholds: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+  drop_imputed_genes_missing_in_group: true
+
+# Differential expression
+# imputed_cell_weight: weight for imputed cells in limma lmFit weights
+#   1.0 = treat as real (default)
+#   0.0 = hard mask, effectively DE on real samples only
+#   any value in between = soft downweight
+de:
+  imputed_cell_weight: 0.0
+
+thresholds:
+  fdr: 0.05
+  logfc: 1.0
+
+# Gene filtering
+gene_filter:
+  protein_coding_only: true
+  min_variance: 0.01
+
+# Validation
+validation:
+  leave_out_fraction: 0.1
+  n_repeats: 3
+
+# Output options
+output:
+  save_imputed_matrices: true
+  save_normalized_matrices: true
+  save_validation_report: true
+  save_comparison_plots: true
+
+# Logging
+logging:
+  verbose: true
+  save_log: true

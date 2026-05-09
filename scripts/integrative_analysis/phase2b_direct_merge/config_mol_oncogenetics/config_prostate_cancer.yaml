@@ -1,0 +1,66 @@
+# Phase 2B: Prostate Cancer integrative analysis (Dept. Mol. Oncogenetics)
+# 3 datasets: 2 Affy GPL570 + 1 Illumina GPL6947
+# softImpute + combat_ref (ref=GSE32571, largest dataset)
+
+paths:
+  mapped_data: "data/mapped/mol_oncogenetics/prostate_cancer"
+  phenodata: "data/phenodata/mol_oncogenetics/prostate_cancer_samples.csv"
+  output: "output/mol_oncogenetics/prostate_cancer"
+
+files:
+  datasets:
+    - "GSE69223"
+    - "GSE32571"
+    - "GSE55945"
+
+sample_filter:
+  Diagnosis: ["Prostate Cancer", "Benign Prostate"]
+
+phenotype:
+  group_column: "Diagnosis"
+  baseline: "Benign Prostate"
+  contrast: "Prostate Cancer"
+  covariates: []
+
+imputation:
+  softimpute:
+    enabled: true
+    rank_max: 30
+    lambda: 0
+    thresh: 1e-4
+    maxit: 50
+    type: "als"
+  none:
+    enabled: true
+
+normalization:
+  combat:
+    enabled: false
+  combat_ref:
+    enabled: true
+    ref_batch: "GSE32571"
+
+coverage:
+  max_imputation_allowed: 0.70
+  compare_thresholds: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+  drop_imputed_genes_missing_in_group: true
+
+de:
+  imputed_cell_weight: 0.0
+
+thresholds:
+  fdr: 0.05
+  logfc: 1.0
+
+gene_filter:
+  protein_coding_only: true
+  min_variance: 0.01
+
+output:
+  save_imputed_matrices: true
+  save_normalized_matrices: true
+  save_comparison_plots: true
+
+logging:
+  verbose: true
+  save_log: true

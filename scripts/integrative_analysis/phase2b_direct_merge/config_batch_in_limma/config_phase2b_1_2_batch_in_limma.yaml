@@ -1,0 +1,126 @@
+# Phase 2B: Direct Merge - 1_2 Comparison, batch-in-limma (no ComBat)
+# =============================================================================
+#
+# Same dataset set as _all_datasets, but instead of ComBat pre-correction,
+# batch (dataset/secondaryaccession) is included directly as a covariate
+# in the limma design matrix.  This is the Nygaard et al. (2016)
+# recommendation for unbalanced designs where batch is partially aliased
+# with biology.  See Supplement 1.
+#
+# Normalization: batch_in_limma (identity transform; batch absorbed by model).
+# ComBat: disabled.
+
+# Input paths
+paths:
+  mapped_data: "data/mapped"
+  phenodata: "data/phenodata/samples.csv"
+  output: "output/phase2b_batch_in_limma/phase2b_1_2_all_datasets_batch_in_limma"
+  baseline_output: "output/baseline_1_2"
+
+# File matching - every GSE TSV under data/mapped/
+files:
+  pattern: "\\.tsv$"
+  datasets:
+    - "GSE100051"
+    - "GSE122214"
+    - "GSE22490"
+    - "GSE28551"
+    - "GSE35574"
+    - "GSE37653"
+    - "GSE37901"
+    - "GSE55439"
+    - "GSE6573"
+    - "GSE70102"
+    - "GSE73374"
+    - "GSE73685"
+    - "GSE93520"
+    - "GSE9984"
+
+# Sample filter
+sample_filter:
+  Diagnosis: ["Healthy"]
+  Biological.Specimen: ["Placenta", "Chorionic villi"]
+  Gestational.Age.Category: ["First Trimester", "Second Trimester"]
+
+# Phenotype configuration
+phenotype:
+  group_column: "Gestational.Age.Category"
+  baseline: "First Trimester"
+  contrast: "Second Trimester"
+  covariates: ["Combined.Fetus.Sex"]
+
+# Imputation methods
+imputation:
+  softimpute:
+    enabled: true
+    rank_max: 30
+    lambda: 0
+    thresh: 1e-4
+    maxit: 50
+    type: "als"
+
+  knn:
+    enabled: false
+    k: 10
+
+  missmda:
+    enabled: false
+    ncp: 5
+    scale: true
+    method: "Regularized"
+
+  sample_knn:
+    enabled: false
+    k: 10
+
+  none:
+    enabled: true
+
+# Normalization methods
+normalization:
+  combat:
+    enabled: false
+    par_prior: true
+
+  batch_in_limma:
+    enabled: true
+
+  dwd:
+    enabled: false
+
+# Coverage thresholds
+coverage:
+  max_imputation_allowed: 0.20
+  compare_thresholds: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+  drop_imputed_genes_missing_in_group: true
+
+# Differential expression
+de:
+  imputed_cell_weight: 0.0
+
+thresholds:
+  fdr: 0.05
+  logfc: 1.0
+
+# Gene filtering
+gene_filter:
+  protein_coding_only: true
+  min_variance: 0.01
+
+# Validation
+validation:
+  leave_out_fraction: 0.1
+  n_repeats: 3
+  mask_type: "gene_dataset_block"
+
+# Output options
+output:
+  save_imputed_matrices: true
+  save_normalized_matrices: true
+  save_validation_report: true
+  save_comparison_plots: true
+
+# Logging
+logging:
+  verbose: true
+  save_log: true

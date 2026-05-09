@@ -1,0 +1,120 @@
+# Phase 2B: Direct Merge - 1_2 Comparison, datasets containing Second Trimester
+# =============================================================================
+#
+# Restricts the merge to ONLY datasets that contain at least one healthy
+# Second Trimester Placenta/Chorion sample. The intent: build a fully
+# 2nd-trimester-anchored cohort and run both the 1_2 and 2_3 contrasts on
+# the same dataset set so the trimester axis is consistent across runs.
+#
+# Datasets (Healthy, Placenta or Chorion, available in data/mapped/):
+#   GSE100051  N1=42  N2=7  NT=5   Illumina HumanHT-12 V4 (GPL10558)
+#   GSE22490   N1=5   N2=1  NT=0   Affymetrix HG-U133 Plus 2.0
+#   GSE37901   N1=0   N2=4  NT=0   Affymetrix HG-U133 Plus 2.0
+#   GSE9984    N1=4   N2=4  NT=4   Affymetrix HG-U133 Plus 2.0
+#   GSE55439   N1=9   N2=0  NT=15  Illumina HumanHT-12 V4 (matches GSE100051)
+#
+# First four were selected for containing >=1 Second Trimester sample;
+# GSE55439 was added as the 5th to boost Term coverage on the same
+# Illumina platform as GSE100051 (and contributes 9 First Trimester
+# samples too).
+#
+# 1_2 totals: First=60, Second=16.
+# Block-mask validation + imputed_cell_weight=0 (preferred defaults).
+
+# Input paths
+paths:
+  mapped_data: "data/mapped"
+  phenodata: "data/phenodata/samples.csv"
+  output: "output/phase2b_combat/phase2b_1_2_2nd_trim_only"
+  baseline_output: "output/baseline_1_2"
+
+# File matching
+files:
+  pattern: "\\.tsv$"
+  datasets: ["GSE100051", "GSE22490", "GSE37901", "GSE9984", "GSE55439"]
+
+# Sample filter
+sample_filter:
+  Diagnosis: ["Healthy"]
+  Biological.Specimen: ["Placenta", "Chorion"]
+  Gestational.Age.Category: ["First Trimester", "Second Trimester"]
+
+# Phenotype configuration
+phenotype:
+  group_column: "Gestational.Age.Category"
+  baseline: "First Trimester"
+  contrast: "Second Trimester"
+  covariates: ["Combined.Fetus.Sex"]
+
+# Imputation methods
+imputation:
+  softimpute:
+    enabled: true
+    rank_max: 30
+    lambda: 0
+    thresh: 1e-4
+    maxit: 50
+    type: "als"
+
+  knn:
+    enabled: false
+    k: 10
+
+  missmda:
+    enabled: false
+    ncp: 5
+    scale: true
+    method: "Regularized"
+
+  sample_knn:
+    enabled: false
+    k: 10
+
+  none:
+    enabled: true
+
+# Normalization methods
+normalization:
+  combat:
+    enabled: true
+    par_prior: true
+
+  dwd:
+    enabled: false
+
+# Coverage thresholds
+coverage:
+  max_imputation_allowed: 0.20
+  compare_thresholds: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+  drop_imputed_genes_missing_in_group: true
+
+# Differential expression
+de:
+  imputed_cell_weight: 0.0
+
+thresholds:
+  fdr: 0.05
+  logfc: 1.0
+
+# Gene filtering
+gene_filter:
+  protein_coding_only: true
+  min_variance: 0.01
+
+# Validation
+validation:
+  leave_out_fraction: 0.1
+  n_repeats: 3
+  mask_type: "gene_dataset_block"
+
+# Output options
+output:
+  save_imputed_matrices: true
+  save_normalized_matrices: true
+  save_validation_report: true
+  save_comparison_plots: true
+
+# Logging
+logging:
+  verbose: true
+  save_log: true

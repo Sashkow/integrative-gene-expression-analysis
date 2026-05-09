@@ -1,0 +1,114 @@
+# Phase 2B: Direct Merge - 1_2 Comparison, maximally balanced design
+# =============================================================================
+#
+# Restricts the merge to ONLY datasets that contain healthy samples from
+# BOTH First AND Second Trimester in Placenta/Chorion.  This eliminates
+# single-condition batches entirely, giving ComBat the best chance to
+# separate batch from biology.
+#
+# Datasets (Healthy, Placenta or Chorion, available in data/mapped/):
+#   GSE100051  N1=42  N2=7   Illumina HumanHT-12 V4 (GPL10558)
+#   GSE22490   N1=5   N2=1   Affymetrix HG-U133 Plus 2.0
+#   GSE9984    N1=4   N2=4   Affymetrix HG-U133 Plus 2.0
+#
+# Every dataset contributes samples to both sides of the contrast.
+# 1_2 totals: First=51, Second=12.
+# Block-mask validation + imputed_cell_weight=0.
+
+# Input paths
+paths:
+  mapped_data: "data/mapped"
+  phenodata: "data/phenodata/samples.csv"
+  output: "output/phase2b_combat/phase2b_1_2_balanced"
+  baseline_output: "output/baseline_1_2"
+
+# File matching
+files:
+  pattern: "\\.tsv$"
+  datasets: ["GSE100051", "GSE22490", "GSE9984"]
+
+# Sample filter
+sample_filter:
+  Diagnosis: ["Healthy"]
+  Biological.Specimen: ["Placenta", "Chorion"]
+  Gestational.Age.Category: ["First Trimester", "Second Trimester"]
+
+# Phenotype configuration
+phenotype:
+  group_column: "Gestational.Age.Category"
+  baseline: "First Trimester"
+  contrast: "Second Trimester"
+  covariates: ["Combined.Fetus.Sex"]
+
+# Imputation methods
+imputation:
+  softimpute:
+    enabled: true
+    rank_max: 30
+    lambda: 0
+    thresh: 1e-4
+    maxit: 50
+    type: "als"
+
+  knn:
+    enabled: false
+    k: 10
+
+  missmda:
+    enabled: false
+    ncp: 5
+    scale: true
+    method: "Regularized"
+
+  sample_knn:
+    enabled: false
+    k: 10
+
+  none:
+    enabled: true
+
+# Normalization methods
+normalization:
+  combat:
+    enabled: true
+    par_prior: true
+
+  dwd:
+    enabled: false
+
+# Coverage thresholds
+coverage:
+  max_imputation_allowed: 0.20
+  compare_thresholds: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+  drop_imputed_genes_missing_in_group: true
+
+# Differential expression
+de:
+  imputed_cell_weight: 0.0
+
+thresholds:
+  fdr: 0.05
+  logfc: 1.0
+
+# Gene filtering
+gene_filter:
+  protein_coding_only: true
+  min_variance: 0.01
+
+# Validation
+validation:
+  leave_out_fraction: 0.1
+  n_repeats: 3
+  mask_type: "gene_dataset_block"
+
+# Output options
+output:
+  save_imputed_matrices: true
+  save_normalized_matrices: true
+  save_validation_report: true
+  save_comparison_plots: true
+
+# Logging
+logging:
+  verbose: true
+  save_log: true

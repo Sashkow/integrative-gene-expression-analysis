@@ -1,0 +1,81 @@
+# Phase 2B: missMDA-only run for the 1_2 comparison
+# ==================================================
+#
+# Enables only the none (intersection) baseline and missMDA
+# iterative regularised PCA. Writes to a separate output
+# directory so it can coexist with other phase2b runs.
+
+paths:
+  mapped_data: "data/mapped"
+  phenodata: "data/phenodata/samples.csv"
+  output: "output/phase2b_combat/phase2b_1_2_missmda"
+  baseline_output: "output/baseline_1_2"
+
+files:
+  pattern: "\\.tsv$"
+  datasets: ["GSE100051", "GSE22490", "GSE28551", "GSE37653", "GSE55439", "GSE122214", "GSE37901", "GSE9984"]
+
+phenotype:
+  group_column: "Gestational.Age.Category"
+  baseline: "First Trimester"
+  contrast: "Second Trimester"
+
+imputation:
+  softimpute:
+    enabled: false
+    rank_max: 30
+    lambda: 0
+    thresh: 1e-4
+    maxit: 50
+    type: "als"
+
+  knn:
+    enabled: false
+    k: 10
+
+  missmda:
+    enabled: true
+    ncp: 5
+    scale: true
+    method: "Regularized"
+
+  sample_knn:
+    enabled: false
+    k: 10
+
+  none:
+    enabled: true
+
+normalization:
+  combat:
+    enabled: true
+    par_prior: true
+
+  dwd:
+    enabled: false
+
+coverage:
+  threshold: 0.25
+  compare_thresholds: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+
+thresholds:
+  fdr: 0.05
+  logfc: 1.0
+
+gene_filter:
+  protein_coding_only: true
+  min_variance: 0.01
+
+validation:
+  leave_out_fraction: 0.1
+  n_repeats: 1
+
+output:
+  save_imputed_matrices: true
+  save_normalized_matrices: true
+  save_validation_report: true
+  save_comparison_plots: true
+
+logging:
+  verbose: true
+  save_log: true

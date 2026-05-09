@@ -1,0 +1,115 @@
+# Phase 2B: Yehor vs Sashko preprocessing comparison
+# Each GEO dataset split into _yehor and _sashko versions
+# Goal: see if preprocessing version is a major source of variance
+
+paths:
+  mapped_data: "data/mapped/yehor_vs_sashko"
+  phenodata: "data/mapped/yehor_vs_sashko/phenodata_combined.csv"
+  output: "output/yehor_sashko/phase2b_1_2_yehor_vs_sashko"
+
+files:
+  datasets:
+    - "GSE100051_yehor"
+    - "GSE100051_sashko"
+    - "GSE122214_yehor"
+    - "GSE122214_sashko"
+    - "GSE22490_yehor"
+    - "GSE22490_sashko"
+    - "GSE28551_yehor"
+    - "GSE28551_sashko"
+    - "GSE37653_yehor"
+    - "GSE37653_sashko"
+    - "GSE37901_yehor"
+    - "GSE37901_sashko"
+    - "GSE70102_yehor"
+    - "GSE70102_sashko"
+    - "GSE93520_yehor"
+    - "GSE93520_sashko"
+    - "GSE9984_yehor"
+    - "GSE9984_sashko"
+  file_map:
+    GSE100051_yehor: "GSE100051_yehor.tsv"
+    GSE100051_sashko: "GSE100051_sashko.tsv"
+    GSE122214_yehor: "GSE122214_yehor.tsv"
+    GSE122214_sashko: "GSE122214_sashko.tsv"
+    GSE22490_yehor: "GSE22490_yehor.tsv"
+    GSE22490_sashko: "GSE22490_sashko.tsv"
+    GSE28551_yehor: "GSE28551_yehor.tsv"
+    GSE28551_sashko: "GSE28551_sashko.tsv"
+    GSE37653_yehor: "GSE37653_yehor.tsv"
+    GSE37653_sashko: "GSE37653_sashko.tsv"
+    GSE37901_yehor: "GSE37901_yehor.tsv"
+    GSE37901_sashko: "GSE37901_sashko.tsv"
+    GSE70102_yehor: "GSE70102_yehor.tsv"
+    GSE70102_sashko: "GSE70102_sashko.tsv"
+    GSE93520_yehor: "GSE93520_yehor.tsv"
+    GSE93520_sashko: "GSE93520_sashko.tsv"
+    GSE9984_yehor: "GSE9984_yehor.tsv"
+    GSE9984_sashko: "GSE9984_sashko.tsv"
+
+sample_filter:
+  Diagnosis: ["Healthy"]
+  Gestational.Age.Category: ["First Trimester", "Second Trimester"]
+
+phenotype:
+  group_column: "Gestational.Age.Category"
+  baseline: "First Trimester"
+  contrast: "Second Trimester"
+  covariates: ["Combined.Fetus.Sex"]
+
+imputation:
+  softimpute:
+    enabled: true
+    rank_max: 30
+    lambda: 0
+    thresh: 1e-4
+    maxit: 50
+    type: "als"
+  none:
+    enabled: true
+  knn:
+    enabled: false
+  missmda:
+    enabled: false
+  sample_knn:
+    enabled: false
+
+normalization:
+  combat_ref:
+    enabled: true
+    ref_batch: "GSE100051_sashko"
+  combat:
+    enabled: false
+  dwd:
+    enabled: false
+
+coverage:
+  max_imputation_allowed: 0.20
+  compare_thresholds: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+  drop_imputed_genes_missing_in_group: true
+
+de:
+  imputed_cell_weight: 0.0
+
+thresholds:
+  fdr: 0.05
+  logfc: 1.0
+
+gene_filter:
+  protein_coding_only: true
+  min_variance: 0.01
+
+validation:
+  leave_out_fraction: 0.1
+  n_repeats: 3
+  mask_type: "gene_dataset_block"
+
+output:
+  save_imputed_matrices: true
+  save_normalized_matrices: true
+  save_validation_report: true
+  save_comparison_plots: true
+
+logging:
+  verbose: true
+  save_log: true
