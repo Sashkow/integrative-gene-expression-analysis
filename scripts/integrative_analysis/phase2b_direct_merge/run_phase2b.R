@@ -70,6 +70,7 @@ if (file.exists(utils_path)) {
 # Source module files
 source(file.path(script_dir, "imputation.R"))
 source(file.path(script_dir, "normalization.R"))
+source(file.path(script_dir, "plot_na_staircase.R"))
 
 # Parse command line arguments
 args <- commandArgs(trailingOnly = TRUE)
@@ -143,7 +144,7 @@ cat("  Mapped path:     ", config$paths$mapped_data, "\n")
 cat("  Phenodata:       ", config$paths$phenodata, "\n")
 cat("  Output dir:      ", output_dir, "\n")
 cat("  Comparison:      ", config$phenotype$contrast, "vs", config$phenotype$baseline, "\n")
-cat("  Coverage thresh: ", config$coverage$threshold, "\n")
+cat("  Max imputation:  ", config$coverage$max_imputation_allowed, "\n")
 cat("\n")
 
 # Archive previous results
@@ -156,6 +157,28 @@ if (!no_archive) {
 # Setup logging
 log_file <- setup_logging(output_dir, prefix = "phase2b_log")
 
+# Make sure any uncaught error lands in the log file before the script
+# terminates. Without this, R's default error handler writes to stderr
+# only, and the sink buffer may be lost on crash.
+options(error = quote({
+  tryCatch({
+    if (sink.number() > 0) {
+      cat("\n\n=== UNCAUGHT ERROR - script terminating ===\n")
+      cat("Time:  ", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n", sep = "")
+      cat("Error: ", geterrmessage(), sep = "")
+      cat("\nTraceback:\n")
+      tb <- .traceback(2)
+      if (length(tb)) {
+        for (i in seq_along(tb)) {
+          cat(sprintf("  %d: %s\n", i, paste(tb[[i]], collapse = " ")))
+        }
+      }
+      while (sink.number() > 0) sink()
+    }
+  }, error = function(e) {})
+  if (!interactive()) quit(save = "no", status = 1)
+}))
+
 # ============================================================
 # Step 1: Load datasets
 # ============================================================
@@ -163,15 +186,35 @@ log_file <- setup_logging(output_dir, prefix = "phase2b_log")
 cat("=== Step 1: Loading Datasets ===\n\n")
 
 # Load phenodata
-phenodata <- read.csv(config$paths$phenodata, stringsAsFactors = FALSE)
+pheno_path <- config$paths$phenodata
+if (grepl("\\.tsv$", pheno_path)) {
+  phenodata <- read.delim(pheno_path, stringsAsFactors = FALSE)
+} else {
+  phenodata <- read.csv(pheno_path, stringsAsFactors = FALSE)
+}
+if (!is.null(config$paths$column_map)) {
+  for (to_col in names(config$paths$column_map)) {
+    from_col <- config$paths$column_map[[to_col]]
+    if (from_col %in% colnames(phenodata)) {
+      phenodata[[to_col]] <- phenodata[[from_col]]
+      cat("  Column mapped:", from_col, "->", to_col, "\n")
+    }
+  }
+}
 cat("Loaded phenodata:", nrow(phenodata), "samples\n")
 
 # Load expression files
 datasets <- config$files$datasets
 exprs_list <- list()
 
+file_suffix <- if (!is.null(config$files$suffix)) config$files$suffix else ""
+file_map <- config$files$file_map
 for (ds in datasets) {
-  file_path <- file.path(config$paths$mapped_data, paste0(ds, ".tsv"))
+  if (!is.null(file_map) && !is.null(file_map[[ds]])) {
+    file_path <- file.path(config$paths$mapped_data, file_map[[ds]])
+  } else {
+    file_path <- file.path(config$paths$mapped_data, paste0(ds, file_suffix, ".tsv"))
+  }
   if (file.exists(file_path)) {
     exprs <- read.delim(file_path, row.names = 1, check.names = FALSE)
     exprs_list[[ds]] <- exprs
@@ -183,20 +226,248 @@ for (ds in datasets) {
 
 cat("\nLoaded", length(exprs_list), "datasets\n")
 
+# Apply sample filter (e.g. Diagnosis, Biological.Specimen, GA.Category).
+# Restricts ComBat/imputation to samples matching phenodata criteria.
+if (!is.null(config$sample_filter) && length(config$sample_filter) > 0) {
+  cat("\nApplying sample filter:\n")
+  mask <- rep(TRUE, nrow(phenodata))
+  for (col in names(config$sample_filter)) {
+    allowed <- config$sample_filter[[col]]
+    cat("  ", col, ":", paste(allowed, collapse = ", "), "\n")
+    if (!col %in% colnames(phenodata)) {
+      stop("sample_filter column not in phenodata: ", col)
+    }
+    mask <- mask & phenodata[[col]] %in% allowed
+  }
+  allowed_samples <- phenodata$arraydatafile_exprscolumnnames[mask]
+  cat("  ", length(allowed_samples), "samples pass filter globally\n")
+
+  for (ds in names(exprs_list)) {
+    before <- ncol(exprs_list[[ds]])
+    keep_cols <- intersect(colnames(exprs_list[[ds]]), allowed_samples)
+    exprs_list[[ds]] <- exprs_list[[ds]][, keep_cols, drop = FALSE]
+    cat("  ", ds, ":", before, "->", ncol(exprs_list[[ds]]), "samples\n")
+  }
+
+  exprs_list <- exprs_list[sapply(exprs_list, ncol) > 0]
+  cat("  ", length(exprs_list), "datasets retained after filter\n")
+}
+
+if (!is.null(config$per_dataset_filter)) {
+  cat("\nApplying per-dataset filters:\n")
+  for (ds in names(config$per_dataset_filter)) {
+    if (!ds %in% names(exprs_list)) next
+    ds_filter <- config$per_dataset_filter[[ds]]
+    ds_samples <- colnames(exprs_list[[ds]])
+    ds_pdata <- phenodata[phenodata$arraydatafile_exprscolumnnames %in% ds_samples, ]
+    ds_mask <- rep(TRUE, nrow(ds_pdata))
+    for (col in names(ds_filter)) {
+      vals <- ds_filter[[col]]
+      ds_mask <- ds_mask & ds_pdata[[col]] %in% vals
+      cat("  ", ds, col, ":", paste(vals, collapse = ", "), "\n")
+    }
+    keep <- ds_pdata$arraydatafile_exprscolumnnames[ds_mask]
+    cat("  ", ds, ":", length(ds_samples), "->", length(keep), "samples\n")
+    exprs_list[[ds]] <- exprs_list[[ds]][, keep, drop = FALSE]
+  }
+  exprs_list <- exprs_list[sapply(exprs_list, ncol) > 0]
+}
+
+# Filter to protein-coding genes (ENTREZIDs with GENETYPE == "protein-coding")
+if (isTRUE(config$gene_filter$protein_coding_only)) {
+  cat("\nFiltering to protein-coding genes (org.Hs.eg.db GENETYPE)...\n")
+  if (!requireNamespace("org.Hs.eg.db", quietly = TRUE)) {
+    stop("org.Hs.eg.db package required for protein_coding_only filter")
+  }
+  gene_types <- AnnotationDbi::select(
+    org.Hs.eg.db::org.Hs.eg.db,
+    keys = AnnotationDbi::keys(org.Hs.eg.db::org.Hs.eg.db, "ENTREZID"),
+    columns = c("ENTREZID", "GENETYPE"),
+    keytype = "ENTREZID"
+  )
+  protein_coding <- gene_types$ENTREZID[gene_types$GENETYPE == "protein-coding"]
+  cat("  protein-coding reference set:", length(protein_coding), "genes\n")
+
+  for (ds in names(exprs_list)) {
+    before <- nrow(exprs_list[[ds]])
+    keep <- rownames(exprs_list[[ds]]) %in% protein_coding
+    exprs_list[[ds]] <- exprs_list[[ds]][keep, , drop = FALSE]
+    cat("  ", ds, ":", before, "->", nrow(exprs_list[[ds]]), "genes\n")
+  }
+}
+
 # ============================================================
 # Step 2: Gene Coverage Analysis
 # ============================================================
 
 cat("\n=== Step 2: Gene Coverage Analysis ===\n")
 
-gene_recovery <- compare_gene_recovery(
-  exprs_list,
-  thresholds = config$coverage$compare_thresholds %||% c(1.0, 0.75, 0.5, 0.25)
+# compare_gene_recovery() intentionally disabled: it ran softimpute on every
+# threshold up-front (10x full imputations) just to build a reference CSV that
+# isn't consumed downstream. The auto-selection scan below picks the threshold
+# on its own; set gene_recovery to NULL so the summary block can skip it.
+gene_recovery <- NULL
+
+# ----------------------------------------------------------------
+# For genes that will be imputed in the outer-join merged matrix,
+# check whether they have non-imputed values in BOTH comparison
+# groups. If a gene is missing from one group entirely, softimpute
+# has to synthesize its expression under that condition, which
+# could bias logFC estimates.
+# ----------------------------------------------------------------
+
+cat("\n=== Imputed-gene coverage per comparison group ===\n")
+
+gene_sets <- lapply(exprs_list, rownames)
+all_genes <- Reduce(union, gene_sets)
+common_genes <- Reduce(intersect, gene_sets)
+imputed_genes <- setdiff(all_genes, common_genes)
+
+imputed_coverage <- list(
+  n_common = length(common_genes),
+  n_imputed = length(imputed_genes),
+  n_both = NA_integer_,
+  n_miss_baseline = NA_integer_,
+  n_miss_contrast = NA_integer_,
+  baseline_grp = config$phenotype$baseline,
+  contrast_grp = config$phenotype$contrast,
+  lines = character(0)
 )
 
-# Save gene recovery report
-write.csv(gene_recovery, file.path(output_dir, "gene_recovery_comparison.csv"),
-          row.names = FALSE)
+add_line <- function(s) {
+  imputed_coverage$lines <<- c(imputed_coverage$lines, s)
+  cat(s, "\n", sep = "")
+}
+
+add_line(sprintf("Genes in all datasets (no imputation): %d",
+                 length(common_genes)))
+add_line(sprintf("Genes needing imputation somewhere:    %d",
+                 length(imputed_genes)))
+
+if (length(imputed_genes) > 0) {
+  baseline_grp <- config$phenotype$baseline
+  contrast_grp <- config$phenotype$contrast
+
+  # Per-dataset lookups: which samples belong to which group
+  dataset_samples <- lapply(exprs_list, colnames)
+  sample_group <- setNames(
+    phenodata[[config$phenotype$group_column]],
+    phenodata$arraydatafile_exprscolumnnames
+  )
+
+  non_imp_baseline <- integer(length(imputed_genes))
+  non_imp_contrast <- integer(length(imputed_genes))
+
+  for (i in seq_along(imputed_genes)) {
+    g <- imputed_genes[i]
+    has_gene <- vapply(gene_sets, function(s) g %in% s, logical(1))
+    samples_with_value <- unlist(dataset_samples[has_gene], use.names = FALSE)
+    grps <- sample_group[samples_with_value]
+    non_imp_baseline[i] <- sum(grps == baseline_grp, na.rm = TRUE)
+    non_imp_contrast[i] <- sum(grps == contrast_grp, na.rm = TRUE)
+  }
+
+  n_both <- sum(non_imp_baseline >= 1 & non_imp_contrast >= 1)
+  n_miss_baseline <- sum(non_imp_baseline == 0)
+  n_miss_contrast <- sum(non_imp_contrast == 0)
+
+  imputed_coverage$n_both <- n_both
+  imputed_coverage$n_miss_baseline <- n_miss_baseline
+  imputed_coverage$n_miss_contrast <- n_miss_contrast
+
+  add_line(sprintf("  In BOTH groups with >=1 real value: %d / %d",
+                   n_both, length(imputed_genes)))
+  add_line(sprintf("  Missing entirely from %-16s: %d",
+                   baseline_grp, n_miss_baseline))
+  add_line(sprintf("  Missing entirely from %-16s: %d",
+                   contrast_grp, n_miss_contrast))
+
+  coverage_df <- data.frame(
+    gene = imputed_genes,
+    n_datasets_with_gene = vapply(imputed_genes, function(g)
+      sum(vapply(gene_sets, function(s) g %in% s, logical(1))),
+      integer(1)),
+    non_imputed_baseline = non_imp_baseline,
+    non_imputed_contrast = non_imp_contrast,
+    in_both_groups = (non_imp_baseline >= 1 & non_imp_contrast >= 1),
+    stringsAsFactors = FALSE
+  )
+  colnames(coverage_df)[3:4] <- c(
+    paste0("non_imputed_", make.names(baseline_grp)),
+    paste0("non_imputed_", make.names(contrast_grp))
+  )
+  write.csv(coverage_df,
+            file.path(output_dir, "imputed_gene_group_coverage.csv"),
+            row.names = FALSE)
+  cat("Saved: imputed_gene_group_coverage.csv\n")
+
+  if (n_miss_baseline > 0 || n_miss_contrast > 0) {
+    add_line(paste("WARNING: some imputed genes lack real values in one",
+                   "comparison group - softimpute will synthesize their",
+                   "expression under that condition."))
+  }
+
+  # Optionally drop imputed genes that are missing from one group entirely.
+  # Flag: coverage.drop_imputed_genes_missing_in_group (default TRUE).
+  drop_bad <- config$coverage$drop_imputed_genes_missing_in_group %||% TRUE
+  bad_idx <- non_imp_baseline == 0 | non_imp_contrast == 0
+  dropped_group_genes <- character(0)
+  # Snapshot for staircase (before dropping genes)
+  exprs_list_pre_drop <- lapply(exprs_list, function(e) e)
+  if (drop_bad && any(bad_idx)) {
+    dropped_group_genes <- imputed_genes[bad_idx]
+    add_line(sprintf(
+      "Dropping %d imputed genes without real values in both groups.",
+      length(dropped_group_genes)))
+    for (ds in names(exprs_list)) {
+      keep <- !(rownames(exprs_list[[ds]]) %in% dropped_group_genes)
+      exprs_list[[ds]] <- exprs_list[[ds]][keep, , drop = FALSE]
+    }
+  } else if (!drop_bad && any(bad_idx)) {
+    add_line(sprintf(
+      "Keeping %d imputed genes without real values in both groups (flag off).",
+      sum(bad_idx)))
+  }
+}
+
+# ----------------------------------------------------------------
+# Auto-select coverage threshold on the POST-drop exprs_list.
+# Picks the LOWEST (most permissive) threshold whose pre-imputation
+# missing fraction is still <= config$coverage$max_imputation_allowed.
+# Runs after dropping group-imbalanced imputed genes so the missing
+# fraction reflects what softimpute will actually see.
+# ----------------------------------------------------------------
+
+max_imp_allowed <- config$coverage$max_imputation_allowed %||% 0.20
+cat("\n=== Coverage threshold auto-selection ===\n")
+cat("Max imputation allowed:", round(100 * max_imp_allowed, 1), "%\n")
+
+threshold_scan <- sort(
+  unique(config$coverage$compare_thresholds %||%
+           c(1.0, 0.90, 0.75, 0.50, 0.25)),
+  decreasing = FALSE
+)
+
+selected_threshold <- NA_real_
+for (thresh in threshold_scan) {
+  inc <- create_incomplete_matrix(exprs_list, min_coverage = thresh)
+  frac <- sum(is.na(inc$matrix)) / length(inc$matrix)
+  cat(sprintf("  threshold=%.2f -> %d genes, %.2f%% missing\n",
+              thresh, nrow(inc$matrix), 100 * frac))
+  if (frac <= max_imp_allowed) {
+    selected_threshold <- thresh
+    break
+  }
+}
+
+if (is.na(selected_threshold)) {
+  stop("No threshold in compare_thresholds keeps missing fraction below ",
+       round(100 * max_imp_allowed, 1), "%. ",
+       "Either raise max_imputation_allowed or add stricter thresholds.")
+}
+
+cat("Selected coverage threshold:", selected_threshold, "\n")
+config$coverage$threshold <- selected_threshold
 
 # ============================================================
 # Step 3: Imputation Validation (if enabled)
@@ -207,10 +478,12 @@ validation_results <- NULL
 if (config$validation$leave_out_fraction %||% 0 > 0) {
   cat("\n=== Step 3: Imputation Validation ===\n")
 
-  methods_to_validate <- c()
-  if (config$imputation$softimpute$enabled %||% FALSE) {
-    methods_to_validate <- c(methods_to_validate, "softimpute")
-  }
+  # Validate any enabled imputer that is in the IMPUTERS registry.
+  methods_to_validate <- intersect(
+    names(IMPUTERS),
+    names(Filter(function(cfg) isTRUE(cfg$enabled),
+                 config$imputation))
+  )
 
   if (length(methods_to_validate) > 0) {
     validation_results <- validate_imputation(
@@ -219,7 +492,10 @@ if (config$validation$leave_out_fraction %||% 0 > 0) {
       leave_out_fraction = config$validation$leave_out_fraction %||% 0.1,
       n_repeats = config$validation$n_repeats %||% 5,
       methods = methods_to_validate,
-      rank_max = config$imputation$softimpute$rank_max %||% 50
+      rank_max = config$imputation$softimpute$rank_max %||% 50,
+      k = config$imputation$knn$k %||% 10,
+      mask_type = config$validation$mask_type %||% "random_cells",
+      min_obs_per_gene = config$validation$min_obs_per_gene %||% 4L
     )
 
     # Save validation results
@@ -242,22 +518,48 @@ if (validate_only) {
 
 cat("\n=== Step 4: Creating Merged Expression Matrices ===\n")
 
-# Methods to run
+# Methods to run: "none" plus every enabled IMPUTERS entry.
 imputation_methods <- c()
 if (config$imputation$none$enabled %||% TRUE) imputation_methods <- c(imputation_methods, "none")
-if (config$imputation$softimpute$enabled %||% FALSE) imputation_methods <- c(imputation_methods, "softimpute")
-if (config$imputation$knn$enabled %||% FALSE) imputation_methods <- c(imputation_methods, "knn")
+enabled_imputers <- intersect(
+  names(IMPUTERS),
+  names(Filter(function(cfg) isTRUE(cfg$enabled), config$imputation))
+)
+imputation_methods <- c(imputation_methods, enabled_imputers)
 
 if (!is.null(override_imputation)) {
   imputation_methods <- override_imputation
 }
 
 normalization_methods <- c()
-if (config$normalization$combat$enabled %||% TRUE) normalization_methods <- c(normalization_methods, "combat")
-if (config$normalization$dwd$enabled %||% FALSE) normalization_methods <- c(normalization_methods, "dwd")
+if (config[["normalization"]][["combat"]][["enabled"]] %||% TRUE) normalization_methods <- c(normalization_methods, "combat")
+if (config[["normalization"]][["batch_in_limma"]][["enabled"]] %||% FALSE) normalization_methods <- c(normalization_methods, "batch_in_limma")
+if (config[["normalization"]][["ruv"]][["enabled"]] %||% FALSE) normalization_methods <- c(normalization_methods, "ruv")
+if (config[["normalization"]][["ruvinv"]][["enabled"]] %||% FALSE) normalization_methods <- c(normalization_methods, "ruvinv")
+if (config[["normalization"]][["bruv"]][["enabled"]] %||% FALSE) normalization_methods <- c(normalization_methods, "bruv")
+if (config[["normalization"]][["combat_ref"]][["enabled"]] %||% FALSE) normalization_methods <- c(normalization_methods, "combat_ref")
+if (config[["normalization"]][["harmonizr"]][["enabled"]] %||% FALSE) normalization_methods <- c(normalization_methods, "harmonizr")
+if (config[["normalization"]][["github_harmonizr"]][["enabled"]] %||% FALSE) normalization_methods <- c(normalization_methods, "github_harmonizr")
+# DWD disabled: normalize_dwd() fails on single-sample batches (see 2_3 run).
+# if (config[["normalization"]][["dwd"]][["enabled"]] %||% FALSE) normalization_methods <- c(normalization_methods, "dwd")
 
 if (!is.null(override_normalization)) {
   normalization_methods <- override_normalization
+}
+
+ruv_control_genes <- NULL
+if (any(c("ruv", "ruvinv", "bruv") %in% normalization_methods)) {
+  ruv_cfg <- config[["normalization"]][["ruv"]]
+  if (is.null(ruv_cfg)) ruv_cfg <- config[["normalization"]][["ruvinv"]]
+  if (is.null(ruv_cfg)) ruv_cfg <- config[["normalization"]][["bruv"]]
+  ruv_file <- ruv_cfg[["control_genes_file"]]
+  if (!is.null(ruv_file) && file.exists(ruv_file)) {
+    ruv_control_genes <- readLines(ruv_file)
+    cat(sprintf("RUV control genes loaded: %d from %s\n",
+                length(ruv_control_genes), ruv_file))
+  } else {
+    stop("RUV enabled but control_genes_file not found: ", ruv_file)
+  }
 }
 
 # Create incomplete matrix
@@ -272,28 +574,62 @@ all_results <- list()
 for (imp_method in imputation_methods) {
   cat("\n--- Imputation:", imp_method, "---\n")
 
-  # Apply imputation
+  # Apply imputation. "none" is a special case (inner join, no
+  # imputation); any other method name is dispatched through the
+  # IMPUTERS registry in imputation.R.
   if (imp_method == "none") {
-    # Inner join (no imputation)
     common_genes <- Reduce(intersect, lapply(exprs_list, rownames))
     cat("Common genes across all datasets:", length(common_genes), "\n")
 
     # Use unname to prevent list names from being prepended to column names
     merged_exprs <- do.call(cbind, unname(lapply(exprs_list, function(e) e[common_genes, ])))
     imputed <- list(matrix = merged_exprs, method = "none")
-  } else if (imp_method == "softimpute") {
-    imputed <- impute_softimpute(
-      incomplete,
-      rank_max = config$imputation$softimpute$rank_max %||% 50,
-      lambda = config$imputation$softimpute$lambda %||% 0,
-      thresh = config$imputation$softimpute$thresh %||% 1e-5,
-      maxit = config$imputation$softimpute$maxit %||% 100
+    imputed_mask <- matrix(FALSE, nrow(merged_exprs), ncol(merged_exprs),
+                           dimnames = dimnames(merged_exprs))
+  } else {
+    imputed <- tryCatch(
+      run_imputer(
+        imp_method,
+        incomplete,
+        config$imputation[[imp_method]]
+      ),
+      error = function(e) {
+        cat("\n!!! Imputation method '", imp_method,
+            "' failed: ", conditionMessage(e), "\n", sep = "")
+        crash_file <- file.path(
+          output_dir,
+          paste0("crash_state_", imp_method, ".rds")
+        )
+        saveRDS(
+          list(
+            imp_method         = imp_method,
+            error_message      = conditionMessage(e),
+            error              = e,
+            coverage_threshold = config$coverage$threshold,
+            incomplete         = incomplete,
+            exprs_list         = exprs_list,
+            session_info       = sessionInfo(),
+            time               = Sys.time()
+          ),
+          crash_file
+        )
+        cat("Saved crash snapshot: ", crash_file, "\n", sep = "")
+        NULL
+      }
     )
+    if (is.null(imputed)) {
+      cat("Skipping '", imp_method, "' for downstream steps.\n", sep = "")
+      next
+    }
     merged_exprs <- imputed$matrix
-  } else if (imp_method == "knn") {
-    imputed <- impute_knn(incomplete, k = config$imputation$knn$k %||% 10)
-    merged_exprs <- imputed$matrix
+    # Imputed cell = cell that was NA in the pre-imputation incomplete matrix.
+    imputed_mask <- is.na(incomplete$matrix)
+    dimnames(imputed_mask) <- dimnames(incomplete$matrix)
   }
+
+  cat(sprintf("Imputed cells in merged matrix: %d / %d (%.2f%%)\n",
+              sum(imputed_mask), length(imputed_mask),
+              100 * sum(imputed_mask) / length(imputed_mask)))
 
   # Save imputed matrix
   if (config$output$save_imputed_matrices %||% FALSE) {
@@ -310,26 +646,121 @@ for (imp_method in imputation_methods) {
   rownames(merged_pdata) <- merged_pdata$arraydatafile_exprscolumnnames
   merged_pdata <- merged_pdata[merged_samples, ]
 
+  # Covariates (e.g. Combined.Fetus.Sex) — used for both ComBat mod and limma
+  covariates <- config$phenotype$covariates %||% c()
+  if (length(covariates) > 0) {
+    for (cov in covariates) {
+      if (!cov %in% colnames(merged_pdata)) {
+        stop("phenotype.covariate not in phenodata: ", cov)
+      }
+      v <- merged_pdata[[cov]]
+      v[v %in% c("", "_", "NA")] <- NA
+      merged_pdata[[cov]] <- v
+    }
+    complete <- complete.cases(merged_pdata[, covariates, drop = FALSE])
+    n_drop <- sum(!complete)
+    if (n_drop > 0) {
+      cat("Dropping", n_drop,
+          "samples with missing covariate values:",
+          paste(covariates, collapse = ", "), "\n")
+      merged_pdata <- merged_pdata[complete, ]
+      merged_exprs <- merged_exprs[, complete, drop = FALSE]
+      imputed_mask <- imputed_mask[, complete, drop = FALSE]
+      merged_samples <- colnames(merged_exprs)
+    }
+    cat("Using covariates:", paste(covariates, collapse = ", "), "\n")
+  }
+
   # Create batch variable
   batch <- as.factor(merged_pdata$secondaryaccession)
 
   # Create biological group
   bio_group <- merged_pdata[[config$phenotype$group_column]]
 
+  # Build ComBat mod formula (biological group + covariates)
+  combat_mod_data <- data.frame(bio_group = bio_group,
+                                stringsAsFactors = FALSE)
+  for (cov in covariates) combat_mod_data[[cov]] <- merged_pdata[[cov]]
+  combat_mod_rhs <- paste(c("bio_group", covariates), collapse = " + ")
+  combat_mod <- model.matrix(as.formula(paste("~", combat_mod_rhs)),
+                             data = combat_mod_data)
+
   for (norm_method in normalization_methods) {
     cat("\n  Normalization:", norm_method, "\n")
+
+    if (norm_method %in% c("harmonizr", "github_harmonizr") && imp_method != "none") {
+      cat("  Skipping ", norm_method, ": only valid with imp_method='none'\n")
+      next
+    }
 
     result_key <- paste0(imp_method, "_", norm_method)
 
     # Apply normalization
+    # "dwd" branch disabled: fails on single-sample batches.
+    ruv_W <- NULL
     normalized <- switch(
       norm_method,
-      "combat" = normalize_combat(merged_exprs, batch,
-                                   mod = model.matrix(~bio_group)),
-      "dwd" = normalize_dwd(merged_exprs, batch),
+      "combat" = normalize_combat(merged_exprs, batch, mod = combat_mod),
+      "combat_ref" = {
+        ref_batch <- config[["normalization"]][["combat_ref"]][["ref_batch"]]
+        if (is.null(ref_batch)) stop("combat_ref requires ref_batch in config")
+        normalize_combat_ref(merged_exprs, batch, mod = combat_mod,
+                             ref_batch = ref_batch)
+      },
+      # "dwd" = normalize_dwd(merged_exprs, batch),
       "mean_center" = normalize_mean_center(merged_exprs, batch),
+      "batch_in_limma" = merged_exprs,
+      "ruv" = {
+        k <- config[["normalization"]][["ruv"]][["k"]] %||% 2
+        ruv_result <- normalize_ruv(merged_exprs, ruv_control_genes, k = k)
+        ruv_W <- ruv_result$W
+        ruv_result$exprs
+      },
+      "ruvinv" = {
+        merged_exprs
+      },
+      "bruv" = {
+        k <- config[["normalization"]][["bruv"]][["k"]] %||% 2
+        bruv_result <- normalize_bruv(
+          merged_exprs, ruv_control_genes, k = k,
+          sample_dataset = as.character(merged_pdata$secondaryaccession),
+          sample_group = merged_pdata[[config$phenotype$group_column]]
+        )
+        ruv_W <- bruv_result$W
+        bruv_result$exprs
+      },
+      "harmonizr" = {
+        harmonizr_ref <- config[["normalization"]][["harmonizr"]][["ref_batch"]]
+        inc_mat <- incomplete$matrix[, merged_samples, drop = FALSE]
+        normalize_harmonizr(
+          incomplete_matrix = inc_mat,
+          batch = batch,
+          mod_data = combat_mod_data,
+          mod_formula = combat_mod_rhs,
+          ref_batch = harmonizr_ref
+        )
+      },
+      "github_harmonizr" = {
+        gh_cfg <- config[["normalization"]][["github_harmonizr"]]
+        inc_mat <- incomplete$matrix[, merged_samples, drop = FALSE]
+        normalize_github_harmonizr(
+          incomplete_matrix = inc_mat,
+          batch = batch,
+          algorithm    = gh_cfg[["algorithm"]] %||% "ComBat",
+          ComBat_mode  = gh_cfg[["ComBat_mode"]] %||% 1,
+          sort         = gh_cfg[["sort"]] %||% FALSE,
+          block        = gh_cfg[["block"]]
+        )
+      },
       merged_exprs
     )
+
+    # HarmonizR returns NAs (uncorrected cells) — set up weight mask
+    if (norm_method %in% c("harmonizr", "github_harmonizr")) {
+      imputed_mask <- is.na(normalized)
+      dimnames(imputed_mask) <- dimnames(normalized)
+      normalized[is.na(normalized)] <- 0
+    }
 
     # Save normalized matrix
     if (config$output$save_normalized_matrices %||% FALSE) {
@@ -337,6 +768,41 @@ for (imp_method in imputation_methods) {
       write.table(normalized, norm_file, sep = "\t", quote = FALSE)
       cat("  Saved normalized matrix:", norm_file, "\n")
     }
+
+    # PCA plot of normalized data
+    pc <- prcomp(t(normalized), center = TRUE, scale. = FALSE)
+    var_pct <- 100 * summary(pc)$importance[2, ]
+    pca_group <- merged_pdata[[config$phenotype$group_column]]
+    pca_batch <- as.character(merged_pdata$secondaryaccession)
+
+    group_lvls <- unique(pca_group)
+    grp_pal <- c("#E78AC3", "#66C2A5", "#FC8D62", "#8DA0CB", "#A6D854", "#FFD92F",
+                 "#E5C494", "#B3B3B3")
+    grp_col <- setNames(grp_pal[seq_along(group_lvls)], group_lvls)
+
+    ds_lvls <- unique(pca_batch)
+    ds_pch <- setNames(c(0:4, 6:8, 15:18)[seq_along(ds_lvls)], ds_lvls)
+
+    pca_file <- file.path(output_dir, paste0("pca_", result_key, ".png"))
+    png(pca_file, width = 1400, height = 900, res = 120)
+    par(mar = c(5, 5, 3, 2))
+    plot(pc$x[, 1], pc$x[, 2],
+         col = grp_col[pca_group], pch = ds_pch[pca_batch], cex = 1.3,
+         xlab = sprintf("PC1 (%.1f%%)", var_pct[1]),
+         ylab = sprintf("PC2 (%.1f%%)", var_pct[2]),
+         main = sprintf("PCA — %s (%d genes, %d samples)",
+                        result_key, nrow(normalized), ncol(normalized)))
+    grp_n <- table(factor(pca_group, levels = group_lvls))
+    ds_n <- table(factor(pca_batch, levels = ds_lvls))
+    legend("topright",
+           legend = c(sprintf("%s (n=%d)", group_lvls, grp_n),
+                      "", sprintf("%s (n=%d)", ds_lvls, ds_n)),
+           col = c(grp_col[group_lvls], NA, rep("grey30", length(ds_lvls))),
+           pch = c(rep(15, length(group_lvls)), NA, ds_pch[ds_lvls]),
+           pt.cex = c(rep(1.5, length(group_lvls)), NA, rep(1.3, length(ds_lvls))),
+           cex = 0.6, bty = "n")
+    dev.off()
+    cat("  PCA plot saved:", pca_file, "\n")
 
     # ============================================================
     # Step 5: Differential Expression Analysis
@@ -351,27 +817,105 @@ for (imp_method in imputation_methods) {
     de_exprs <- normalized[, keep_samples]
     de_pdata <- merged_pdata[keep_samples, ]
 
-    # Create design matrix
+    # Align the imputed-cell mask to the DE matrix (ComBat may have
+    # dropped zero-variance rows).
+    de_mask <- imputed_mask[rownames(de_exprs), keep_samples, drop = FALSE]
+
+    # Create design matrix (group + covariates, optionally + batch)
     group <- factor(de_pdata[[config$phenotype$group_column]],
-                    levels = c(config$phenotype$baseline, config$phenotype$contrast))
-    design <- model.matrix(~group)
+                    levels = c(config$phenotype$baseline,
+                               config$phenotype$contrast))
 
-    # Fit linear model
-    fit <- lmFit(de_exprs, design)
-    fit <- eBayes(fit)
+    if (norm_method == "ruvinv") {
+      # RUVinv does its own DE testing — bypass limma
+      cov_df <- NULL
+      if (length(covariates) > 0) {
+        cov_df <- de_pdata[, covariates, drop = FALSE]
+      }
+      lambda <- config[["normalization"]][["ruvinv"]][["lambda"]]
+      ruvinv_result <- normalize_ruvinv(
+        de_exprs, ruv_control_genes, group,
+        covariates_df = cov_df, lambda = lambda
+      )
+      de_results <- ruvinv_result$de_results
+    } else {
+      design_data <- data.frame(group = group, stringsAsFactors = FALSE)
+      for (cov in covariates) design_data[[cov]] <- de_pdata[[cov]]
+      design_terms <- c("group", covariates)
+      if (norm_method == "batch_in_limma") {
+        de_batch <- droplevels(as.factor(de_pdata$secondaryaccession))
+        if (nlevels(de_batch) > 1) {
+          design_data$batch <- de_batch
+          design_terms <- c("group", "batch", covariates)
+          cat(sprintf("  Including batch in limma design (%d levels)\n", nlevels(de_batch)))
+        } else {
+          cat("  Warning: only 1 batch level after filtering, skipping batch term\n")
+        }
+      }
+      if (norm_method %in% c("ruv", "bruv") && !is.null(ruv_W)) {
+        de_W <- ruv_W[keep_samples, , drop = FALSE]
+        for (j in seq_len(ncol(de_W))) {
+          wname <- colnames(de_W)[j]
+          design_data[[wname]] <- de_W[, j]
+          design_terms <- c(design_terms, wname)
+        }
+        cat(sprintf("  Including %d RUV factors (W) in limma design\n", ncol(de_W)))
+      }
+      design_rhs <- paste(design_terms, collapse = " + ")
+      design <- model.matrix(as.formula(paste("~", design_rhs)),
+                             data = design_data)
 
-    # Get results
-    de_results <- topTable(fit, coef = 2, number = Inf, sort.by = "none")
-    de_results$gene <- rownames(de_results)
-    de_results <- de_results[, c("gene", "logFC", "AveExpr", "t", "P.Value", "adj.P.Val", "B")]
+      # Handle technical replicates via duplicateCorrelation (e.g. GSE55439).
+      block_col <- de_pdata$technical_replicate_block
+      if (!is.null(block_col) && any(nzchar(block_col))) {
+        block_vec <- block_col
+        block_vec[!nzchar(block_vec)] <- paste0("singleton_", seq_len(sum(!nzchar(block_vec))))
+        block_vec <- as.factor(block_vec)
+        cat(sprintf("  duplicateCorrelation: %d samples in %d blocks (%d singleton)\n",
+                    length(block_vec), nlevels(block_vec), sum(grepl("^singleton_", block_vec))))
+        corfit <- duplicateCorrelation(de_exprs, design, block = block_vec)
+        cat(sprintf("  Consensus correlation: %.4f\n", corfit$consensus.correlation))
+      } else {
+        block_vec <- NULL
+        corfit <- NULL
+      }
+
+      # Per-cell limma weights for imputed cells.
+      imp_w <- config$de$imputed_cell_weight %||% 1.0
+      if (imp_w != 1.0 && any(de_mask)) {
+        W <- matrix(1.0, nrow(de_exprs), ncol(de_exprs),
+                    dimnames = dimnames(de_exprs))
+        W[de_mask] <- imp_w
+        cat(sprintf("  Imputed-cell weight: %.3f  (downweighting %d cells)\n",
+                    imp_w, sum(de_mask)))
+        if (!is.null(corfit)) {
+          fit <- lmFit(de_exprs, design, weights = W,
+                       block = block_vec, correlation = corfit$consensus.correlation)
+        } else {
+          fit <- lmFit(de_exprs, design, weights = W)
+        }
+      } else {
+        if (!is.null(corfit)) {
+          fit <- lmFit(de_exprs, design,
+                       block = block_vec, correlation = corfit$consensus.correlation)
+        } else {
+          fit <- lmFit(de_exprs, design)
+        }
+      }
+      fit <- eBayes(fit)
+
+      de_results <- topTable(fit, coef = 2, number = Inf, sort.by = "none")
+      de_results$gene <- rownames(de_results)
+      de_results <- de_results[, c("gene", "logFC", "AveExpr", "t", "P.Value", "adj.P.Val", "B")]
+    }
 
     # Apply thresholds
     fdr_thresh <- config$thresholds$fdr %||% 0.05
     logfc_thresh <- config$thresholds$logfc %||% 1.0
 
-    de_significant <- de_results[
-      de_results$adj.P.Val < fdr_thresh & abs(de_results$logFC) > logfc_thresh,
-    ]
+    sig_mask <- !is.na(de_results$adj.P.Val) & !is.na(de_results$logFC) &
+      de_results$adj.P.Val < fdr_thresh & abs(de_results$logFC) > logfc_thresh
+    de_significant <- de_results[sig_mask, ]
 
     cat("  Total genes:", nrow(de_results), "\n")
     cat("  Significant (FDR <", fdr_thresh, ", |logFC| >", logfc_thresh, "):",
@@ -450,6 +994,45 @@ if (length(all_results) > 1) {
 }
 
 # ============================================================
+# Step 7: Visualization (NA staircases with FDR overlay)
+# ============================================================
+
+cat("\n=== Step 7: Visualization ===\n")
+
+gene_fdr_list <- list()
+for (key in names(all_results)) {
+  gene_fdr_list[[key]] <- setNames(
+    all_results[[key]]$de_results$adj.P.Val,
+    as.character(all_results[[key]]$de_results$gene)
+  )
+}
+
+staircase_sample_ds <- rep(names(exprs_list), sapply(exprs_list, ncol))
+names(staircase_sample_ds) <- unlist(lapply(exprs_list, colnames))
+staircase_title <- paste0(config$phenotype$baseline, " vs ", config$phenotype$contrast)
+staircase_group <- phenodata[[config$phenotype$group_column]][
+  match(names(staircase_sample_ds), phenodata$arraydatafile_exprscolumnnames)
+]
+
+# Build full pre-drop matrix so dropped genes appear as "1 group all-NA"
+if (length(dropped_group_genes) > 0) {
+  staircase_inc <- create_incomplete_matrix(
+    exprs_list_pre_drop, min_coverage = config$coverage$threshold
+  )
+  staircase_matrix <- staircase_inc$matrix
+} else {
+  staircase_matrix <- incomplete$matrix
+}
+
+plot_na_staircase(staircase_matrix, staircase_sample_ds,
+                  staircase_title, file.path(output_dir, "na_staircase.png"),
+                  sample_group = staircase_group,
+                  gene_fdr_list = gene_fdr_list,
+                  baseline = config$phenotype$baseline,
+                  contrast = config$phenotype$contrast,
+                  coverage_threshold = selected_threshold)
+
+# ============================================================
 # Save Summary
 # ============================================================
 
@@ -464,13 +1047,16 @@ writeLines(c(
   "",
   paste("Comparison:", config$phenotype$contrast, "vs", config$phenotype$baseline),
   paste("Datasets:", paste(datasets, collapse = ", ")),
-  paste("Coverage threshold:", config$coverage$threshold),
+  paste("Max imputation allowed:", max_imp_allowed),
+  paste("Selected coverage threshold:", selected_threshold),
   "",
-  "Gene Recovery:",
-  capture.output(print(gene_recovery)),
+  "Gene Recovery: skipped (compare_gene_recovery disabled)",
   "",
   "Method Comparison:",
   capture.output(print(comparison_df)),
+  "",
+  "Imputed-gene coverage per comparison group:",
+  imputed_coverage$lines,
   "",
   if (!is.null(validation_results)) {
     c("Imputation Validation:",
@@ -485,6 +1071,9 @@ cat("\nSaved summary to:", summary_file, "\n")
 
 # Close logging
 close_logging(log_file)
+
+cat("\n=== Imputed-gene coverage per comparison group (recap) ===\n")
+for (line in imputed_coverage$lines) cat(line, "\n", sep = "")
 
 cat("\n============================================================\n")
 cat("  Phase 2B Complete!\n")

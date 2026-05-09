@@ -18,12 +18,12 @@ cat("\n=== Creating Volcano Plots for Merged vs Excluded Genes ===\n\n")
 library(ggplot2)
 
 # Source pipeline modules to reuse existing functions
-source("R/01_data_merging.R")
+source("scripts/integrative_analysis/integrative_analysis_disser_pipeline/01_data_merging.R")
 
 # Configuration
 mapped_dir <- "data/mapped"
 pattern <- ".tsv"
-output_dir <- "output/gene_volcano_analysis"
+output_dir <- "output/analysis/gene_volcano_analysis"
 
 # Create output directory
 if (!dir.exists(output_dir)) {

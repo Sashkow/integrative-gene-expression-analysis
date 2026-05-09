@@ -254,10 +254,10 @@ library(rmarkdown)
 render("notebooks/pipeline.Rmd")
 
 # Or run step-by-step interactively
-source("R/config.R")
+source("scripts/integrative_analysis/integrative_analysis_disser_pipeline/config.R")
 config <- load_config("config/config.yaml")
 
-source("R/01_data_merging.R")
+source("scripts/integrative_analysis/integrative_analysis_disser_pipeline/01_data_merging.R")
 merged <- merge_expression_data(config$paths$mapped_data)
 
 # ... continue with other steps

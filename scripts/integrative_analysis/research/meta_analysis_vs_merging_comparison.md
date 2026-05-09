@@ -266,7 +266,7 @@ Report both:
 ## Output Files
 
 ```
-output/phase2_meta/
+output/exploratory/phase2_meta/
 ├── metafor_results.tsv          # Metafor full results
 ├── metafor_significant.tsv      # FDR < 0.05
 ├── dexma_results.tsv            # DExMA full results (SMD as effect size)

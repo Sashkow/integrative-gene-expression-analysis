@@ -16,9 +16,9 @@ library(ggplot2)
 library(VennDiagram)
 
 # Define paths
-baseline_dir <- "output/test_first_datasets/BASELINE"
+baseline_dir <- "output/dataset_testing/test_first_datasets/BASELINE"
 disser_file <- "data/disser/lykhenko_Supplement1_sorted_include_present.xlsx"
-output_dir <- "output/baseline_vs_disser_comparison"
+output_dir <- "output/dissertation/baseline_vs_disser_comparison"
 
 # Create output directory
 dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)

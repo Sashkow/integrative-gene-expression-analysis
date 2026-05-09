@@ -61,3 +61,28 @@ Thumbs.db
 !*example*
 
 metadata_coverage_detailed.csv
+
+# Raw/large data
+data/raw_geo/
+data/raws/
+data/disser/
+data/reference/
+
+# MCP servers (local tooling, not project code)
+mcp-demo/
+igea-vectordb-from-demo/
+paper-search-mcp/
+mcp-vectordb/
+docs_to_ingest/
+
+# Large binary/doc files
+presentation/
+yehor/
+*.hmap
+
+# Log/output files from batch runs
+nohup.out
+*.out
+
+# Misc
+dataset_sample_matching.csv

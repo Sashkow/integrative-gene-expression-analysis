@@ -18,7 +18,7 @@ library(gridExtra)
 library(magick)
 
 # Define paths
-pcas_dir <- "output/test_first_datasets/GSE55439_GSE93520_GSE28551_GSE100051/pcas"
+pcas_dir <- "output/dataset_testing/test_first_datasets/GSE55439_GSE93520_GSE28551_GSE100051/pcas"
 
 # Image files in order: A, B, C, D (left to right, top to bottom)
 image_files <- c(

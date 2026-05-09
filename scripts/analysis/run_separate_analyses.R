@@ -18,18 +18,18 @@ cat("\n=== Separate Analyses Pipeline ===\n\n")
 library(yaml)
 
 # Source all modules
-source("R/config.R")
-source("R/utils.R")
-source("R/01_data_merging.R")
-source("R/02_batch_correction.R")
-source("R/03_pca_analysis.R")
-source("R/04_differential_expression.R")
-source("R/05_network_clustering.R")
-source("R/06_enrichment_analysis.R")
-source("R/07_visualization.R")
+source("scripts/integrative_analysis/integrative_analysis_disser_pipeline/config.R")
+source("scripts/integrative_analysis/integrative_analysis_disser_pipeline/utils.R")
+source("scripts/integrative_analysis/integrative_analysis_disser_pipeline/01_data_merging.R")
+source("scripts/integrative_analysis/integrative_analysis_disser_pipeline/02_batch_correction.R")
+source("scripts/integrative_analysis/integrative_analysis_disser_pipeline/03_pca_analysis.R")
+source("scripts/integrative_analysis/integrative_analysis_disser_pipeline/04_differential_expression.R")
+source("scripts/integrative_analysis/integrative_analysis_disser_pipeline/05_network_clustering.R")
+source("scripts/integrative_analysis/integrative_analysis_disser_pipeline/06_enrichment_analysis.R")
+source("scripts/integrative_analysis/integrative_analysis_disser_pipeline/07_visualization.R")
 
 # Load configuration
-config <- load_config("config/config_separate_analyses.yaml")
+config <- load_config("config/pipeline/config_separate_analyses.yaml")
 
 # Initialize STRING database (shared across analyses)
 cat("\n=== Initializing STRING Database (shared) ===\n")
@@ -43,7 +43,7 @@ string_db <- initialize_stringdb(
 
 # Storage for results
 all_results <- list()
-names(config$separate_analyses)1
+names(config$separate_analyses)
 # Loop through each separate analysis
 for (analysis_id in names(config$separate_analyses)) {
 

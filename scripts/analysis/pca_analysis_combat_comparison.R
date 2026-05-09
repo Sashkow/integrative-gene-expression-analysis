@@ -15,7 +15,7 @@ library(ggplot2)
 library(factoextra)
 
 # Source PCA analysis module
-source("R/03_pca_analysis.R")
+source("scripts/integrative_analysis/integrative_analysis_disser_pipeline/03_pca_analysis.R")
 
 #' Custom PCA plot function using ggplot2 directly
 #'
@@ -164,7 +164,7 @@ plot_pca_ga_gradient <- function(pca, pdata, axes = c(1, 2), output_file, output
 }
 
 # Define paths
-data_dir <- "output/test_first_datasets/GSE55439_GSE93520_GSE28551_GSE100051"
+data_dir <- "output/dataset_testing/test_first_datasets/GSE55439_GSE93520_GSE28551_GSE100051"
 pca_output_dir <- file.path(data_dir, "pca_plots")
 pca_output_dir_png <- file.path(data_dir, "pca_plots_png")
 

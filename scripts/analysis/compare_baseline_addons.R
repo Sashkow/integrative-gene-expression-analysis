@@ -138,7 +138,7 @@ initialize_string_db_if_needed <- function(filter_by_stringdb) {
     cat("STRING DB filtering: ENABLED\n")
     cat("Initializing STRING database...\n")
     string_db <- initialize_stringdb(
-      version = "11", species = 9606, score_threshold = 400,
+      version = "12.0", species = 9606, score_threshold = 400,
       use_cache = TRUE, cache_dir = "data/stringdb_cache"
     )
     cat("STRING database initialized\n\n")
@@ -216,6 +216,8 @@ run_analysis_iteration <- function(config, pdata_full, exclusions, batch_col,
                                     baseline_difexp_all = NULL) {
 
   pdata_filtered <- filter_phenodata(pdata = pdata_full, filters = config$filtering)
+  if (!is.null(config$allowed_datasets))
+    pdata_filtered <- pdata_filtered[pdata_filtered[[batch_col]] %in% config$allowed_datasets, ]
   pdata_filtered <- pdata_filtered[!(pdata_filtered[[batch_col]] %in% exclusions), ]
 
   n_trim_1 <- sum(pdata_filtered$Gestational.Age.Category == trimester_col_1, na.rm = TRUE)

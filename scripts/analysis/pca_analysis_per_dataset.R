@@ -15,7 +15,7 @@ library(ggplot2)
 library(ggrepel)  # For non-overlapping labels
 
 # Source PCA analysis module
-source("R/03_pca_analysis.R")
+source("scripts/integrative_analysis/integrative_analysis_disser_pipeline/03_pca_analysis.R")
 
 #' PCA plot with sample labels
 #'
@@ -214,7 +214,7 @@ plot_pca_ga_gradient_single <- function(pca, pdata, axes = c(1, 2), output_file,
 }
 
 # Define paths
-data_dir <- "output/test_first_datasets/GSE55439_GSE93520_GSE28551_GSE100051"
+data_dir <- "output/dataset_testing/test_first_datasets/GSE55439_GSE93520_GSE28551_GSE100051"
 pca_output_base <- file.path(data_dir, "pca_plots_per_dataset")
 pca_output_base_png <- file.path(data_dir, "pca_plots_per_dataset_png")
 

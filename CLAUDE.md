@@ -39,5 +39,46 @@ Rscript install_packages.R
 - **Temporary scripts go in `one_off_scripts/`** - Put debug scripts, one-time analyses, and experimental code there
 - Scripts archive previous output to `output/{name}/archive/{timestamp}/` before overwriting
 - Phenodata sample column `arraydatafile_exprscolumnnames` must match expression file column names
-- Output folders match script names (e.g., `test_first_datasets.R` → `output/test_first_datasets/`)
+- Output folders match script names (e.g., `test_first_datasets.R` → `output/dataset_testing/test_first_datasets/`)
 - DEG filtering defaults: `adj.P.Val < 0.05` and `|logFC| > 1`
+- Use unambigous date format
+
+## Python Environment
+
+Use `uv` for Python package management:
+
+```bash
+# Initialize new Python project
+uv init
+
+# Install dependencies
+uv sync
+
+# Run Python scripts
+uv run python script.py
+```
+
+## MCP Vector Database
+
+A local vector database MCP server is available for semantic search over project documentation.
+
+**Location**: `mcp-vectordb/`
+
+**Available tools** (via MCP):
+- `search_docs` - Semantic search over all markdown documentation
+- `ingest_docs` - Re-index documents after updates
+- `list_sources` - List all indexed document sources
+
+**Setup** (if needed):
+```bash
+cd mcp-vectordb
+uv sync
+```
+
+**Manual test**:
+```bash
+cd mcp-vectordb
+uv run python -c "from server import ingest_documents; print(f'Ingested {ingest_documents()} chunks')"
+```
+
+The MCP server is configured in `.mcp.json` and will be auto-started by Claude Code.

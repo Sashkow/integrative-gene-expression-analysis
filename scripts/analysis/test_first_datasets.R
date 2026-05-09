@@ -14,8 +14,8 @@ cat("\n=== Testing Additional Datasets Addition to Old Baseline ===\n\n")
 source("scripts/analysis/compare_baseline_addons.R")
 
 run_dataset_comparison(
-  config_file = "config/config_test_first_datasets.yaml",
-  output_dir = "output/test_first_datasets",
+  config_file = "config/dataset_testing/config_test_first_datasets.yaml",
+  output_dir = "output/dataset_testing/test_first_datasets",
   trimester_col_1 = "First Trimester",
   trimester_col_2 = "Second Trimester",
   addon_config_key = "first_trimester_datasets",

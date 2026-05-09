@@ -133,7 +133,7 @@ plot_logfc_fdr_comparison <- function(baseline_difexp, current_difexp, output_fi
 }
 
 # Set paths
-test_output_dir <- "output/test_first_datasets"
+test_output_dir <- "output/dataset_testing/test_first_datasets"
 baseline_file <- file.path(test_output_dir, "BASELINE", "difexp_genes_unfiltered.csv")
 
 # Check if baseline file exists

@@ -5,7 +5,7 @@
 paths:
   mapped_data: "data/mapped"              # Directory with expression .tsv files
   phenodata: "data/phenodata/samples.csv" # Sample metadata
-  output: "output/phase2_meta"            # Output directory
+  output: "output/exploratory/phase2_meta"            # Output directory
 
 # File matching
 files:

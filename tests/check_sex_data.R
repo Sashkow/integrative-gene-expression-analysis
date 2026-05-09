@@ -34,11 +34,14 @@ check_sex_data <- function(dataset_id, pdata) {
   # Count samples with sex data in different columns
   has_fetus_sex <- sum(!is.na(dataset_samples$Fetus.Sex) &
                        dataset_samples$Fetus.Sex != "" &
-                       dataset_samples$Fetus.Sex != "NA", na.rm = TRUE)
+                       dataset_samples$Fetus.Sex != "NA" &
+                       dataset_samples$Fetus.Sex != "_" &
+                       dataset_samples$Fetus.Sex != "None", na.rm = TRUE)
 
   has_sex <- sum(!is.na(dataset_samples$Sex) &
                  dataset_samples$Sex != "" &
-                 dataset_samples$Sex != "NA", na.rm = TRUE)
+                 dataset_samples$Sex != "NA" &
+                 dataset_samples$Sex != "_", na.rm = TRUE)
 
   has_estimated <- sum(!is.na(dataset_samples$Estimated.Fetus.Sex) &
                        dataset_samples$Estimated.Fetus.Sex != "" &
@@ -53,11 +56,12 @@ check_sex_data <- function(dataset_id, pdata) {
                       dataset_samples$Combined.Fetus.Sex != "NA", na.rm = TRUE)
 
   # Any sex data at all (from any column)
-  has_any <- (!is.na(dataset_samples$Fetus.Sex) & dataset_samples$Fetus.Sex != "" & dataset_samples$Fetus.Sex != "NA") |
-             (!is.na(dataset_samples$Sex) & dataset_samples$Sex != "" & dataset_samples$Sex != "NA") |
-             (!is.na(dataset_samples$Estimated.Fetus.Sex) & dataset_samples$Estimated.Fetus.Sex != "" & dataset_samples$Estimated.Fetus.Sex != "NA") |
-             (!is.na(dataset_samples$estimated_sex) & dataset_samples$estimated_sex != "" & dataset_samples$estimated_sex != "NA") |
-             (!is.na(dataset_samples$Combined.Fetus.Sex) & dataset_samples$Combined.Fetus.Sex != "" & dataset_samples$Combined.Fetus.Sex != "NA")
+  is_valid <- function(x) !is.na(x) & x != "" & x != "NA" & x != "_" & x != "None"
+  has_any <- is_valid(dataset_samples$Fetus.Sex) |
+             is_valid(dataset_samples$Sex) |
+             is_valid(dataset_samples$Estimated.Fetus.Sex) |
+             is_valid(dataset_samples$estimated_sex) |
+             is_valid(dataset_samples$Combined.Fetus.Sex)
 
   has_any_sex <- sum(has_any, na.rm = TRUE)
   pct_any_sex <- round(100 * has_any_sex / nrow(dataset_samples), 1)

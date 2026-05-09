@@ -9,7 +9,7 @@
 #' @date 2025-01-07
 
 # Source the common comparison function
-source("R/compare_to_disser_common.R")
+source("scripts/integrative_analysis/integrative_analysis_disser_pipeline/compare_to_disser_common.R")
 
 # Dissertation file path
 disser_file <- "data/disser/lykhenko_Supplement1_sorted_include_present.xlsx"
@@ -24,10 +24,10 @@ cat("#                    1_2 COMPARISON (Sheet 1)                        #\n")
 cat("######################################################################\n")
 
 summary_1_2 <- run_dissertation_comparison(
-  results_dir = "output/test_first_datasets/BASELINE",
+  results_dir = "output/dataset_testing/test_first_datasets/BASELINE",
   disser_file = disser_file,
   disser_sheet = 1,
-  output_dir = "output/comparison_1_2_vs_disser",
+  output_dir = "output/dissertation/comparison_1_2_vs_disser",
   comparison_name = "Trim 1_2"
 )
 
@@ -41,10 +41,10 @@ cat("#                    2_3 COMPARISON (Sheet 2)                        #\n")
 cat("######################################################################\n")
 
 summary_2_3 <- run_dissertation_comparison(
-  results_dir = "output/test_term_datasets/archive/2026-01-10_214735/BASELINE",
+  results_dir = "output/dataset_testing/test_term_datasets/archive/2026-01-10_214735/BASELINE",
   disser_file = disser_file,
   disser_sheet = 2,
-  output_dir = "output/comparison_2_3_vs_disser",
+  output_dir = "output/dissertation/comparison_2_3_vs_disser",
   comparison_name = "Trim 2_3"
 )
 
@@ -69,5 +69,5 @@ cat("  Direction concordance:", summary_2_3$Value[summary_2_3$Metric == "Directi
 
 cat("All comparisons complete!\n")
 cat("Results saved to:\n")
-cat("  - output/comparison_1_2_vs_disser/\n")
-cat("  - output/comparison_2_3_vs_disser/\n\n")
+cat("  - output/dissertation/comparison_1_2_vs_disser/\n")
+cat("  - output/dissertation/comparison_2_3_vs_disser/\n\n")

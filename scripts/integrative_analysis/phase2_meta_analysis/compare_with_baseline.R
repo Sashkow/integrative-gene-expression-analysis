@@ -14,9 +14,9 @@ suppressPackageStartupMessages({
 # Configuration
 # ============================================================================
 
-baseline_dir <- "output/trim_2_3"
-phase2_dir <- "output/phase2_meta"
-output_dir <- "output/phase2_meta/comparison"
+baseline_dir <- "output/exploratory/trim_2_3"
+phase2_dir <- "output/exploratory/phase2_meta"
+output_dir <- "output/exploratory/phase2_meta/comparison"
 
 # Create output directory
 if (!dir.exists(output_dir)) {

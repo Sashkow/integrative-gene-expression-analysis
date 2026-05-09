@@ -97,7 +97,7 @@ The simplified DWD implementation proved too aggressive:
 **Datasets**: 8 (GSE100051, GSE22490, GSE28551, GSE37653, GSE55439, GSE122214, GSE37901, GSE9984)
 **Total samples**: 125 DE samples (108 First Trimester + 17 Second Trimester)
 **Recommended coverage**: 75% (6/8 datasets)
-**Permanent output folder**: `output/phase2b_1_2_8datasets_final/`
+**Permanent output folder**: `output/phase2b_combat/phase2b_1_2_8datasets_final/`
 
 ### Gene Recovery (1_2)
 
@@ -153,7 +153,7 @@ Note: Lower correlation than 2_3 (0.71 vs 0.89) due to fewer Second Trimester sa
 
 **Conclusion**: 87% of DEGs (151/174) required NO imputation. The remaining 23 DEGs have at most 25% imputed values. No DEGs with >25% imputation reached significance, suggesting imputation is not introducing false positives.
 
-Full per-gene imputation rates saved to: `output/phase2b_1_2_8datasets_final/deg_imputation_rates.csv`
+Full per-gene imputation rates saved to: `output/phase2b_combat/phase2b_1_2_8datasets_final/deg_imputation_rates.csv`
 
 ### Weighted Limma Analysis (1_2)
 
@@ -169,7 +169,7 @@ The 22 genes that lost significance had logFC values drop from 2-4 range to 0.1-
 
 Only **ZNF638** (missing from GSE100051, 39% imputed) survived weighted analysis: logFC dropped from 4.66 to 2.43 but remained significant (adj.P = 0.002).
 
-Weighted results saved to: `output/phase2b_1_2_8datasets_final/difexp_softimpute_combat_weighted.tsv`
+Weighted results saved to: `output/phase2b_combat/phase2b_1_2_8datasets_final/difexp_softimpute_combat_weighted.tsv`
 
 ---
 
@@ -177,7 +177,7 @@ Weighted results saved to: `output/phase2b_1_2_8datasets_final/difexp_softimpute
 
 **Datasets**: GSE100051, GSE122214, GSE22490, GSE37901, GSE55439, GSE9984 (same as dissertation)
 **Total samples**: 84 DE samples (67 First + 17 Second)
-**Output folder**: `output/phase2b_1_2_disser/`
+**Output folder**: `output/phase2b_combat/phase2b_1_2_disser/`
 
 ### Gene Recovery (Dissertation Datasets)
 
@@ -236,7 +236,7 @@ output/phase2b_term_vs_2trim_final/
 
 **1_2 Comparison - 8 Datasets (First Trimester vs Second Trimester):**
 ```
-output/phase2b_1_2_8datasets_final/
+output/phase2b_combat/phase2b_1_2_8datasets_final/
 ├── deg_imputation_rates.csv          # Per-DEG imputation percentage
 ├── deg_imputation_rates_detailed.csv # Exact imputation % per sample
 ├── difexp_softimpute_combat_weighted.tsv  # Weighted limma results
@@ -247,7 +247,7 @@ output/phase2b_1_2_8datasets_final/
 
 **1_2 Comparison - Dissertation Datasets (6 datasets):**
 ```
-output/phase2b_1_2_disser/
+output/phase2b_combat/phase2b_1_2_disser/
 ├── gene_recovery_comparison.csv      # Genes retained at different thresholds
 ├── imputation_validation.csv         # Leave-out validation metrics
 ├── method_comparison.csv             # Summary of all method combinations

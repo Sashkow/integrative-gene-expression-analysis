@@ -14,7 +14,7 @@ library(officer)
 library(ggplot2)
 
 # Define paths
-data_dir <- "output/test_first_datasets/GSE55439_GSE93520_GSE28551_GSE100051"
+data_dir <- "output/dataset_testing/test_first_datasets/GSE55439_GSE93520_GSE28551_GSE100051"
 output_dir <- file.path(data_dir, "pcas")
 
 # Load data

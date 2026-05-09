@@ -20,10 +20,10 @@ source("scripts/integrative_analysis/integrative_analysis_disser_pipeline/01_dat
 source("scripts/integrative_analysis/integrative_analysis_disser_pipeline/02_batch_correction.R")
 
 # Load configuration
-config <- load_config("config/config_test_first_datasets.yaml")
+config <- load_config("config/dataset_testing/config_test_first_datasets.yaml")
 
 # Define the specific dataset combination we want
-target_dir <- "output/test_first_datasets/GSE55439_GSE93520_GSE28551_GSE100051"
+target_dir <- "output/dataset_testing/test_first_datasets/GSE55439_GSE93520_GSE28551_GSE100051"
 
 cat("Target directory:", target_dir, "\n\n")
 

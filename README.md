@@ -186,8 +186,8 @@ Or run interactively in RStudio by opening `notebooks/pipeline.Rmd`.
 
 ```r
 # Source specific modules
-source("R/01_data_merging.R")
-source("R/02_batch_correction.R")
+source("scripts/integrative_analysis/integrative_analysis_disser_pipeline/01_data_merging.R")
+source("scripts/integrative_analysis/integrative_analysis_disser_pipeline/02_batch_correction.R")
 # ... etc
 
 # Load configuration
@@ -370,7 +370,7 @@ differential_expression:
 ### Check Input Data
 
 ```r
-source("R/utils.R")
+source("scripts/integrative_analysis/integrative_analysis_disser_pipeline/utils.R")
 
 # Validate input
 validate_input(exprs, pdata)
@@ -384,7 +384,7 @@ validate_config(config)
 
 ```r
 # Load specific module
-source("R/05_network_clustering.R")
+source("scripts/integrative_analysis/integrative_analysis_disser_pipeline/05_network_clustering.R")
 
 # Test function
 string_db <- initialize_stringdb(species = 9606, score_threshold = 400)
@@ -410,6 +410,89 @@ This pipeline is provided as-is for research purposes.
 ## Contact
 
 For questions or issues, please open an issue in the repository or contact the maintainer.
+
+## Future Improvements
+
+### Safely adding new datasets to the integrative cohort
+
+Adding a new GEO dataset (or a newer array platform) to an existing contrast
+is usually framed as a power gain — more samples → tighter p-values → more
+DEGs. In practice the decision is more nuanced, and the current pipeline does
+not yet include dedicated diagnostics for it. Before expanding either cohort,
+the following should be implemented or checked manually:
+
+**The core risk: single-condition batches and ComBat confounding.** If the new
+dataset contains only one level of the comparison group (e.g., only Term
+samples for the 2_3 contrast), the new batch's location/scale term and that
+group's biological coefficient become partially collinear in the ComBat +
+limma design matrix. ComBat will still run, but part of any systematic offset
+from the new platform leaks into the logFC estimates for that group instead
+of being absorbed as a batch effect. This can inflate *or* deflate the
+Term-vs-Second-Trimester contrast depending on the new platform's overall
+intensity offset, and is not ComBat-specific — it applies to any
+location-scale batch correction (sva, RUV, `removeBatchEffect`). A batch
+that contains *both* comparison groups is identifiable; a single-condition
+batch is not.
+
+**Why DEG count alone is not a sufficient sanity check.** "More DEGs and none
+of the previously significant genes lost" is a necessary but not sufficient
+condition for improvement: a uniform-direction bias preserves previously
+significant genes while inflating the count by reinforcing effects that are
+already in the favoured direction. Stable top-N DEG sets can mask substantial
+logFC drift that matters biologically.
+
+**Diagnostics to add before accepting a new dataset.** These are not yet
+implemented in this repo but should be part of a future "dataset-addition
+qualification" script:
+
+- **logFC-stability check**: re-run DE with and without the candidate dataset
+  on the common gene set and compare logFCs for the previously significant
+  genes. A clean power gain leaves logFCs approximately unchanged with tighter
+  standard errors; a biased addition shifts them in a coherent direction.
+- **Mean-shift test on previously-significant DEGs**: test whether the mean
+  logFC shift across top DEGs is significantly non-zero and whether its sign
+  matches the new platform's global intensity offset.
+- **Leave-one-dataset-out stability**: rerun DE with each dataset held out in
+  turn; datasets that help reduce the leave-one-out variance of the DEG set,
+  datasets that bias the result shift the logFC distribution systematically.
+- **Negative-control gene distribution**: distribution of logFCs for
+  housekeeping genes, Y-chromosome genes (stratified by fetal sex), and
+  ribosomal genes should be centred at zero and similarly spread before and
+  after the addition. A shift or widening is a red flag for batch leakage.
+- **Biological coherence of gained DEGs**: enrichment analysis on genes that
+  became significant only after the addition. Gained genes should enrich for
+  plausible contrast-relevant biology (placental maturation, labor onset,
+  syncytiotrophoblast markers for trimester contrasts) rather than tissue /
+  RNA-degradation signatures.
+- **External anchor genes**: pick a small panel of genes with established
+  trimester expression patterns from independent literature (not from the
+  current DEG list) and check that their logFCs stay put or move *toward* the
+  literature values after the addition.
+
+**When an addition is safe by construction.**
+
+- The new dataset comes from a platform **already present** in the existing
+  cohort, so it joins an existing batch (no new γ coefficient to fit).
+- The new dataset contributes samples to **both** comparison groups (even a
+  few of the under-represented group), so the new batch is identifiable.
+
+**When to be cautious.**
+
+- A new-platform dataset contributing only one group's samples. This is the
+  worst case — identifiability failure plus new-batch signal — and should not
+  be added without the logFC-stability + negative-control diagnostics above.
+
+### Other improvements on the wishlist
+
+- Make `min_datasets_per_gene` (the block-mask pair-pool filter) a
+  configurable YAML knob, so the stringency of block-mask validation can be
+  tuned without editing `imputation.R`.
+- Extend the block-mask validator to optionally score only genes that are
+  truly missing in at least one real dataset (rather than uniformly over the
+  fully-observed pool), which better mirrors the actual downstream imputation
+  task.
+- Add a dataset-addition-qualification script that implements the diagnostics
+  above end-to-end, returning a go/no-go summary.
 
 ## Recent Updates
 
