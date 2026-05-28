@@ -1,0 +1,83 @@
+# CVS vs GSE100051 (termination) — GA 10-12 exact week match
+# RUVg k=1 — one unwanted factor for two platforms
+#
+# GSE12767:  CVS, Affymetrix HGU133Plus2, GA 10-12 weeks (8 healthy)
+# GSE100051: Termination, Illumina HumanHT-12 v4, GA 10-12 weeks (15 healthy)
+
+paths:
+  mapped_data: "data/mapped"
+  phenodata: "data/phenodata/samples_cvs_ga_matched.csv"
+  output: "output/cvs_vs_termination_compare/cvs_vs_GSE100051"
+  baseline_output: null
+
+files:
+  pattern: "\\.tsv$"
+  datasets:
+    - "GSE12767"
+    - "GSE100051"
+  file_map:
+    GSE12767: "cvs/GSE12767_entrez_protein_coding.tsv"
+    GSE100051: "GSE100051.tsv"
+
+sample_filter:
+  Diagnosis: ["Healthy"]
+  Biological.Specimen: ["Chorionic Villus Sampling", "Chorionic villi"]
+  Gestational.Age.Category: ["First Trimester"]
+
+per_dataset_filter:
+  GSE100051:
+    Gestational.Age: ["10", "11", "12"]
+
+phenotype:
+  group_column: "Biological.Specimen"
+  baseline: "Chorionic villi"
+  contrast: "Chorionic Villus Sampling"
+  covariates: []
+
+imputation:
+  softimpute:
+    enabled: false
+  knn:
+    enabled: false
+  missmda:
+    enabled: false
+  sample_knn:
+    enabled: false
+  none:
+    enabled: true
+
+normalization:
+  combat:
+    enabled: false
+  ruv:
+    enabled: true
+    k: 1
+    control_genes_file: "scripts/integrative_analysis/phase2b_direct_merge/config_cvs_vs_termination_compare/control_genes_cvs_GSE100051.txt"
+  dwd:
+    enabled: false
+
+coverage:
+  max_imputation_allowed: 0.0
+  compare_thresholds: [1.0, 0.0]
+  drop_imputed_genes_missing_in_group: true
+
+de:
+  imputed_cell_weight: 0.0
+
+thresholds:
+  fdr: 0.05
+  logfc: 1.0
+
+gene_filter:
+  protein_coding_only: true
+  min_variance: 0.01
+
+output:
+  save_imputed_matrices: false
+  save_normalized_matrices: true
+  save_validation_report: false
+  save_comparison_plots: true
+
+logging:
+  verbose: true
+  save_log: true
