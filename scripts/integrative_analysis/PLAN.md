@@ -134,12 +134,32 @@ Compared Sashko (8 datasets) vs Yehor (8-9 datasets) preprocessing:
 
 ---
 
+## Phase 6: Beyond DEGs — Continuous GA Modeling [NOT STARTED]
+
+**Goal:** Model gene expression as a continuous function of gestational age (GA) instead of categorical trimester comparisons. Identify *when* during pregnancy each gene's expression changes most rapidly.
+
+**Approach:**
+1. **Spline regression in limma** — replace trimester factor with `ns(ga_weeks, df=4)`. Identifies genes that vary with GA (nonlinear trends included).
+2. **Derivative analysis** — compute first derivative of fitted spline per gene; peaks in |derivative| reveal GA windows of maximal expression change. Cluster genes by derivative-peak timing to find coordinated transitions.
+3. **GA uncertainty model** — some samples have GA ranges, not exact values, and different dating methods (ultrasound vs LMP) have different precision. Handle via:
+   - Start with multiple imputation (sample GA from plausible range, refit, pool with Rubin's rules)
+   - Optionally move to Bayesian hierarchical model: true GA latent, observed GA ~ N(true_GA, sigma_method), expression ~ GP(true_GA)
+
+**Key considerations:**
+- Uneven sample density across GA — most samples cluster in weeks 7–12 and 37–40; sparse in between
+- GA uncertainty propagates into derivative confidence intervals — need to check whether "change hotspots" are robust to GA jitter
+- Can reuse existing ComBat-corrected, imputed expression matrices from Phase 2B
+
+---
+
 ## Open Questions
 
 1. **GSE37653 sample quality**: Should bad samples (10 of 25) be excluded? How does this affect batch balance?
 2. **Soncin dataset**: Included in 9ds runs but excluded from 8ds — impact on results?
 3. **Sex-stratified analysis thresholds**: |logFC| >= log2(1.2) for within-trimester sex comparisons vs |logFC| >= 1 for trimester comparisons — is the lower threshold justified?
 4. **Weighted limma**: Should imputed values always be downweighted to 0, or is there a middle ground?
+5. **Placenta vs chorionic villi**: Decide whether placenta and chorionic villi datasets are mutually fit for integration (tissue comparability, dissection protocols, potential confounding), using Yevheniy's deconvolution data.
+6. **Batch-sensitized imputation**: Try imputing within each batch (dataset) separately before merging and running ComBat, so the imputer never sees cross-batch differences and doesn't bake batch effects into filled values. Per Goh, Hui & Wong (Drug Discovery Today, 2023). Note: only applicable to cell-level missingness within a dataset — won't help for structural platform holes (gene absent from entire dataset), which is the dominant pattern in our data. Worth testing on the minority of genes that are present but have sporadic missing cells within a batch.
 
 ## Key References
 
