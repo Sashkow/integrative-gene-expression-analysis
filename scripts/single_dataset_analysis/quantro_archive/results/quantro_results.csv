@@ -1,0 +1,7 @@
+"Dataset","Platform","Contrast","Groups","N_per_group","quantro_stat","perm_pvalue"
+"GSE100051","Illumina HumanHT-12 V4.0","GA categories","First Trimester / Second Trimester / Term","42/7/5",2.7852,0.058
+"GSE100051","Illumina HumanHT-12 V4.0","Male vs Female","Female / Male","34/20",0.2136,0.827
+"GSE9984","Affy HG-U133 Plus 2.0","GA categories","First Trimester / Second Trimester / Term","4/4/4",2.4821,0.103
+"GSE9984","Affy HG-U133 Plus 2.0","Male vs Female","Female / Male","9/3",2.6587,0.11
+"GSE22490","Affy HG-U133 Plus 2.0","GA categories","First Trimester / Second Trimester","8/2",0.6386,0.575
+"GSE93520","Agilent 4x44K","Male vs Female","Female / Male","19/17",0.3361,0.705
