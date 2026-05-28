@@ -86,3 +86,28 @@ nohup.out
 
 # Misc
 dataset_sample_matching.csv
+
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.blg
+*.fls
+*.fdb_latexmk
+*.synctex*
+*.toc
+*.nav
+*.snm
+
+# Python
+__pycache__/
+.venv/
+*.pyc
+
+# Articles (manuscripts, data, PDFs - too large for git)
+articles/
+
+# Personal notes
+emotional_management/
+
+# Quantro archive raw data (342 MB of .CEL files)
+scripts/single_dataset_analysis/quantro_archive/data/raws/
