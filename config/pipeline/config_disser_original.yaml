@@ -1,0 +1,169 @@
+# Expression Integration Pipeline Configuration - Original Dissertation Data
+# This config uses ONLY the 8 datasets from dissertation Table 3.1
+#
+# Dissertation datasets (Table 3.1):
+#   GSE122214, GSE22490, GSE35574, GSE37901, GSE6573, GSE73374, GSE73685, GSE9984
+#
+# For 1_2 analysis (First vs Second Trimester):
+#   - GSE122214: 4 First Trimester
+#   - GSE22490: 5 First, 1 Second
+#   - GSE37901: 4 Second Trimester
+#   - GSE9984: 4 First, 4 Second
+#   Total: 13 First + 9 Second = 22 samples
+
+# Global Dataset Exclusions - exclude ALL datasets NOT in dissertation
+global_exclusions:
+  datasets:
+    # Datasets added after dissertation (not in Table 3.1)
+    - "GSE100051"
+    - "GSE93520"
+    - "GSE37653"
+    - "GSE28551"
+    - "GSE55439"
+    # Other exclusions
+    - "GSE43942"
+    - "GSE74341"
+
+# Project Information
+project:
+  name: "Original Dissertation Trimester Comparison"
+  description: "Regenerate dissertation data WITHOUT GSE100051"
+  author: "Olexandr Lykhenko"
+  date: "2026-01-18"
+
+# Input Paths
+paths:
+  mapped_data: "/home/shivers/a/r/igea-r/scripts/integrative-gene-expression-analysis/data/mapped"
+  phenodata: "/home/shivers/a/r/igea-r/scripts/integrative-gene-expression-analysis/data/phenodata/samples.csv"
+  output: "/home/shivers/a/r/igea-r/scripts/integrative-gene-expression-analysis/output/dissertation/integrative_pipeline_disser"
+
+# Data Merging Parameters
+merging:
+  pattern: ".tsv"
+  sample_column: "arraydatafile_exprscolumnnames"
+
+# Analysis Mode
+analysis_mode: "separate"
+
+# Separate Analyses Configuration
+separate_analyses:
+
+  # Analysis 1: First vs Second Trimester (without GSE100051)
+  trim_1_2:
+    name: "First vs Second Trimester (Dissertation)"
+    output_subdir: "1_2"
+
+    # Dataset exclusions - GSE100051 was NOT in dissertation
+    exclude_datasets: []  # Already excluded globally
+
+    # Filtering - only samples from First and Second trimester
+    filtering:
+      Biological.Specimen: ["Placenta", "Chorionic villi"]
+      Diagnosis: ["Healthy"]
+      Gestational.Age.Category: ["First Trimester", "Second Trimester"]
+
+    # Batch correction
+    batch_correction:
+      batch_column: "secondaryaccession"
+      model_formula: "~trim_term + Combined.Fetus.Sex"
+      par_prior: TRUE
+      prior_plots: FALSE
+
+    # Differential expression
+    differential_expression:
+      design_formula: "~0 + trim_term + Combined.Fetus.Sex"
+      contrasts:
+        - "trim_termSecond Trimester - trim_termFirst Trimester"
+      decide_method: "global"
+      logfc_threshold: 1
+      pvalue_threshold: 0.05
+
+  # Analysis 2: Second vs Third Trimester (Term) (without GSE100051)
+  trim_2_3:
+    name: "Second Trimester vs Term (Dissertation)"
+    output_subdir: "2_3"
+
+    # Dataset exclusions
+    exclude_datasets: []  # Already excluded globally
+
+    # Filtering - only samples from Second trimester and Term
+    filtering:
+      Biological.Specimen: ["Placenta", "Chorionic villi"]
+      Diagnosis: ["Healthy"]
+      Gestational.Age.Category: ["Second Trimester", "Term"]
+
+    # Batch correction
+    batch_correction:
+      batch_column: "secondaryaccession"
+      model_formula: "~trim_term + Combined.Fetus.Sex"
+      par_prior: TRUE
+      prior_plots: FALSE
+
+    # Differential expression
+    differential_expression:
+      design_formula: "~0 + trim_term + Combined.Fetus.Sex"
+      contrasts:
+        - "trim_termTerm - trim_termSecond Trimester"
+      decide_method: "global"
+      logfc_threshold: 1
+      pvalue_threshold: 0.05
+
+# PCA Parameters
+pca:
+  center: TRUE
+  scale: FALSE
+  color_by:
+    - "trim_term"
+    - "Combined.Fetus.Sex"
+    - "secondaryaccession"
+  n_pcs: 20
+  biplot_genes: 10
+
+# STRING Database Parameters
+stringdb:
+  version: "11"
+  species: 9606
+  score_threshold: 100
+  use_cache: TRUE
+  cache_dir: "data/stringdb_cache"
+
+# Network Clustering Parameters
+clustering:
+  min_cluster_size: 3
+  recursive: TRUE
+
+# Enrichment Analysis Parameters
+enrichment:
+  max_pvalue: 0.05
+  category: "Process"
+  enrichr_databases:
+    - "GO_Biological_Process_2018"
+    - "KEGG_2021_Human"
+
+# Visualization Parameters
+visualization:
+  network_layout: "fr"
+  volcano_top_genes: 20
+  heatmap_top_genes: 50
+
+# Output Formats
+output:
+  save_rds: TRUE
+  save_csv: TRUE
+  save_plots: TRUE
+  plot_format: "svg"
+
+# Performance
+performance:
+  cores: 1
+  memory_limit: 8000
+
+# Comparison Analysis
+comparison:
+  enabled: FALSE
+  output_subdir: "comparison"
+  analyses_to_compare: ["trim_1_2", "trim_2_3"]
+  venn_diagram: TRUE
+  direction_comparison: TRUE
+  opposite_direction: TRUE
+  fold_change_correlation: TRUE

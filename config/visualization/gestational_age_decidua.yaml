@@ -1,0 +1,6 @@
+tissue_label: "decidua"
+condition: "healthy"
+tissues:
+  - "Decidua"
+output_dir: "output/visualization/gestational_age_estimation"
+file_prefix: "gestational_age_decidua"

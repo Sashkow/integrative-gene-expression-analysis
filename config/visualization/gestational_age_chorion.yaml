@@ -1,0 +1,6 @@
+tissue_label: "chorion"
+condition: "healthy"
+tissues:
+  - "Chorion"
+output_dir: "output/visualization/gestational_age_estimation"
+file_prefix: "gestational_age_chorion"

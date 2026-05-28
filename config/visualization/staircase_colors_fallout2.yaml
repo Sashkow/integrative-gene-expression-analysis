@@ -1,0 +1,22 @@
+# Staircase color scheme: Fallout 2 Pip-Boy CRT
+# Green-on-black terminal aesthetic
+
+background: "#0A0A0A"
+text_primary: "#00FF00"
+text_dim: "#33AA33"
+
+fdr_gradient:
+  significant: "#00FF00"    # bright pip-boy green (FDR → 0)
+  nonsig: "#1A3A1A"         # dark green (FDR → 1)
+  min_alpha: 0.08
+
+categories:
+  no_fdr: "#0D1F0D"         # near-black green — observed, not in DE results
+  imputable_na: "#3E2723"   # dark brown — NA cells that softImpute fills
+  group_excluded: "#FF1744" # rad-warning red — one trimester group entirely absent
+  coverage_excluded: "#FF6F00" # amber warning — gene dropped, too much missing
+  padding: "#212121"        # charcoal — gene not in this run at all
+
+legacy:
+  na: "#FF1744"
+  excluded: "#FF1744"

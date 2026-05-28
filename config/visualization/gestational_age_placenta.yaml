@@ -1,0 +1,8 @@
+tissue_label: "placenta/chorionic villi"
+condition: "healthy"
+tissues:
+  - "Placenta"
+  - "Chorionic villi"
+  - "Placenta, chorionic villi"
+output_dir: "output/visualization/gestational_age_estimation"
+file_prefix: "gestational_age_placenta"

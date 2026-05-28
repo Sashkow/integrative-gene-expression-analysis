@@ -1,0 +1,6 @@
+tissue_label: "basal plate"
+condition: "healthy"
+tissues:
+  - "Basal Plate"
+output_dir: "output/visualization/gestational_age_estimation"
+file_prefix: "gestational_age_basal_plate"

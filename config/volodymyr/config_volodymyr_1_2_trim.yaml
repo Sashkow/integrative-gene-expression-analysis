@@ -1,0 +1,76 @@
+# Configuration for Volodymyr Article - 1st vs 2nd Trimester PCA
+# 5 datasets: GSE122214, GSE22490, GSE37901, GSE9984 (Affymetrix) + GSE93520 (Agilent)
+
+# Project Information
+project:
+  name: "Volodymyr Article 1-2 Trimester"
+  description: "PCA multiplot for 1st vs 2nd trimester with 5 datasets"
+  author: "Olexandr Lykhenko"
+  date: "2026-03-24"
+
+# Input Paths
+paths:
+  mapped_data: "/home/shivers/a/r/igea-r/scripts/integrative-gene-expression-analysis/data/mapped"
+  phenodata: "/home/shivers/a/r/igea-r/scripts/integrative-gene-expression-analysis/data/phenodata/samples.csv"
+  output: "/home/shivers/a/r/igea-r/scripts/integrative-gene-expression-analysis/output/volodymyr/volodymyr_1_2_trim"
+
+# Data Merging Parameters
+merging:
+  pattern: ".tsv"
+  sample_column: "arraydatafile_exprscolumnnames"
+
+# Baseline Datasets (4 Affymetrix)
+baseline:
+  datasets: ["GSE122214", "GSE22490", "GSE37901", "GSE9984"]
+  description: "4 Affymetrix datasets"
+
+# Additional dataset
+first_trimester_datasets:
+  datasets: ["GSE93520"]
+  description: "Agilent dataset to add to baseline"
+
+# Testing Mode
+testing:
+  test_all_subsets: false
+  description: "Only test GSE93520 added to baseline"
+
+# Only include datasets from Volodymyr's article
+allowed_datasets: ["GSE122214", "GSE22490", "GSE37901", "GSE9984", "GSE93520"]
+
+# Filtering
+filtering:
+  Biological.Specimen: ["Placenta", "Chorionic villi"]
+  Diagnosis: ["Healthy"]
+  Gestational.Age.Category: ["First Trimester", "Second Trimester"]
+
+# Batch Correction Parameters
+batch_correction:
+  batch_column: "secondaryaccession"
+  model_formula: "~trim_term + Combined.Fetus.Sex"
+  par_prior: TRUE
+  prior_plots: FALSE
+
+# Differential Expression Parameters
+differential_expression:
+  design_formula: "~0 + trim_term + Combined.Fetus.Sex"
+  contrasts:
+    - "trim_termSecond Trimester - trim_termFirst Trimester"
+  decide_method: "global"
+  logfc_threshold: 1
+  pvalue_threshold: 0.05
+  filter_by_stringdb: true
+  normalize_fdr_to_baseline: true
+
+# Single Dataset Analysis Parameters
+single_dataset_analysis:
+  enabled: FALSE
+  min_samples_per_group: 3
+
+# Output Settings
+output:
+  save_gene_lists: TRUE
+  save_summary_tables: TRUE
+  gene_list_prefix: "first_"
+  summary_file: "first_dataset_comparison_summary.csv"
+  single_dataset_summary_file: "first_single_dataset_summary.csv"
+  max_genes_to_print: 50

@@ -1,0 +1,76 @@
+# Configuration for Volodymyr Article - 2nd vs 3rd Trimester
+# 6 datasets: GSE37901, GSE6573, GSE9984, GSE73374, GSE73685 (Affymetrix) + GSE35574 (Illumina)
+
+# Project Information
+project:
+  name: "Volodymyr Article 2-3 Trimester"
+  description: "Pipeline for 2nd vs 3rd trimester with 6 datasets from Volodymyr article"
+  author: "Olexandr Lykhenko"
+  date: "2026-04-21"
+
+# Input Paths
+paths:
+  mapped_data: "/home/shivers/a/r/igea-r/scripts/integrative-gene-expression-analysis/data/mapped"
+  phenodata: "/home/shivers/a/r/igea-r/scripts/integrative-gene-expression-analysis/data/phenodata/samples.csv"
+  output: "/home/shivers/a/r/igea-r/scripts/integrative-gene-expression-analysis/output/volodymyr/volodymyr_2_3_trim"
+
+# Data Merging Parameters
+merging:
+  pattern: ".tsv"
+  sample_column: "arraydatafile_exprscolumnnames"
+
+# Baseline Datasets (5 Affymetrix)
+baseline:
+  datasets: ["GSE37901", "GSE6573", "GSE9984", "GSE73374", "GSE73685"]
+  description: "5 Affymetrix datasets"
+
+# Additional dataset
+term_datasets:
+  datasets: ["GSE35574"]
+  description: "Illumina dataset to add to baseline"
+
+# Testing Mode
+testing:
+  test_all_subsets: false
+  description: "Only test GSE35574 added to baseline"
+
+# Only include datasets from Volodymyr's article
+allowed_datasets: ["GSE37901", "GSE6573", "GSE9984", "GSE73374", "GSE73685", "GSE35574"]
+
+# Filtering
+filtering:
+  Biological.Specimen: ["Placenta", "Chorionic villi"]
+  Diagnosis: ["Healthy"]
+  Gestational.Age.Category: ["Second Trimester", "Term"]
+
+# Batch Correction Parameters
+batch_correction:
+  batch_column: "secondaryaccession"
+  model_formula: "~trim_term + Combined.Fetus.Sex"
+  par_prior: TRUE
+  prior_plots: FALSE
+
+# Differential Expression Parameters
+differential_expression:
+  design_formula: "~0 + trim_term + Combined.Fetus.Sex"
+  contrasts:
+    - "trim_termTerm - trim_termSecond Trimester"
+  decide_method: "global"
+  logfc_threshold: 1
+  pvalue_threshold: 0.05
+  filter_by_stringdb: true
+  normalize_fdr_to_baseline: true
+
+# Single Dataset Analysis Parameters
+single_dataset_analysis:
+  enabled: FALSE
+  min_samples_per_group: 3
+
+# Output Settings
+output:
+  save_gene_lists: TRUE
+  save_summary_tables: TRUE
+  gene_list_prefix: "term_"
+  summary_file: "term_dataset_comparison_summary.csv"
+  single_dataset_summary_file: "term_single_dataset_summary.csv"
+  max_genes_to_print: 50

@@ -1,0 +1,22 @@
+# Staircase color scheme: Teal data-quality
+# Cool blues = observed data, warm yellows/reds = missing/problems
+
+background: "white"
+text_primary: "black"
+text_dim: "black"
+
+fdr_gradient:
+  significant: "#004D40"    # deep teal (FDR → 0)
+  nonsig: "#B2DFDB"         # pale teal (FDR → 1)
+  min_alpha: 0.05
+
+categories:
+  no_fdr: "#E0F2F1"         # palest teal — observed, not in DE results
+  imputable_na: "#FFF176"   # soft yellow — NA cells that softImpute fills
+  group_excluded: "#B71C1C" # dark red — one trimester group entirely absent
+  coverage_excluded: "#F9A825" # golden amber — gene dropped, too much missing
+  padding: "#9E9E9E"        # neutral gray — gene not in this run at all
+
+legacy:
+  na: "#D93025"
+  excluded: "#D93025"

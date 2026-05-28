@@ -1,0 +1,6 @@
+tissue_label: "blood"
+condition: "healthy"
+tissues:
+  - "Blood"
+output_dir: "output/visualization/gestational_age_estimation"
+file_prefix: "gestational_age_blood"

@@ -1,0 +1,9 @@
+tissue_label: "placenta/chorionic villi (exact/range GA only for term-only datasets)"
+condition: "healthy"
+tissues:
+  - "Placenta"
+  - "Chorionic villi"
+  - "Placenta, chorionic villi"
+output_dir: "output/visualization/gestational_age_estimation"
+file_prefix: "gestational_age_placenta_exact_term"
+require_exact_for_term_only: true
