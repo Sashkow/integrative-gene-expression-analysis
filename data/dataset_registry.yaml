@@ -1,0 +1,245 @@
+# Dataset Registry
+# Tracks provenance, preprocessing, and known issues for each mapped dataset.
+# 14 datasets used in integrative placental gene expression analysis.
+
+GSE100051:
+  source: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE100051
+  platform: GPL10558 (Illumina HumanHT-12 V4.0)
+  samples: 54
+  tissue: Placenta
+  preprocessed_by: Yehor
+  preprocessing_script: null  # Yehor's external pipeline
+  mapped_file: data/mapped/GSE100051.tsv
+  raw_data: null
+  known_issues: []
+  notes: ""
+
+GSE122214:
+  source: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE122214
+  platform: GPL570 (Affymetrix HG-U133 Plus 2.0)
+  samples: 4
+  tissue: Placenta
+  preprocessed_by: Yehor
+  preprocessing_script: null  # Yehor's external pipeline
+  mapped_file: data/mapped/GSE122214.tsv
+  raw_data: null
+  known_issues:
+    - ethnicity: Asian
+  notes: ""
+
+GSE22490:
+  source: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE22490
+  platform: GPL570 (Affymetrix HG-U133 Plus 2.0)
+  samples: 10
+  tissue: Placenta
+  preprocessed_by: Yehor
+  preprocessing_script: null  # Yehor's external pipeline
+  mapped_file: data/mapped/GSE22490.tsv
+  raw_data: null
+  known_issues:
+    - preservation: "snap-freeze or RNAlater (mixed)"
+  notes: ""
+
+GSE28551:
+  source: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE28551
+  pmid: 22442682
+  platform: GPL2986 (ABI Human Genome Survey v2.0)
+  samples: 37
+  tissue: Placenta (chorionic tissue, standardized location)
+  preprocessed_by: Yehor
+  preprocessing_script: null  # Yehor's external pipeline
+  per_dataset_scripts:
+    - scripts/per_dataset_scripts/GSE28551/estimate_smoking_status.R
+  mapped_file: data/mapped/GSE28551.tsv
+  raw_data: data/raws/GSE28551/GSE28551_RAW.tar
+  known_issues:
+    - smoking: "9/16 first trimester samples are smokers (56%)"
+    - smoking_estimation: "Inferred via clustering on 18 smoking-responsive genes (one_off_scripts/pmid22442682/estimate_smoking_status.R)"
+    - smoking_column: "Estimated.Smoking.Status in samples.csv"
+    - no_per_sample_GA: "Gestational age not available per sample (only category)"
+    - ethnicity: Caucasian
+  notes: "Authors processed 301 arrays total, deposited only 37 on GEO"
+
+GSE35574:
+  source: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE35574
+  platform: GPL6884 (Illumina Human-6 v2)
+  samples: 94
+  tissue: Placenta
+  preprocessed_by: Sashko
+  preprocessing_script: null  # pipeline internal
+  mapped_file: data/mapped/GSE35574.tsv
+  raw_data: null
+  known_issues:
+    - intra_batch: "Two processing batches: A (23 samples) and B (71 samples), recorded in Batch column of samples.csv but NOT used by pipeline"
+    - technical_replicate: "1 confirmed replicate (Human.Placenta.654.rep), NOT marked in technical_replicate_block column"
+    - ethnicity: "Caucasian/African-American"
+  notes: ""
+
+GSE37653:
+  source: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE37653
+  pmid: null  # Khan et al. 2014, Indian J Med Res
+  platform: NimbleGen Human Gene Expression
+  samples: 25
+  tissue: Placental villi
+  preprocessed_by: Yehor
+  preprocessing_script: null  # Yehor's external pipeline
+  per_dataset_scripts:
+    - scripts/per_dataset_scripts/GSE37653/pca_3_yehor_gse37653.R
+    - scripts/per_dataset_scripts/GSE37653/pca_gse37653_combat_batch.R
+    - scripts/per_dataset_scripts/GSE37653/pca_gse37653_combat_then_sex.R
+  mapped_file: data/mapped/GSE37653.tsv
+  raw_data: null
+  known_issues:
+    - scanning_batches: "3 batches: Dec 2009 Singapore v2.5 (12), Feb 2010 India v2.5 (6), Jul 2010 India v2.6 (4), 3 unknown"
+    - scanning_batch_column: "Batch column in samples.csv"
+    - ethnicity: Indian
+  notes: "Arrays shipped to different NimbleGen scanning facilities (Singapore vs India) and different array versions (v2.5 vs v2.6)"
+
+GSE37901:
+  source: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE37901
+  platform: GPL570 (Affymetrix HG-U133 Plus 2.0)
+  samples: 4
+  tissue: Placenta
+  preprocessed_by: Yehor
+  preprocessing_script: null  # Yehor's external pipeline
+  mapped_file: data/mapped/GSE37901.tsv
+  raw_data: null
+  known_issues:
+    - preservation: "snap-freeze or RNAlater (mixed)"
+    - ethnicity: "white European"
+    - smoking: "Reported per group (controls: 0 smokers)"
+  notes: ""
+
+GSE55439:
+  source: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE55439
+  platform: GPL10558 (Illumina HumanHT-12 V4.0)
+  samples: 24
+  tissue: Placenta
+  preprocessed_by: Sashko
+  preprocessing_script: scripts/per_dataset_scripts/GSE55439/remap_gse55439_neqc.R
+  mapped_file: data/mapped/GSE55439.tsv
+  raw_data: null
+  known_issues:
+    - pseudo_replicates: "Preservation study (~3 placentas, multiple preservation methods per placenta). technical_replicate_block populated in samples.csv"
+    - preservation: "Snap-freeze vs RNAlater comparison study"
+  notes: "HIGH technical replicate concern. duplicateCorrelation active via technical_replicate_block"
+
+GSE6573:
+  source: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE6573
+  platform: GPL570 (Affymetrix HG-U133 Plus 2.0)
+  samples: 6
+  tissue: Placenta
+  preprocessed_by: Sashko
+  preprocessing_script: null  # pipeline internal
+  mapped_file: data/mapped/GSE6573.tsv
+  raw_data: null
+  known_issues:
+    - pooled: "10 individuals pooled per chip"
+    - delivery_mode: "All C-section"
+  notes: "Cannot be treated as n=1 independent samples — each chip is an average of 10"
+
+GSE70102:
+  source: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE70102
+  platform: GPL570 (Affymetrix HG-U133 Plus 2.0)
+  samples: 20
+  tissue: Placenta (basal plate, NOT chorionic villi)
+  preprocessed_by: Yehor + Sashko (reprocessed)
+  preprocessing_script: scripts/per_dataset_scripts/GSE70102/preprocess_gse70102_raw.R
+  per_dataset_scripts:
+    - scripts/per_dataset_scripts/GSE70102/preprocess_gse70102_raw.R
+    - scripts/per_dataset_scripts/GSE70102/map_gse70102.R
+  mapped_file: data/mapped/GSE70102.tsv
+  raw_data: null
+  known_issues:
+    - tissue_type: "Basal plate (maternal-fetal interface), distinct from villous tissue used by other datasets"
+  notes: ""
+
+GSE73374:
+  source: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE73374
+  platform: GPL16686 (Affymetrix HuGene-2.0-st)
+  samples: 36
+  tissue: Placenta
+  preprocessed_by: Sashko
+  preprocessing_script: null  # pipeline internal
+  mapped_file: data/mapped/GSE73374.tsv
+  raw_data: null
+  known_issues:
+    - ethnicity: "Multi-ethnic: 42% African-American, 31% Caucasian, 17% Hispanic"
+  notes: ""
+
+GSE73685:
+  source: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE73685
+  platform: GPL6244 (Affymetrix HuGene-1.0-st)
+  samples: 183
+  tissue: Placenta + other tissues (multiple tissues per patient)
+  preprocessed_by: Sashko
+  preprocessing_script: null  # pipeline internal
+  mapped_file: data/mapped/GSE73685.tsv
+  raw_data: null
+  known_issues:
+    - delivery_mode: "All C-section"
+    - labor_status: "Precisely phenotyped: PL/PNL/TL/TNL"
+    - multi_tissue: "Multiple tissues per patient, but all Placenta samples are from different women (verified)"
+  notes: "Largest dataset. 21 Placenta samples used, all from unique patients"
+
+GSE93520:
+  source: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE93520
+  platform: GPL13497 (Agilent Whole Human Genome 4x44K)
+  samples: 36
+  tissue: Placenta
+  preprocessed_by: Yehor (redownloaded and reprocessed)
+  preprocessing_script: scripts/per_dataset_scripts/GSE93520/process_GSE93520.R
+  per_dataset_scripts:
+    - scripts/per_dataset_scripts/GSE93520/download_GSE93520.R
+    - scripts/per_dataset_scripts/GSE93520/process_GSE93520.R
+    - scripts/per_dataset_scripts/GSE93520/fix_GSE93520_mapped.R
+    - scripts/per_dataset_scripts/GSE93520/fix_GSE93520_mapped_v2.R
+  mapped_file: data/mapped/GSE93520.tsv
+  raw_data: null
+  known_issues:
+    - ethnicity: Chinese
+  notes: "Redownloaded and reprocessed (see GSE93520_redownload/)"
+
+GSE9984:
+  source: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE9984
+  platform: GPL570 (Affymetrix HG-U133 Plus 2.0)
+  samples: 12
+  tissue: Placenta (villous tissue)
+  preprocessed_by: Yehor
+  preprocessing_script: null  # Yehor's external pipeline
+  mapped_file: data/mapped/GSE9984.tsv
+  raw_data: null
+  known_issues:
+    - delivery_mode: "Term samples: C-section"
+    - labor_status: "No labor for term"
+  notes: ""
+
+# =============================================================================
+# Enriched dataset pack for Yehor (8 datasets, GSE70102 excluded)
+# =============================================================================
+# Location: data/mapped/yehor/8_yehor_preprocessed_datasets_enriched_sashko/
+#
+# Based on Yehor's 2026-04-27 preprocessing of 9 datasets, with:
+#   - GSE70102 removed (basal plate tissue, not villi; 4 healthy 2nd-trimester samples)
+#   - GSE28551 replaced with Sashko's preprocessing (10437 vs 11013 genes)
+#   - GSE37653 filtered to Singapore batch only (12 of 25 samples)
+#     + Kept only "Dec 2009 Singapore v2.5" scanning batch (12 samples, 6f/6m)
+#     + Dropped India v2.5 (6), India v2.6 (4), No header (3) — scanning facility batch effects
+#     + No ComBat needed — single batch
+#     + Khan et al. 2014 (PMID 24604048) does not discuss scanning batches
+#   - phenodata: phenodata_placenta_1_2_enriched_sashko.tsv (173 rows)
+#     + Added columns: Batch (GSE37653 scanning batches), Estimated.Smoking.Status (GSE28551)
+#     + GSE28551 smoking: 9 Smoker, 7 Non-Smoker (1st trimester), inferred via clustering
+#       on 18 smoking-responsive genes (see scripts/per_dataset_scripts/GSE28551/estimate_smoking_status.R)
+#
+# PCA plots: output/per_dataset_pca/8_yehor_enriched_sashko/
+#
+# Datasets included (8):
+#   GSE100051 — Yehor preprocessing
+#   GSE122214 — Yehor preprocessing
+#   GSE22490  — Yehor preprocessing
+#   GSE28551_enriched_sashko  — Sashko preprocessing (smoking status estimated)
+#   GSE37653_enriched_sashko  — Yehor preprocessing, Singapore batch only (12 samples)
+#   GSE37901  — Yehor preprocessing
+#   GSE93520  — Yehor preprocessing
+#   GSE9984   — Yehor preprocessing
