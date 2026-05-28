@@ -7,6 +7,7 @@ paths:
   phenodata: "data/mapped/yehor/8_yehor_preprocessed_datasets_enriched_sashko/phenodata_placenta_1_2_enriched_sashko.tsv"
   reference_de: "output/yehor_sashko/phase2b_1_2_yehor_8ds_enriched_sashko/difexp_softimpute_combat_ref.tsv"
   reference_imputed: "output/yehor_sashko/phase2b_1_2_yehor_8ds_enriched_sashko/exprs_imputed_softimpute.tsv"
+  balanced_reference_de: "output/yehor_sashko/phase2b_1_2_yehor_2ds_balanced/difexp_softimpute_combat.tsv"
   output: "output/yehor_sashko/phase5_validation"
   column_map:
     arraydatafile_exprscolumnnames: "sample_id"

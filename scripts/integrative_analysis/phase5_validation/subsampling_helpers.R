@@ -253,21 +253,31 @@ run_lean_pipeline_inner <- function(exprs_sub_list, pdata_sub, config,
     }
   }
 
-  # --- Coverage threshold scan ---
-  threshold_scan <- sort(unique(
-    config$coverage$compare_thresholds %||% c(1.0, 0.9, 0.75, 0.5, 0.25)
-  ))
-  max_imp <- config$coverage$max_imputation_allowed %||% 0.20
+  # --- Determine min_datasets (fixed or auto-scan) ---
+  n_ds <- length(exprs_sub_list)
+  fixed_min_ds <- config$coverage$min_datasets
 
-  incomplete <- NULL
-  for (thresh in threshold_scan) {
-    incomplete <- create_incomplete_matrix(exprs_sub_list, min_coverage = thresh)
-    frac <- sum(is.na(incomplete$matrix)) / length(incomplete$matrix)
-    if (frac <= max_imp) break
+  if (!is.null(fixed_min_ds)) {
+    fixed_min_ds <- as.integer(fixed_min_ds)
+    if (fixed_min_ds < 1L || fixed_min_ds > n_ds)
+      stop("coverage$min_datasets must be between 1 and ", n_ds,
+           " (got ", fixed_min_ds, ")")
+    incomplete <- create_incomplete_matrix(exprs_sub_list,
+                                           min_datasets = fixed_min_ds)
+  } else {
+    max_imp <- config$coverage$max_imputation_allowed %||% 0.20
     incomplete <- NULL
+    for (min_ds in seq_len(n_ds)) {
+      incomplete <- create_incomplete_matrix(exprs_sub_list,
+                                             min_datasets = min_ds)
+      frac <- sum(is.na(incomplete$matrix)) / length(incomplete$matrix)
+      if (frac <= max_imp) break
+      incomplete <- NULL
+    }
+    if (is.null(incomplete))
+      stop("No min_datasets (1..", n_ds, ") keeps missingness below ",
+           round(100 * max_imp, 1), "%")
   }
-  if (is.null(incomplete))
-    stop("No threshold keeps missingness below ", round(100 * max_imp, 1), "%")
 
   # --- Imputation ---
   imputed_mask <- is.na(incomplete$matrix)
@@ -406,12 +416,23 @@ jaccard <- function(a, b) {
   int / uni
 }
 
+lin_ccc <- function(x, y) {
+  ok <- complete.cases(x, y)
+  if (sum(ok) < 3) return(NA_real_)
+  x <- x[ok]; y <- y[ok]
+  mx <- mean(x); my <- mean(y)
+  sx <- var(x); sy <- var(y)
+  sxy <- cov(x, y)
+  2 * sxy / (sx + sy + (mx - my)^2)
+}
+
 compute_subsample_metrics <- function(result, ref_de, ref_sig_genes,
                                       ref_sig_genes_fdr_only = NULL) {
   na_row <- data.frame(
     n_deg = NA, n_up = NA, n_down = NA, n_genes_tested = NA,
     jaccard_vs_full = NA, overlap_vs_full = NA,
-    logfc_pearson_vs_full = NA, logfc_spearman_vs_full = NA,
+    logfc_pearson_vs_full = NA, logfc_ccc_vs_full = NA,
+    logfc_spearman_vs_full = NA,
     same_direction_pct = NA,
     n_deg_fdr_only = NA, jaccard_fdr_only = NA,
     overlap_fdr_only = NA,
@@ -432,6 +453,7 @@ compute_subsample_metrics <- function(result, ref_de, ref_sig_genes,
     ref_sub <- ref_de[match(shared_genes, ref_de$gene), ]
     pearson_r <- cor(de_sub$logFC, ref_sub$logFC,
                      use = "complete.obs")
+    ccc_r <- lin_ccc(de_sub$logFC, ref_sub$logFC)
     spearman_r <- cor(de_sub$logFC, ref_sub$logFC,
                       use = "complete.obs", method = "spearman")
     shared_sig <- intersect(sig, ref_sig_genes)
@@ -445,6 +467,7 @@ compute_subsample_metrics <- function(result, ref_de, ref_sig_genes,
     }
   } else {
     pearson_r <- NA_real_
+    ccc_r <- NA_real_
     spearman_r <- NA_real_
     same_dir <- NA_real_
   }
@@ -465,6 +488,7 @@ compute_subsample_metrics <- function(result, ref_de, ref_sig_genes,
     n_genes_tested = result$n_genes_tested,
     jaccard_vs_full = j, overlap_vs_full = overlap,
     logfc_pearson_vs_full = pearson_r,
+    logfc_ccc_vs_full = ccc_r,
     logfc_spearman_vs_full = spearman_r,
     same_direction_pct = same_dir,
     n_deg_fdr_only = n_fdr, jaccard_fdr_only = j_fdr,
@@ -476,6 +500,7 @@ compute_subsample_metrics <- function(result, ref_de, ref_sig_genes,
 compute_pairwise_metrics <- function(result_a, result_b) {
   na_row <- data.frame(
     jaccard_between = NA, logfc_pearson_between = NA,
+    logfc_ccc_between = NA,
     logfc_spearman_between = NA, same_direction_pct = NA,
     jaccard_fdr_only_between = NA,
     jaccard_lfc15_between = NA,
@@ -501,6 +526,7 @@ compute_pairwise_metrics <- function(result_a, result_b) {
       match(shared, result_b$de_results$gene), ]
     pr <- cor(a_sub$logFC, b_sub$logFC,
               use = "complete.obs")
+    cc <- lin_ccc(a_sub$logFC, b_sub$logFC)
     sr <- cor(a_sub$logFC, b_sub$logFC,
               use = "complete.obs", method = "spearman")
     shared_sig <- intersect(
@@ -515,12 +541,14 @@ compute_pairwise_metrics <- function(result_a, result_b) {
     }
   } else {
     pr <- NA_real_
+    cc <- NA_real_
     sr <- NA_real_
     same_dir <- NA_real_
   }
 
   data.frame(
     jaccard_between = j, logfc_pearson_between = pr,
+    logfc_ccc_between = cc,
     logfc_spearman_between = sr, same_direction_pct = same_dir,
     jaccard_fdr_only_between = j_fdr,
     jaccard_lfc15_between = j_lfc15,
