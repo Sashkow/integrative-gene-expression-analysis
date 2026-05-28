@@ -34,6 +34,13 @@ Rscript install_packages.R
 2. Merge → ComBat → PCA → limma DE → STRING mapping → fastgreedy clustering → enrichment
 3. Output: `output/{analysis_name}/` with `difexp_filtered.tsv`, `exprs_corrected.tsv`, plots
 
+## Phenodata Modifications
+
+When modifying `data/phenodata/samples.csv` (gestational age, diagnosis, exclusions, etc.), always document the change in `data/phenodata/samples_evidence.md`:
+- Add a dated entry to the Changelog section
+- For new datasets, add a section under "GA Evidence by Dataset" with: GA type, source (article path or GEO data path), and diagnosis source
+- Reference the specific article PDF or series matrix file used as evidence
+
 ## Key Patterns
 
 - **Temporary scripts go in `one_off_scripts/`** - Put debug scripts, one-time analyses, and experimental code there
