@@ -12,10 +12,10 @@ library(softImpute)
 #' Create combined expression matrix with NAs for missing genes
 #'
 #' @param exprs_list Named list of expression matrices (genes x samples)
-#' @param min_coverage Minimum proportion of datasets a gene must appear in (0-1)
+#' @param min_datasets Minimum number of datasets a gene must appear in (integer, 1..N)
 #' @return List with: matrix (combined with NAs), gene_info, sample_info
 #' @export
-create_incomplete_matrix <- function(exprs_list, min_coverage = 0.5) {
+create_incomplete_matrix <- function(exprs_list, min_datasets = 1L) {
 
   n_datasets <- length(exprs_list)
   cat("Creating incomplete matrix from", n_datasets, "datasets\n")
@@ -24,7 +24,7 @@ create_incomplete_matrix <- function(exprs_list, min_coverage = 0.5) {
   all_genes <- unique(unlist(lapply(exprs_list, rownames)))
   cat("  Total unique genes:", length(all_genes), "\n")
 
-  # Calculate gene coverage (vectorized for speed)
+  # Calculate gene presence (vectorized for speed)
   # Create a presence matrix: genes x datasets
   gene_sets <- lapply(exprs_list, rownames)
   presence_matrix <- sapply(gene_sets, function(genes) all_genes %in% genes)
@@ -33,9 +33,9 @@ create_incomplete_matrix <- function(exprs_list, min_coverage = 0.5) {
   gene_presence <- rowSums(presence_matrix)
   gene_coverage <- gene_presence / n_datasets
 
-  # Filter genes by coverage
-  genes_to_keep <- names(gene_coverage)[gene_coverage >= min_coverage]
-  cat("  Genes with >=", round(min_coverage * 100), "% coverage:",
+  # Filter genes by minimum dataset count
+  genes_to_keep <- names(gene_presence)[gene_presence >= min_datasets]
+  cat("  Genes in >=", min_datasets, "of", n_datasets, "datasets:",
       length(genes_to_keep), "\n")
 
   # Get all samples
@@ -88,7 +88,7 @@ create_incomplete_matrix <- function(exprs_list, min_coverage = 0.5) {
     gene_info = gene_info,
     sample_info = sample_info,
     n_datasets = n_datasets,
-    coverage_threshold = min_coverage
+    min_datasets = min_datasets
   )
 }
 
@@ -420,7 +420,7 @@ impute_sample_knn <- function(incomplete, k = 10) {
 #' }
 #'
 #' @param exprs_list Named list of expression matrices
-#' @param min_coverage Minimum gene coverage for merging
+#' @param min_datasets Minimum number of datasets a gene must appear in
 #' @param leave_out_fraction Fraction of values to mask (0-1)
 #' @param n_repeats Number of CV repetitions
 #' @param methods Character vector of methods to test: "softimpute", "knn"
@@ -430,7 +430,7 @@ impute_sample_knn <- function(incomplete, k = 10) {
 #' @return Data frame with validation metrics
 #' @export
 validate_imputation <- function(exprs_list,
-                                 min_coverage = 0.5,
+                                 min_datasets = 1L,
                                  leave_out_fraction = 0.1,
                                  n_repeats = 5,
                                  methods = c("softimpute"),
@@ -448,7 +448,7 @@ validate_imputation <- function(exprs_list,
   cat("Methods:", paste(methods, collapse = ", "), "\n\n")
 
   # Create the base incomplete matrix
-  incomplete <- create_incomplete_matrix(exprs_list, min_coverage)
+  incomplete <- create_incomplete_matrix(exprs_list, min_datasets)
   X <- incomplete$matrix
 
   # Get indices of observed (non-NA) values
@@ -703,26 +703,30 @@ run_imputer <- function(method, incomplete, cfg = list()) {
 }
 
 
-#' Compare gene recovery across imputation methods and thresholds
+#' Compare gene recovery across imputation methods and dataset-count thresholds
 #'
 #' @param exprs_list Named list of expression matrices
-#' @param thresholds Vector of coverage thresholds to compare
+#' @param min_datasets_range Integer vector of minimum dataset counts to compare
+#'   (defaults to 1:N where N = length(exprs_list))
 #' @param methods Vector of methods: "none", "softimpute", "knn"
 #' @return Data frame with gene counts
 #' @export
 compare_gene_recovery <- function(exprs_list,
-                                   thresholds = c(1.0, 0.75, 0.5, 0.25),
+                                   min_datasets_range = NULL,
                                    methods = c("none", "softimpute")) {
+
+  if (is.null(min_datasets_range))
+    min_datasets_range <- seq_len(length(exprs_list))
 
   cat("\n=== Gene Recovery Comparison ===\n\n")
 
   results <- list()
 
-  for (thresh in thresholds) {
-    incomplete <- create_incomplete_matrix(exprs_list, min_coverage = thresh)
+  for (min_ds in min_datasets_range) {
+    incomplete <- create_incomplete_matrix(exprs_list, min_datasets = min_ds)
 
     for (method in methods) {
-      cat("Threshold:", thresh, "Method:", method, "\n")
+      cat("min_datasets:", min_ds, "Method:", method, "\n")
 
       mat <- if (method == "none") {
         incomplete$matrix
@@ -743,7 +747,7 @@ compare_gene_recovery <- function(exprs_list,
       pct_missing <- round(100 * n_missing_total / length(mat), 1)
 
       results[[length(results) + 1]] <- data.frame(
-        threshold = thresh,
+        min_datasets = min_ds,
         method = method,
         n_genes = n_genes,
         n_missing = n_missing_total,

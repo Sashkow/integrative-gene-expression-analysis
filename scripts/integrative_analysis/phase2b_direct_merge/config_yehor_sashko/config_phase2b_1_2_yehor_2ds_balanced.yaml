@@ -1,13 +1,11 @@
-# Phase 2B: Yehor 7-dataset 1_2 trimester comparison (enriched by Sashko)
-# GSE37653 excluded
-# GSE28551: Yehor preprocessing
-# GSE70102 excluded (basal plate tissue)
-# softImpute + combat_ref (ref=GSE100051) + sex covariate
+# Phase 2B: Balanced 2-dataset reference (Soncin + Mikheev)
+# GSE100051 (42 1st + 7 2nd) + GSE9984 (4 1st + 4 2nd) = 46 1st + 11 2nd
+# Used as balanced reference for phase5 validation test1b
 
 paths:
   mapped_data: "data/mapped/yehor/8_yehor_preprocessed_datasets_enriched_sashko"
   phenodata: "data/mapped/yehor/8_yehor_preprocessed_datasets_enriched_sashko/phenodata_placenta_1_2_enriched_sashko.tsv"
-  output: "output/yehor_sashko/phase2b_1_2_yehor_7ds_no_37653_enriched_sashko"
+  output: "output/yehor_sashko/phase2b_1_2_yehor_2ds_balanced"
   column_map:
     arraydatafile_exprscolumnnames: "sample_id"
     secondaryaccession: "dataset_id"
@@ -16,15 +14,8 @@ paths:
 
 files:
   suffix: "_entrez_protein_coding"
-  file_map:
-    GSE28551: "GSE28551_entrez_protein_coding.tsv"
   datasets:
     - "GSE100051"
-    - "GSE122214"
-    - "GSE22490"
-    - "GSE28551"
-    - "GSE37901"
-    - "GSE93520"
     - "GSE9984"
 
 sample_filter:
@@ -49,12 +40,12 @@ imputation:
     enabled: true
 
 normalization:
-  combat_ref:
+  combat:
     enabled: true
-    ref_batch: "GSE100051"
 
 coverage:
-  min_datasets: 1
+  max_imputation_allowed: 1.0
+  compare_thresholds: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
   drop_imputed_genes_missing_in_group: true
 
 de:
@@ -68,15 +59,10 @@ gene_filter:
   protein_coding_only: true
   min_variance: 0.01
 
-validation:
-  leave_out_fraction: 0.1
-  n_repeats: 3
-  mask_type: "gene_dataset_block"
-
 output:
   save_imputed_matrices: true
   save_normalized_matrices: true
-  save_validation_report: true
+  save_validation_report: false
   save_comparison_plots: true
 
 logging:

@@ -1,13 +1,13 @@
-# Phase 2B: Yehor 7-dataset 1_2 trimester comparison (enriched by Sashko)
-# GSE37653 excluded
-# GSE28551: Yehor preprocessing
-# GSE70102 excluded (basal plate tissue)
+# Phase 2B: Yehor 6ds trimmed to Prater 2021 GA range
+# 1T: weeks 7-8 only (n=31 from 4 datasets)
+# 2T: weeks 13-14 only (n=5 from GSE100051)
+# Dropped datasets: GSE28551 (wk9-12), GSE37901 (wk17-19)
 # softImpute + combat_ref (ref=GSE100051) + sex covariate
 
 paths:
   mapped_data: "data/mapped/yehor/8_yehor_preprocessed_datasets_enriched_sashko"
-  phenodata: "data/mapped/yehor/8_yehor_preprocessed_datasets_enriched_sashko/phenodata_placenta_1_2_enriched_sashko.tsv"
-  output: "output/yehor_sashko/phase2b_1_2_yehor_7ds_no_37653_enriched_sashko"
+  phenodata: "data/mapped/yehor/8_yehor_preprocessed_datasets_enriched_sashko/phenodata_placenta_1_2_trimmed_to_prater.tsv"
+  output: "output/yehor_sashko/phase2b_1_2_yehor_6ds_trimmed_to_prater"
   column_map:
     arraydatafile_exprscolumnnames: "sample_id"
     secondaryaccession: "dataset_id"
@@ -21,9 +21,6 @@ files:
   datasets:
     - "GSE100051"
     - "GSE122214"
-    - "GSE22490"
-    - "GSE28551"
-    - "GSE37901"
     - "GSE93520"
     - "GSE9984"
 

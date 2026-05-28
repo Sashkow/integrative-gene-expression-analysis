@@ -1,5 +1,6 @@
-# Phase 2B: Yehor 7-dataset 1_2 trimester comparison (enriched by Sashko)
+# Phase 2B: Yehor 6-dataset 1_2 trimester comparison (enriched by Sashko)
 # GSE37653 excluded
+# GSE22490 excluded (decidual contamination in tissue protocol)
 # GSE28551: Yehor preprocessing
 # GSE70102 excluded (basal plate tissue)
 # softImpute + combat_ref (ref=GSE100051) + sex covariate
@@ -7,7 +8,7 @@
 paths:
   mapped_data: "data/mapped/yehor/8_yehor_preprocessed_datasets_enriched_sashko"
   phenodata: "data/mapped/yehor/8_yehor_preprocessed_datasets_enriched_sashko/phenodata_placenta_1_2_enriched_sashko.tsv"
-  output: "output/yehor_sashko/phase2b_1_2_yehor_7ds_no_37653_enriched_sashko"
+  output: "output/yehor_sashko/phase2b_1_2_yehor_6ds_no_37653_no_22490_enriched_sashko"
   column_map:
     arraydatafile_exprscolumnnames: "sample_id"
     secondaryaccession: "dataset_id"
@@ -21,7 +22,6 @@ files:
   datasets:
     - "GSE100051"
     - "GSE122214"
-    - "GSE22490"
     - "GSE28551"
     - "GSE37901"
     - "GSE93520"

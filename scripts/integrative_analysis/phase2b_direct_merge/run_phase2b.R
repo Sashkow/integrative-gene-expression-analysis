@@ -144,7 +144,12 @@ cat("  Mapped path:     ", config$paths$mapped_data, "\n")
 cat("  Phenodata:       ", config$paths$phenodata, "\n")
 cat("  Output dir:      ", output_dir, "\n")
 cat("  Comparison:      ", config$phenotype$contrast, "vs", config$phenotype$baseline, "\n")
-cat("  Max imputation:  ", config$coverage$max_imputation_allowed, "\n")
+if (!is.null(config$coverage$min_datasets)) {
+  cat("  Coverage mode:    fixed min_datasets =", config$coverage$min_datasets, "\n")
+} else {
+  cat("  Coverage mode:    max_imputation_allowed =",
+      config$coverage$max_imputation_allowed %||% 0.20, "\n")
+}
 cat("\n")
 
 # Archive previous results
@@ -431,42 +436,62 @@ if (length(imputed_genes) > 0) {
 }
 
 # ----------------------------------------------------------------
-# Auto-select coverage threshold on the POST-drop exprs_list.
-# Picks the LOWEST (most permissive) threshold whose pre-imputation
-# missing fraction is still <= config$coverage$max_imputation_allowed.
+# Determine min_datasets: the minimum number of datasets a gene
+# must appear in to be included in the merged matrix.
+#
+# Two mutually exclusive config modes:
+#   coverage$min_datasets  – use this value directly (no scan)
+#   coverage$max_imputation_allowed – scan 1..N and pick the lowest
+#       min_datasets whose missing fraction does not exceed the limit
+#
 # Runs after dropping group-imbalanced imputed genes so the missing
 # fraction reflects what softimpute will actually see.
 # ----------------------------------------------------------------
 
-max_imp_allowed <- config$coverage$max_imputation_allowed %||% 0.20
-cat("\n=== Coverage threshold auto-selection ===\n")
-cat("Max imputation allowed:", round(100 * max_imp_allowed, 1), "%\n")
+n_datasets_total <- length(exprs_list)
+fixed_min_ds     <- config$coverage$min_datasets
+max_imp_allowed  <- config$coverage$max_imputation_allowed
 
-threshold_scan <- sort(
-  unique(config$coverage$compare_thresholds %||%
-           c(1.0, 0.90, 0.75, 0.50, 0.25)),
-  decreasing = FALSE
-)
+cat("\n=== Coverage threshold selection ===\n")
+cat("Number of datasets:", n_datasets_total, "\n")
 
-selected_threshold <- NA_real_
-for (thresh in threshold_scan) {
-  inc <- create_incomplete_matrix(exprs_list, min_coverage = thresh)
+if (!is.null(fixed_min_ds)) {
+  # --- Mode 1: fixed min_datasets from config ---
+  fixed_min_ds <- as.integer(fixed_min_ds)
+  if (fixed_min_ds < 1L || fixed_min_ds > n_datasets_total)
+    stop("coverage$min_datasets must be between 1 and ", n_datasets_total,
+         " (got ", fixed_min_ds, ")")
+  selected_threshold <- fixed_min_ds
+  inc <- create_incomplete_matrix(exprs_list, min_datasets = selected_threshold)
   frac <- sum(is.na(inc$matrix)) / length(inc$matrix)
-  cat(sprintf("  threshold=%.2f -> %d genes, %.2f%% missing\n",
-              thresh, nrow(inc$matrix), 100 * frac))
-  if (frac <= max_imp_allowed) {
-    selected_threshold <- thresh
-    break
+  cat(sprintf("  Fixed min_datasets=%d/%d -> %d genes, %.2f%% missing\n",
+              selected_threshold, n_datasets_total,
+              nrow(inc$matrix), 100 * frac))
+} else {
+  # --- Mode 2: auto-select via max_imputation_allowed ---
+  max_imp_allowed <- max_imp_allowed %||% 0.20
+  cat("Max imputation allowed:", round(100 * max_imp_allowed, 1), "%\n")
+
+  selected_threshold <- NA_integer_
+  for (min_ds in seq_len(n_datasets_total)) {
+    inc <- create_incomplete_matrix(exprs_list, min_datasets = min_ds)
+    frac <- sum(is.na(inc$matrix)) / length(inc$matrix)
+    cat(sprintf("  min_datasets=%d/%d -> %d genes, %.2f%% missing\n",
+                min_ds, n_datasets_total, nrow(inc$matrix), 100 * frac))
+    if (frac <= max_imp_allowed) {
+      selected_threshold <- min_ds
+      break
+    }
+  }
+
+  if (is.na(selected_threshold)) {
+    stop("No min_datasets value (1..", n_datasets_total,
+         ") keeps missing fraction below ",
+         round(100 * max_imp_allowed, 1), "%.")
   }
 }
 
-if (is.na(selected_threshold)) {
-  stop("No threshold in compare_thresholds keeps missing fraction below ",
-       round(100 * max_imp_allowed, 1), "%. ",
-       "Either raise max_imputation_allowed or add stricter thresholds.")
-}
-
-cat("Selected coverage threshold:", selected_threshold, "\n")
+cat("Selected min_datasets:", selected_threshold, "of", n_datasets_total, "\n")
 config$coverage$threshold <- selected_threshold
 
 # ============================================================
@@ -488,7 +513,7 @@ if (config$validation$leave_out_fraction %||% 0 > 0) {
   if (length(methods_to_validate) > 0) {
     validation_results <- validate_imputation(
       exprs_list,
-      min_coverage = config$coverage$threshold,
+      min_datasets = config$coverage$threshold,
       leave_out_fraction = config$validation$leave_out_fraction %||% 0.1,
       n_repeats = config$validation$n_repeats %||% 5,
       methods = methods_to_validate,
@@ -565,7 +590,7 @@ if (any(c("ruv", "ruvinv", "bruv") %in% normalization_methods)) {
 # Create incomplete matrix
 incomplete <- create_incomplete_matrix(
   exprs_list,
-  min_coverage = config$coverage$threshold
+  min_datasets = config$coverage$threshold
 )
 
 # Store all results for comparison
@@ -1017,7 +1042,7 @@ staircase_group <- phenodata[[config$phenotype$group_column]][
 # Build full pre-drop matrix so dropped genes appear as "1 group all-NA"
 if (length(dropped_group_genes) > 0) {
   staircase_inc <- create_incomplete_matrix(
-    exprs_list_pre_drop, min_coverage = config$coverage$threshold
+    exprs_list_pre_drop, min_datasets = config$coverage$threshold
   )
   staircase_matrix <- staircase_inc$matrix
 } else {
@@ -1030,7 +1055,7 @@ plot_na_staircase(staircase_matrix, staircase_sample_ds,
                   gene_fdr_list = gene_fdr_list,
                   baseline = config$phenotype$baseline,
                   contrast = config$phenotype$contrast,
-                  coverage_threshold = selected_threshold)
+                  coverage_threshold = selected_threshold / n_datasets_total)
 
 # ============================================================
 # Save Summary
@@ -1047,8 +1072,12 @@ writeLines(c(
   "",
   paste("Comparison:", config$phenotype$contrast, "vs", config$phenotype$baseline),
   paste("Datasets:", paste(datasets, collapse = ", ")),
-  paste("Max imputation allowed:", max_imp_allowed),
-  paste("Selected coverage threshold:", selected_threshold),
+  if (!is.null(config$coverage$min_datasets)) {
+    paste("Coverage mode: fixed min_datasets =", selected_threshold, "of", n_datasets_total)
+  } else {
+    paste("Coverage mode: max_imputation_allowed =", max_imp_allowed,
+          "-> selected min_datasets =", selected_threshold, "of", n_datasets_total)
+  },
   "",
   "Gene Recovery: skipped (compare_gene_recovery disabled)",
   "",
