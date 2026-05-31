@@ -1,0 +1,59 @@
+# Article branch .gitignore
+# Minimal — most files are explicitly added
+
+# R specific
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+Rplots*.pdf
+
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.blg
+*.fls
+*.fdb_latexmk
+*.synctex*
+*.toc
+*.nav
+*.snm
+*.log
+*.out
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Lock files
+.~lock.*
+
+# Python
+__pycache__/
+.venv/
+*.pyc
+
+# Article reference PDFs (available via DOI)
+articles/imputation_article/references/
+
+# Deconvolution data (not referenced in article)
+articles/imputation_article/data/deconvolution data/
+
+# MCP / tooling (not part of article)
+mcp-demo/
+mcp-vectordb/
+igea-vectordb-from-demo/
+paper-search-mcp/
+docs_to_ingest/
+
+# Personal
+emotional_management/
+
+# OpenSpec (workflow management, not article content)
+openspec/
+.claude/
