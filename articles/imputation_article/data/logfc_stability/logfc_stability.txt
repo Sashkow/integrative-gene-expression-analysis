@@ -1,0 +1,19 @@
+logFC stability: softImpute vs intersection-only (shared 8260 genes)
+
+Pearson r:        0.9982
+Mean difference:  -0.0010
+Median |diff|:    0.0141
+SD |diff|:        0.0184
+P75 |diff|:       0.0255
+P90 |diff|:       0.0402
+P95 |diff|:       0.0517
+P99 |diff|:       0.0856
+Max |diff|:       0.2671
+
+Threshold counts:
+  |diff| > 0.01: 5165 (62.5%)
+  |diff| > 0.05: 465 (5.6%)
+  |diff| > 0.10: 48 (0.6%)
+  |diff| > 0.20: 2 (0.0%)
+  |diff| > 0.50: 0 (0.0%)
+

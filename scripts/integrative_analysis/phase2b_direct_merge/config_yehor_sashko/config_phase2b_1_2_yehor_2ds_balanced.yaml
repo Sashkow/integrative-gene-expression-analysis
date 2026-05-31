@@ -1,0 +1,70 @@
+# Phase 2B: Balanced 2-dataset reference (Soncin + Mikheev)
+# GSE100051 (42 1st + 7 2nd) + GSE9984 (4 1st + 4 2nd) = 46 1st + 11 2nd
+# Used as balanced reference for phase5 validation test1b
+
+paths:
+  mapped_data: "data/mapped/yehor/8_yehor_preprocessed_datasets_enriched_sashko"
+  phenodata: "data/mapped/yehor/8_yehor_preprocessed_datasets_enriched_sashko/phenodata_placenta_1_2_enriched_sashko.tsv"
+  output: "output/yehor_sashko/phase2b_1_2_yehor_2ds_balanced"
+  column_map:
+    arraydatafile_exprscolumnnames: "sample_id"
+    secondaryaccession: "dataset_id"
+    Gestational.Age.Category: "trimester"
+    Diagnosis: "condition"
+
+files:
+  suffix: "_entrez_protein_coding"
+  datasets:
+    - "GSE100051"
+    - "GSE9984"
+
+sample_filter:
+  condition: ["healthy"]
+  trimester: ["First trimester", "Second trimester"]
+
+phenotype:
+  group_column: "trimester"
+  baseline: "First trimester"
+  contrast: "Second trimester"
+  covariates: ["fetux_sex_estimate"]
+
+imputation:
+  softimpute:
+    enabled: true
+    rank_max: 30
+    lambda: 0
+    thresh: 1e-4
+    maxit: 50
+    type: "als"
+  none:
+    enabled: true
+
+normalization:
+  combat:
+    enabled: true
+
+coverage:
+  max_imputation_allowed: 1.0
+  compare_thresholds: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+  drop_imputed_genes_missing_in_group: true
+
+de:
+  imputed_cell_weight: 0.0
+
+thresholds:
+  fdr: 0.05
+  logfc: 1.0
+
+gene_filter:
+  protein_coding_only: true
+  min_variance: 0.01
+
+output:
+  save_imputed_matrices: true
+  save_normalized_matrices: true
+  save_validation_report: false
+  save_comparison_plots: true
+
+logging:
+  verbose: true
+  save_log: true

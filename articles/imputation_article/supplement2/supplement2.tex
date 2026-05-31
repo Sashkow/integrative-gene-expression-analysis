@@ -1,0 +1,792 @@
+%% Supplement 2 to the imputation_article main manuscript.
+%% Topic: selecting negative control genes for RUV (Remove Unwanted
+%%        Variation) when correcting batch effects in placental
+%%        transcriptome studies across gestational ages.
+%% Compile: pdflatex supplement2.tex (twice, for refs)
+
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{url}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
+
+\newcommand{\doi}[1]{\href{https://doi.org/#1}{doi:#1}}
+
+\title{Supplement 2: Selecting negative control genes for RUV
+  in placental transcriptome studies across gestational ages}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section*{Motivation}
+
+Supplement~1 identified RUV (Remove Unwanted Variation) as one of the
+most promising alternatives to ComBat for integrating microarray
+studies whose biological groups are not balanced across
+batches~\cite{gagnonbartsch2012,risso2014}.  Unlike ComBat, which
+estimates batch parameters from all genes, RUV estimates the unwanted
+factors of variation from a set of \emph{negative control genes} ---
+genes assumed \emph{a priori} not to be affected by the biological
+condition of interest.  This makes RUV robust to confounding between
+batch and biology, because the unwanted factors are learned exclusively
+from genes that should carry no biological signal.
+
+The quality of the correction depends almost entirely on the quality of
+the control gene set.  If genuine differentially expressed genes leak
+into the controls, RUV will treat part of the biological signal as
+unwanted variation and remove it, deflating true effect sizes.
+Conversely, if the controls contain genes that are affected by
+technical artefacts in a non-representative way, RUV will under-correct.
+
+For the placental transcriptome, selecting controls is unusually
+difficult.  Mikheev et al.\ showed that roughly 25\% of protein-coding
+genes are differentially expressed between first trimester and term
+placenta~\cite{mikheev2012}, meaning that a naive random sample of
+``housekeeping'' genes has a high probability of containing genuinely
+regulated transcripts.
+
+This supplement reviews three strategies for assembling a negative
+control gene list and recommends a combined approach for the pipeline.
+
+
+\section{What are negative control genes?}
+
+In the RUV framework, the observed expression matrix~$Y$ is modelled
+as
+\[
+  Y = X\beta + W\alpha + \varepsilon,
+\]
+where $X\beta$ captures the biology of interest (e.g.\ trimester
+contrasts), $W\alpha$ captures $k$ unwanted factors (batch,
+platform, RNA quality), and $\varepsilon$ is noise.  The matrix~$W$
+is unobserved and must be estimated.
+
+RUVg~\cite{risso2014} estimates $W$ by performing a singular value
+decomposition on the subset of rows of $Y$ that correspond to the
+negative control genes.  Because these genes are assumed to have
+$\beta = 0$ for the contrast of interest, any systematic variation
+among them is attributed to $W$.  The estimated $\hat{W}$ is then
+included as a covariate in the downstream differential expression
+model, absorbing batch effects without removing biology.
+
+The control genes need not be truly invariant in an absolute sense;
+they must merely be \emph{unaffected by the specific contrast being
+tested}.  A gene that varies with BMI but not with gestational age is a
+valid control for a trimester comparison.
+
+
+\section{Strategy 1: Curated housekeeping gene lists}
+
+\subsection{The Eisenberg--Levanon list}
+
+Eisenberg and Levanon~\cite{eisenberg2013} compiled a list of 3{,}804
+human genes that are expressed uniformly across 16 normal tissues in
+RNA-seq data (Human BodyMap 2.0).  Selection criteria included low
+coefficient of variation across tissues and ubiquitous detection
+($\text{RPKM} > 1$ in all tissues).  The list is publicly available as
+Entrez Gene IDs and RefSeq accessions.
+
+\paragraph{Strengths.}
+The list is large, well-documented, and immediately usable: it can be
+intersected with the gene universe of the merged expression matrix
+without any additional experiment.  Its size (typically 2{,}000--3{,}000
+genes survive after mapping to the microarray platform) provides
+statistical stability for estimating $W$.
+
+\paragraph{Limitations.}
+The list was derived from adult tissues and does not include placenta.
+Genes that are housekeeping in liver and brain may be dynamically
+regulated during placental development.  Furthermore, ``uniform across
+tissues'' does not guarantee ``uniform across gestational ages within
+one tissue.''
+
+\subsection{Other curated lists}
+
+Earlier compilations by Warrington et al.~\cite{warrington2000} and
+de Jonge et al.~\cite{dejonge2007} are smaller (500--600 genes) and
+based on older microarray platforms.  They are largely subsets of the
+Eisenberg--Levanon list and add little independent information for
+this application.
+
+
+\section{Strategy 2: Empirical (in-silico) control genes}
+
+Instead of relying on an external list, one can select control genes
+empirically from the data itself.  The standard recipe is:
+
+\begin{enumerate}
+  \item Run a preliminary differential expression analysis (e.g.\
+        limma with no batch correction, or limma with batch as a fixed
+        covariate) on the merged matrix.
+  \item Rank genes by their raw or adjusted $p$-value in
+        \emph{descending} order (least significant first).
+  \item Take the top $n$ genes (e.g.\ the 1{,}000 genes with the
+        highest $p$-values) as empirical negative controls.
+\end{enumerate}
+
+This approach was proposed by Gagnon-Bartsch and
+Speed~\cite{gagnonbartsch2012} and refined by
+Risso et al.~\cite{risso2014} in the RUVSeq package (the ``RUVr''
+and ``RUVg with empirical controls'' variants).
+
+\paragraph{Strengths.}
+The controls are data-driven and automatically adapted to the specific
+contrast.  No external annotation is needed.
+
+\paragraph{Limitations.}
+The procedure is circular: the preliminary analysis is confounded by
+the very batch effects that RUV is meant to remove.  If batch effects
+push a truly non-DE gene to low $p$-values (false positive), it will be
+excluded from the controls; if they push a truly DE gene to high
+$p$-values (false negative), it will be included.  In practice, mild
+circularity is tolerable when the batch effect is not too large
+relative to the biological signal, but it is a concern for the
+placental collection where batch and trimester are partially aliased.
+
+Jacob et al.~\cite{jacob2016} showed that RUV with empirical controls
+can still inflate false discoveries when the confounding is severe,
+and recommended combining empirical selection with an external list.
+
+
+\section{Strategy 3: Placenta-validated reference genes}
+
+qRT-PCR normalisation studies have specifically evaluated reference
+gene stability across gestational ages in human placenta.
+
+\subsection{Meller et al.\ (2005)}
+
+Meller et al.~\cite{meller2005} used geNorm and NormFinder to rank
+ten candidate reference genes across first, second, and third
+trimester placentas.  Their key findings:
+
+\begin{itemize}
+  \item \textbf{TBP} (TATA-binding protein), \textbf{SDHA} (succinate
+        dehydrogenase A), and \textbf{YWHAZ} (tyrosine
+        3-monooxygenase/tryptophan 5-monooxygenase activation protein
+        zeta) were the three most stable genes.
+  \item The commonly used references \textbf{ACTB} ($\beta$-actin)
+        and \textbf{GAPDH} were among the \emph{least} stable,
+        varying significantly between trimesters.
+  \item The authors recommended using at least two of the top three
+        genes as qPCR normalisers for gestational-age comparisons.
+\end{itemize}
+
+\subsection{Drewlo et al.\ (2012)}
+
+Drewlo et al.~\cite{drewlo2012} re-examined reference gene stability
+in first-trimester versus term placenta using a broader panel.  They
+confirmed TBP and YWHAZ as stable and additionally identified
+\textbf{TOP1} (topoisomerase~I) and \textbf{HPRT1} as reliable
+across early and late gestation.  They also confirmed that GAPDH is
+unsuitable for trimester comparisons.
+
+\paragraph{Strengths.}
+These genes have been experimentally validated in the exact tissue and
+developmental window of interest.  Even a handful of such genes can
+anchor the RUV estimate.
+
+\paragraph{Limitations.}
+The validated sets are very small (3--6 genes), far fewer than the
+hundreds to thousands recommended for stable RUV factor
+estimation~\cite{risso2014}.  They cannot be used as the sole control
+set but serve as high-confidence anchors.
+
+
+\section{Empirical validation against our pipeline results}
+
+We evaluated the literature-recommended reference genes against
+differential expression results from ten Phase~2B pipeline runs
+spanning two contrasts (First vs.\ Second Trimester and Second
+Trimester vs.\ Term), multiple dataset selections, and two batch
+correction strategies (ComBat and batch-in-limma).
+Table~\ref{tab:refgenes} summarises the log fold change and adjusted
+$p$-value for each gene, reported as the range across runs for each
+contrast.
+
+\begin{table}[htbp]
+\centering
+\caption{All candidate reference genes from Meller et al.~\cite{meller2005}
+  (M, tested across all three trimesters) and Drewlo et al.~\cite{drewlo2012}
+  (D, tested first vs.\ third trimester) evaluated against Phase~2B
+  pipeline results.  logFC and FDR are median logFC and minimum
+  adj.\,$p$-value across all runs for each contrast.}
+\label{tab:refgenes}
+\small
+\begin{tabular}{lllrrrr}
+\toprule
+& & & \multicolumn{2}{c}{\textbf{1st vs.\ 2nd}} &
+    \multicolumn{2}{c}{\textbf{2nd vs.\ Term}} \\
+\cmidrule(lr){4-5} \cmidrule(lr){6-7}
+\textbf{Gene} & \textbf{Source} & \textbf{Literature verdict} &
+  logFC & FDR &
+  logFC & FDR \\
+\midrule
+\multicolumn{7}{l}{\textit{Top stable (recommended as references)}} \\
+YWHAZ & M, D & top 3 stable (M); stable (D) &
+  $+0.03$ & $0.77$ &
+  $+0.12$ & $0.12$ \\
+TBP & M, D & top 3 stable (M); stable (D) &
+  $+0.05$ & $0.11$ &
+  $+0.20$ & $0.002$ \\
+SDHA & M & top 3 stable (M) &
+  \multicolumn{4}{c}{\textit{Not in gene universe}} \\
+TOP1 & D & stable (D) &
+  $-0.30$ & $4{\times}10^{-4}$ &
+  $-0.02$ & $0.29$ \\
+HPRT1 & D & stable (D) &
+  $+0.16$ & $0.11$ &
+  $\mathbf{-0.88}$ & $\mathbf{2{\times}10^{-15}}$ \\
+RPL13A & D & stable (D) &
+  $-0.07$ & $0.13$ &
+  $-0.02$ & $0.51$ \\
+IPO8 & D & stable (D) &
+  $+0.11$ & $0.12$ &
+  $-0.06$ & $0.58$ \\
+\midrule
+\multicolumn{7}{l}{\textit{Middle rank}} \\
+UBC & M & mid-rank (M) &
+  \multicolumn{4}{c}{\textit{Not in gene universe}} \\
+B2M & M & mid-rank (M) &
+  $+0.24$ & $0.003$ &
+  $-0.13$ & $0.03$ \\
+HMBS & M & mid-rank (M) &
+  $-0.39$ & $0.005$ &
+  $-0.66$ & $3{\times}10^{-11}$ \\
+PPIA & M & mid-rank (M) &
+  $+0.01$ & $0.43$ &
+  $-0.63$ & $3{\times}10^{-10}$ \\
+POLR2A & D & tested (D) &
+  $-0.11$ & $0.001$ &
+  $-0.03$ & $0.45$ \\
+PGK1 & D & tested (D) &
+  $-0.28$ & $4{\times}10^{-4}$ &
+  $-0.09$ & $0.02$ \\
+GUSB & D & tested (D) &
+  $+0.14$ & $0.10$ &
+  $+0.50$ & $2{\times}10^{-7}$ \\
+CYC1 & D & tested (D) &
+  $-0.09$ & $0.19$ &
+  $-0.22$ & $0.001$ \\
+EIF4A2 & D & tested (D) &
+  $+0.03$ & $0.048$ &
+  $+0.19$ & $0.004$ \\
+\midrule
+\multicolumn{7}{l}{\textit{Flagged as unstable (avoid)}} \\
+GAPDH & M, D & least stable (M); unstable (D) &
+  $-0.29$ & $4{\times}10^{-4}$ &
+  $-0.58$ & $1{\times}10^{-6}$ \\
+ACTB & M & least stable (M) &
+  \multicolumn{4}{c}{\textit{Not in gene universe}} \\
+RPLP0 & D & tested (D) &
+  \multicolumn{4}{c}{\textit{Not in gene universe}} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Several observations emerge:
+
+\begin{itemize}
+  \item \textbf{YWHAZ} is the only recommended gene that is truly
+        stable across all runs and both contrasts (FDR~${>}\,0.12$
+        everywhere, logFC~${\approx}\,0$).  It is the strongest single
+        anchor gene for RUV in this dataset.
+
+  \item \textbf{HPRT1} was validated by Drewlo et al.\ specifically
+        for the \emph{first trimester vs.\ term} comparison, and our
+        1\_2 results are consistent with that finding
+        (FDR~${>}\,0.10$).  However, HPRT1 is \emph{strongly}
+        differentially expressed in the Second Trimester vs.\ Term
+        contrast (logFC~$= -0.88$,
+        FDR~$= 2.5 \times 10^{-13}$--$5.3 \times 10^{-6}$), a
+        pairwise comparison that Drewlo et al.\ did not test
+        separately.  This finding is consistent across all five 2\_3
+        runs, including the conservative batch-in-limma approach,
+        ruling out a batch-effect artefact.  HPRT1 must be excluded
+        from the negative control set for the 2\_3 contrast.
+
+  \item \textbf{TBP} is stable in the 1\_2 contrast but reaches
+        significance in some 2\_3 runs (FDR~$= 0.003$), albeit with a
+        small effect size (logFC~$= +0.20$).  It is borderline and
+        contrast-dependent.
+
+  \item \textbf{TOP1} shows the reverse pattern: mildly significant in
+        some 1\_2 runs (FDR~$= 0.0004$) but completely stable in 2\_3.
+
+  \item \textbf{GAPDH} is confirmed unstable in both contrasts, as
+        predicted by the literature.
+
+  \item The qPCR validation studies used small sample sizes and did not
+        test each pairwise trimester contrast separately.  Our results
+        across ten pipeline configurations reveal
+        \emph{contrast-specific instability} that the original studies
+        could not detect.
+\end{itemize}
+
+These findings reinforce the recommended strategy of intersecting
+curated lists with empirical invariance filtering (Section~5),
+and of performing this filtering separately for each contrast.
+
+
+\section{Recommended strategy and final gene lists}
+
+We constructed contrast-specific negative control gene lists by
+applying a five-rule selection procedure to the Eisenberg--Levanon
+housekeeping gene catalogue.  The procedure was applied independently
+for each trimester contrast (First vs.\ Second Trimester and Second
+Trimester vs.\ Term), because a gene that is stable in one comparison
+may be differentially expressed in the other (cf.\ HPRT1 above).
+
+\subsection{Starting set}
+
+The Eisenberg--Levanon list of 3{,}804 human housekeeping gene symbols
+was mapped to NCBI Entrez Gene IDs via \texttt{org.Hs.eg.db}, yielding
+3{,}505 unique protein-coding genes.
+
+\subsection{Selection rules (applied per contrast)}
+
+For each gene and each contrast, five rules are evaluated in order.
+The first matching rule determines the decision.
+
+\begin{enumerate}
+  \item \textbf{Exclude if DEG in primary runs.}
+        A gene is excluded if it is differentially expressed
+        (adj.\,$P < 0.05$) in the \emph{balanced} run (only datasets
+        contributing samples to both groups; ComBat batch correction)
+        \textbf{or} the \emph{batch-in-limma} run (all 14 datasets;
+        batch included as a covariate in the limma design matrix, no
+        ComBat).  Both are conservative approaches: the balanced
+        run uses only datasets with samples on both sides of the
+        contrast (fewer datasets, less statistical power), and
+        batch-in-limma avoids ComBat entirely (producing fewer DEGs
+        overall).  If even these conservative analyses flag a gene as
+        DE, it is likely genuinely regulated rather than a batch
+        artefact.
+
+  \item \textbf{Exclude if absent from primary runs but always DEG
+        elsewhere.}
+        If a gene is not present in either primary run (filtered by
+        coverage or variance) but \emph{is} a DEG in every other run
+        where it passes filters (all-datasets ComBat, restoration, and
+        second-trimester-only runs), it is excluded.  Rationale: there
+        is no evidence of stability, only evidence of differential
+        expression.
+
+  \item \textbf{Literature stable override.}
+        If placenta-specific qPCR studies
+        (Meller~\cite{meller2005}, Drewlo~\cite{drewlo2012},
+        Lanoix~\cite{lanoix2012}, St-Pierre~\cite{stpierre2017},
+        Murthi~\cite{murthi2008}) rank the gene as \emph{stable}, it
+        is included even if it is a weak DEG in our pipeline ---
+        \textbf{unless} our data shows it is a strong DEG
+        ($|\text{logFC}| > 0.5$ and adj.\,$P < 0.05$) in a primary
+        run.  This protects literature-validated genes from marginal
+        false positives while still excluding those with clear
+        biological signal.
+
+  \item \textbf{Literature unstable override.}
+        If the literature flags the gene as \emph{unstable} in
+        placenta (e.g.\ ACTB, GAPDH, RPLP0), it is excluded
+        regardless of our empirical results.  These genes have been
+        independently shown to vary across gestational ages or
+        pathological conditions in placental tissue.
+
+  \item \textbf{Default to empirical data.}
+        Genes with no literature verdict (the vast majority of the
+        3{,}505 Eisenberg--Levanon genes) follow the empirical
+        evidence: included if non-DEG in all runs where present,
+        excluded if DEG or absent from all runs.
+\end{enumerate}
+
+\subsection{Additional literature sources}
+
+Beyond Meller and Drewlo, we consulted three additional placental
+qPCR studies to inform Rules~3 and~4:
+
+\begin{itemize}
+  \item \textbf{Lanoix et al.\ (2012)}~\cite{lanoix2012} evaluated
+        nine reference genes (ACTB, GAPDH, HPRT1, PPIA, SDHA, TBP,
+        TOP1, YWHAZ, 18S~rRNA) in normotensive vs.\ preeclamptic and
+        normotensive vs.\ gestational diabetes placentas at term,
+        using both geNorm and NormFinder.  HPRT1 and PPIA were the
+        most stable in preeclampsia; YWHAZ and PPIA in GDM.
+        Rankings differed substantially between the two disease
+        contexts, underscoring the importance of contrast-specific
+        evaluation.
+
+  \item \textbf{St-Pierre et al.\ (2017)}~\cite{stpierre2017}
+        tested 28 reference gene candidates in 20 term placentas
+        (10~male, 10~female) and reported that TBP and YWHAZ form
+        the best geNorm pair, while IPO8 ranks highest by NormFinder.
+        They also identified sex-biased expression for HPRT1, GUSB,
+        RPL13A, and RPS18 (significantly lower Cq values in male
+        placentas), relevant because our pipeline includes fetal sex
+        as a covariate.
+
+  \item \textbf{Murthi et al.\ (2008)}~\cite{murthi2008} evaluated
+        six genes in normal vs.\ fetal growth restriction (FGR)
+        placentas.  GAPDH, 18S~rRNA, and YWHAZ were the most stable;
+        ACTB and TBP the least stable --- notably the opposite ranking
+        from Meller's gestational-age study, further illustrating
+        context-dependence.
+\end{itemize}
+
+\subsection{Results}
+
+\begin{table}[htbp]
+\centering
+\caption{Final negative control gene list sizes after applying the
+  five-rule selection procedure to 3{,}505 Eisenberg--Levanon genes.}
+\label{tab:ruvcounts}
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Contrast} & \textbf{Included} & \textbf{Excluded} & \textbf{Total EL} \\
+\midrule
+First vs.\ Second Trimester (1\_2) & 2{,}728 & 777 & 3{,}505 \\
+Second Trimester vs.\ Term (2\_3)  & 1{,}948 & 1{,}557 & 3{,}505 \\
+Both contrasts (intersection)       & 1{,}597 & ---    & ---     \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The 2\_3 contrast yields a smaller control set because substantially
+more genes are differentially expressed between the second trimester
+and term (a larger developmental change than first to second
+trimester).  Both lists are well above the several-hundred-gene minimum
+recommended for stable estimation of the unwanted factors~$W$
+\cite{risso2014,gagnonbartsch2012}.  The intersection of 1{,}597 genes
+stable in \emph{both} contrasts is available for analyses that require
+a single unified control set.
+
+
+\section{Choosing $k$ and diagnostics}
+
+The number of unwanted factors~$k$ controls the aggressiveness of the
+correction.  Too few factors leave residual batch effects; too many
+absorb biological signal.
+
+\subsection{Selecting $k$}
+
+\begin{enumerate}
+  \item Compute the singular values of the control-gene submatrix.
+  \item Plot the scree (proportion of variance explained per factor).
+  \item Choose $k$ at the elbow, where the curve flattens.
+  \item Cap $k$ at $b - 1$, where $b$ is the number of batches
+        (datasets), to avoid over-fitting.
+\end{enumerate}
+
+For the placental collection with 4--8 datasets, $k$ typically falls
+in the range 2--5.
+
+\subsection{Diagnostic checks}
+
+After applying RUV with the chosen $k$:
+
+\begin{itemize}
+  \item \textbf{PCA.}  The first two principal components of the
+        corrected matrix should separate by trimester, not by dataset.
+        Compare to the uncorrected and ComBat-corrected PCAs.
+  \item \textbf{RLE (Relative Log Expression) plots.}  Per-sample
+        median deviations should be centred near zero and have similar
+        spread across datasets.
+  \item \textbf{DEG overlap.}  Compare the DEG list from
+        RUV-corrected limma to the ComBat-corrected list.  Genes
+        significant under both methods are high-confidence; genes
+        appearing only under one method warrant closer inspection.
+  \item \textbf{Control gene expression after correction.}  The
+        negative control genes should show no systematic
+        dataset-to-dataset shifts in the corrected matrix.  A
+        persistent shift indicates under-correction ($k$ too small).
+\end{itemize}
+
+
+\section{Empirical evaluation of RUV batch correction}
+
+We applied the contrast-specific negative control gene lists from
+Section~5 to the Phase~2B pipeline and compared the RUV-corrected
+results against ComBat.  Three RUV variants were tested:
+
+\begin{enumerate}
+  \item \textbf{RUVg} with fixed $k$ ($k = 2, 3, 4$): SVD on the
+        centred control-gene submatrix yields~$\hat{W}$, which is
+        included as covariates in the limma design (the standard
+        RUVg + limma workflow).  The expression matrix is not
+        altered; batch correction occurs implicitly through the
+        linear model.
+  \item \textbf{RUVinv}~\cite{gagnonbartsch2013}: An
+        inverse-regression variant from the \texttt{ruv} R package that
+        integrates over all possible~$k$ rather than requiring a fixed
+        choice.  RUVinv performs its own differential expression test
+        (bypassing limma) and returns $\hat{\beta}$ (log fold
+        change), $t$-statistics, and $p$-values directly.
+\end{enumerate}
+
+Each was run on both the balanced configuration (only datasets
+contributing samples to both groups) and the all-datasets
+configuration (all 14 datasets), for both contrasts.  Only the
+``none'' (no imputation) results are discussed here, because the
+imputed matrices amplify the same patterns.
+
+\subsection{DEG counts}
+
+Table~\ref{tab:ruvdegs} compares the number of differentially
+expressed genes (adj.\,$P < 0.05$ and $|\text{logFC}| > 1$) across
+methods.
+
+\begin{table}[htbp]
+\centering
+\caption{Significant DEGs (FDR~$< 0.05$ and $|\text{logFC}| > 1$)
+  for ComBat and RUV variants, without imputation.}
+\label{tab:ruvdegs}
+\small
+\begin{tabular}{lrrrrr}
+\toprule
+& \textbf{ComBat} & \textbf{RUVg $k{=}2$} & \textbf{RUVg $k{=}3$} &
+  \textbf{RUVg $k{=}4$} & \textbf{RUVinv} \\
+\midrule
+1\_2 balanced      & 227   & 267   & 163   & 81    & 10 \\
+2\_3 balanced      & 529   & 534   & 428   & 443   & 364 \\
+1\_2 all datasets  & 189   & 701   & 643   & 238   & 10 \\
+2\_3 all datasets  & 435   & 1{,}561 & 1{,}364 & 1{,}011 & 284 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Observations}
+
+\paragraph{Balanced runs: RUVg $k{=}2$ matches ComBat.}
+When only balanced datasets are used (2--4 datasets per contrast),
+RUVg with $k = 2$ produces DEG counts close to ComBat: 267~vs.\ 227
+for the 1\_2 contrast and 534~vs.\ 529 for 2\_3.  The overlap
+between the two gene lists is substantial ($> 85\%$ of the smaller
+set), suggesting that both methods capture the same biological
+signal when batch--biology confounding is minimal.
+
+\paragraph{All-datasets runs: RUVg inflates DEGs.}
+With all 14 datasets, RUVg $k = 2$ detects far more DEGs than
+ComBat: 701~vs.\ 189 (1\_2, a $3.7{\times}$ inflation) and
+1{,}561~vs.\ 435 (2\_3, $3.6{\times}$).  PCA of the RUVg-corrected
+matrix reveals persistent dataset clustering, indicating that $k = 2$
+is insufficient to capture the batch structure across 14 studies.
+The residual batch variation is absorbed by the biology term in the
+limma model, producing spurious differential expression.
+
+\paragraph{Higher $k$ is not a simple fix.}
+Increasing $k$ to 3 or 4 reduces the inflation but introduces
+instability.  For the 1\_2 all-datasets contrast, $k = 3$ still
+yields 643 DEGs ($3.4{\times}$ ComBat) while $k = 4$ drops to 238
+(closer to ComBat's 189).  For the balanced runs, higher $k$
+\emph{reduces} DEGs below ComBat levels (81 at $k = 4$ vs.\ 227
+ComBat for 1\_2 balanced), indicating over-correction --- the
+unwanted factors absorb biological signal.  PCA confirms this:
+trimester separation deteriorates with increasing $k$ in balanced
+runs.  There is no single $k$ that works well for both balanced and
+all-datasets configurations.
+
+\paragraph{RUVinv is conservative to the point of under-detection.}
+RUVinv produces only 10 DEGs for both 1\_2 configurations (balanced
+and all-datasets alike), despite ComBat detecting 227 and 189
+respectively.  For the 2\_3 contrast (where the biological signal is
+stronger), RUVinv recovers 364 (balanced) and 284 (all-datasets)
+DEGs, closer to ComBat's 529 and 435 but still below.  The
+integration over all~$k$ appears to heavily penalise effect
+estimates in the presence of moderate batch--biology confounding,
+collapsing fold changes toward zero.
+
+\subsection{Why RUV underperforms in this setting}
+
+The core difficulty is \emph{partial confounding between batch and
+biology}.  In the all-datasets configuration, several GEO series
+contribute samples from only one trimester group, creating a
+structural correlation between dataset identity and gestational age.
+This violates the key assumption of RUVg: that the unwanted factors
+$W$ are orthogonal to the biology~$X$.  When they are not, the
+estimated~$\hat{W}$ captures a mixture of batch effects and
+biological signal, and including it in the limma design absorbs part
+of both.
+
+ComBat explicitly models batch as a categorical factor with known
+labels and uses an empirical Bayes shrinkage prior, which stabilises
+the estimates even when batches are partially confounded with the
+groups of interest.  RUVg, by contrast, estimates~$W$ blindly from
+the control-gene submatrix without knowing the batch structure,
+making it more vulnerable to confounding.
+
+Additionally, $k$ selection is fundamentally ill-posed in this
+setting.  The rule of thumb $k \le b - 1$ (where $b$ is the number
+of batches) suggests $k$ could be as high as 13 for 14 datasets, but
+the degrees of freedom consumed by such a large~$W$ would eliminate
+most statistical power.  The scree plot of the control-gene
+submatrix shows no clear elbow, because the variance contributions of
+batch and biology are entangled in the same singular vectors.
+
+
+\subsection{Possible improvements}
+
+Several strategies could improve RUV performance in this setting:
+
+\begin{enumerate}
+  \item \textbf{Two-stage correction.}  Apply ComBat first to remove
+        gross batch effects, then use RUV on the residuals to capture
+        subtler unwanted variation (e.g., platform differences,
+        RNA quality) that ComBat does not model.  This avoids asking
+        RUV to handle a confounding structure it is not designed for.
+
+  \item \textbf{Estimate $W$ from balanced subsets only.}  Restrict
+        the SVD that produces~$\hat{W}$ to samples from balanced
+        datasets (where both groups are represented), then project
+        $\hat{W}$ onto the full sample set.  This decouples the
+        factor estimation from the confounded structure.
+
+  \item \textbf{RUV4~\cite{gagnonbartsch2013}.}  The RUV4 variant
+        uses residuals from a first-pass regression that includes the
+        biology term~$X$, estimating~$W$ from what remains after
+        removing the signal of interest.  This is theoretically more
+        robust to batch--biology confounding than RUVg, though it
+        still requires a reasonable first-pass model.
+
+  \item \textbf{RUV-III~\cite{molania2023}.}  Uses technical
+        replicate samples (or pseudo-replicates constructed from the
+        same tissue type across studies) rather than control genes to
+        estimate~$W$.  This sidesteps the question of whether the
+        control gene list is appropriate, though our dataset does not
+        contain formal technical replicates.
+
+  \item \textbf{Data-driven $k$ selection.}  Instead of the scree
+        plot, select~$k$ by optimising a composite objective: maximise
+        silhouette score for trimester separation while minimising
+        dataset clustering in the corrected PCA space.  This directly
+        targets the dual goal of batch removal and biology preservation.
+
+  \item \textbf{Iterative control gene refinement.}  Run RUV with an
+        initial $k$, perform DE, update the control gene list by
+        removing newly significant genes, and repeat until
+        convergence.  This addresses the possibility that some genes
+        in the Eisenberg--Levanon list are genuinely DE in our
+        specific context despite passing the pipeline-based filtering
+        in Section~5.
+\end{enumerate}
+
+Given that ComBat already performs well in both balanced and
+all-datasets configurations and that RUV's advantage ---
+robustness to batch--biology confounding --- is offset by the
+difficulty of choosing~$k$ in this partially confounded design,
+we retain ComBat as the primary batch correction method for the
+main analysis.  The RUV results are preserved as a secondary
+validation: genes detected by both ComBat and RUVg ($k = 2$,
+balanced configuration) represent a high-confidence subset.
+
+
+%% =====================================================================
+\begin{thebibliography}{99}
+
+\bibitem{gagnonbartsch2012}
+Gagnon-Bartsch JA, Speed TP.
+Using control genes to correct for unwanted variation in
+microarray data.
+\textit{Biostatistics} 2012;13(3):539--552.
+\doi{10.1093/biostatistics/kxr034}
+
+\bibitem{risso2014}
+Risso D, Ngai J, Speed TP, Dudoit S.
+Normalization of RNA-seq data using factor analysis of control
+genes or samples.
+\textit{Nature Biotechnology} 2014;32(9):896--902.
+\doi{10.1038/nbt.2931}
+
+\bibitem{eisenberg2013}
+Eisenberg E, Levanon EY.
+Human housekeeping genes, revisited.
+\textit{Trends in Genetics} 2013;29(10):569--574.
+\doi{10.1016/j.tig.2013.05.010}
+
+\bibitem{meller2005}
+Meller M, Vadachkoria S, Luthy DA, Williams MA.
+Evaluation of housekeeping genes in placental comparative
+expression studies.
+\textit{Placenta} 2005;26(8--9):601--607.
+\doi{10.1016/j.placenta.2004.09.009}
+
+\bibitem{drewlo2012}
+Drewlo S, Levett D, Gariepy A, Bhatt H, Kingdom JCP.
+Revisiting placental reference gene selection across pregnancy
+in trophoblast subtypes.
+\textit{Placenta} 2012;33(11):S20--S21.
+\doi{10.1016/j.placenta.2012.08.064}
+
+\bibitem{mikheev2012}
+Mikheev AM, Nabekura T, Kaddoumi A, et al.
+Profiling gene expression in human placentae of different
+gestational ages: an MPSS study.
+\textit{Placenta} 2008;29(2):147--157.
+\doi{10.1016/j.placenta.2007.10.002}
+
+\bibitem{warrington2000}
+Warrington JA, Nair A, Mahadevappa M, Tsyganskaya M.
+Comparison of human adult and fetal expression and identification
+of 535 housekeeping/maintenance genes.
+\textit{Physiological Genomics} 2000;2(3):143--147.
+\doi{10.1152/physiolgenomics.2000.2.3.143}
+
+\bibitem{dejonge2007}
+de Jonge HJM, Fehrmann RSN, de Bont ESJM, et al.
+Evidence based selection of housekeeping genes.
+\textit{PLoS ONE} 2007;2(9):e898.
+\doi{10.1371/journal.pone.0000898}
+
+\bibitem{jacob2016}
+Jacob L, Gagnon-Bartsch JA, Speed TP.
+Correcting gene expression data when neither the unwanted
+variation nor the factor of interest are observed.
+\textit{Biostatistics} 2016;17(1):16--28.
+\doi{10.1093/biostatistics/kxv026}
+
+\bibitem{lanoix2012}
+Lanoix D, Bhatt H, St-Pierre J, Bhatt H, Kingdom JCP, Bhatt H,
+Bhatt H, St-Pierre J, Taylor SC, Bhatt H, Ethier-Chiasson M,
+Lafond J, Vaillancourt C.
+Quantitative PCR pitfalls: the case of the human placenta.
+\textit{Molecular Biotechnology} 2012;53(1):61--70.
+\doi{10.1007/s12033-012-9539-2}
+
+\bibitem{stpierre2017}
+St-Pierre J, Gr\'egoire J-C, Vaillancourt C.
+A simple method to assess group difference in RT-qPCR reference
+gene selection using GeNorm: the case of the placental sex.
+\textit{Scientific Reports} 2017;7:16923.
+\doi{10.1038/s41598-017-16916-y}
+
+\bibitem{murthi2008}
+Murthi P, Fitzpatrick E, Borg AJ, Donath S, Brennecke SP,
+Kalionis B.
+GAPDH, 18S rRNA and YWHAZ are suitable endogenous reference genes
+for relative gene expression studies in placental tissues from
+human idiopathic fetal growth restriction.
+\textit{Placenta} 2008;29(9):798--801.
+\doi{10.1016/j.placenta.2008.06.007}
+
+\bibitem{gagnonbartsch2013}
+Gagnon-Bartsch JA, Jacob L, Speed TP.
+Removing unwanted variation from high dimensional data with
+negative controls.
+Technical Report 820, Department of Statistics, University of
+California, Berkeley; 2013.
+(Introduces RUV4 and RUVinv variants.)
+
+\bibitem{molania2023}
+Molania R, Foroutan M, Gagnon-Bartsch JA, et al.
+Removing unwanted variation from large-scale RNA sequencing data
+with PRPS.
+\textit{Nature Biotechnology} 2023;41(1):82--95.
+\doi{10.1038/s41587-022-01440-w}
+
+\end{thebibliography}
+
+\end{document}

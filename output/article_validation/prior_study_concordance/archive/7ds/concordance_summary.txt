@@ -1,0 +1,29 @@
+
+=== Prior-study concordance summary ===
+
+This study (7 datasets, 123 samples, softImpute + ComBat-ref):
+  Total DEGs: 380
+  Intersection-only DEGs: 182
+  Gained DEGs: 201 (lost: 3)
+
+Gained DEGs matched to Lykhenko 2021 (4 Affy datasets, 22 samples):
+  Found in 2021 table: 181/201 (90.0%)
+  Not found (non-Affy platform genes): 20
+
+Direction concordance (of 181 matched):
+  Same direction, FDR<0.05 in 2021: 122 (67.4%)
+  Same direction, FDR 0.05-0.20:    18 (9.9%)
+  Same direction, FDR>0.20:         23 (12.7%)
+  Opposite direction:                18 (9.9%)
+
+  Total same direction: 163/181 (90.1%)
+  Pearson r of logFC:   0.633
+
+Three-way Venn set sizes:
+  softImpute DEGs: 380
+  Intersection DEGs: 182
+  Lykhenko 2021 DEGs: 328
+  softImpute ∩ Lykhenko 2021: 119
+  Intersection ∩ Lykhenko 2021: 79
+  All three: 76
+

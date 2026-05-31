@@ -1,0 +1,79 @@
+# HarmonizR: Yehor 9-dataset 1_2 trimester comparison
+# Matrix dissection + pairwise ComBat (no imputation)
+
+paths:
+  mapped_data: "data/mapped/yehor/9_datasets"
+  phenodata: "data/mapped/yehor/9_datasets/phenodata_placenta_1_2_fix_sex.tsv"
+  output: "output/harmonizr/yehor_9ds"
+  column_map:
+    arraydatafile_exprscolumnnames: "sample_id"
+    secondaryaccession: "dataset_id"
+    Gestational.Age.Category: "trimester"
+    Diagnosis: "condition"
+
+files:
+  suffix: "_2_processed_entrez_matrix"
+  datasets:
+    - "GSE100051"
+    - "GSE122214"
+    - "GSE22490"
+    - "GSE28551"
+    - "GSE37653"
+    - "GSE37901"
+    - "GSE70102"
+    - "GSE93520"
+    - "GSE9984"
+
+sample_filter:
+  condition: ["healthy"]
+  trimester: ["First trimester", "Second trimester"]
+
+phenotype:
+  group_column: "trimester"
+  baseline: "First trimester"
+  contrast: "Second trimester"
+  covariates: ["fetux_sex_estimate"]
+
+imputation:
+  none:
+    enabled: true
+
+normalization:
+  combat:
+    enabled: false
+  combat_ref:
+    enabled: false
+  harmonizr:
+    enabled: true
+    ref_batch: "GSE100051"
+
+coverage:
+  max_imputation_allowed: 0.20
+  compare_thresholds: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+  drop_imputed_genes_missing_in_group: true
+
+de:
+  imputed_cell_weight: 0.0
+
+thresholds:
+  fdr: 0.05
+  logfc: 1.0
+
+gene_filter:
+  protein_coding_only: true
+  min_variance: 0.01
+
+validation:
+  leave_out_fraction: 0.1
+  n_repeats: 3
+  mask_type: "gene_dataset_block"
+
+output:
+  save_imputed_matrices: true
+  save_normalized_matrices: true
+  save_validation_report: true
+  save_comparison_plots: true
+
+logging:
+  verbose: true
+  save_log: true

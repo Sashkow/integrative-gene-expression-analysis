@@ -1,0 +1,718 @@
+%% Supplement 1 to the imputation_article main manuscript.
+%% Topic: alternatives and supplements to ComBat for integrating
+%%        microarray studies whose biological groups (here pregnancy
+%%        trimesters) are not all represented in every dataset.
+%% Compile: pdflatex supplement1.tex (twice, for refs)
+
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{url}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
+
+\newcommand{\doi}[1]{\href{https://doi.org/#1}{doi:#1}}
+
+\title{Supplement 1: Alternatives and supplements to ComBat for
+  integrating microarray studies with non-overlapping
+  biological groups}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section*{Motivation}
+
+ComBat~\cite{johnson2007} is the default empirical-Bayes method for
+removing batch effects from merged microarray data and is the engine
+used in the main pipeline. Its location-and-scale model assumes that
+each batch contributes additive and multiplicative perturbations that
+are \emph{independent} of the biological covariates of interest. When
+the covariate of interest is balanced across batches, this assumption
+is harmless: the per-batch mean of the biological signal is the same,
+so subtracting per-batch means does not erase between-group
+contrasts.
+
+The placental dataset collection used in this work violates that
+assumption in a hard way. Several Affymetrix and Illumina studies
+contain only a single trimester (e.g.\ first trimester only, or term
+only); other studies span two trimesters but never all three.
+There is no batch in which all three trimesters are observed jointly.
+Under this design, ``batch'' is partially aliased with ``trimester'':
+the batch-mean estimate that ComBat removes contains real biological
+signal, and the model has no way to separate the two without
+additional information.
+
+Nygaard, R{\o}dland, and Hovig formalised the problem and showed
+that running ComBat (or its parametric two-way ANOVA equivalent) on
+unbalanced designs and then handing the corrected matrix to a naive
+downstream test exaggerates between-group differences and inflates
+false positives, sometimes by an order of magnitude~\cite{nygaard2016}.
+Their concrete recommendation is to skip the pre-correction step and
+instead include batch as a covariate in the differential-expression
+model directly, so that the residual degrees of freedom are charged
+correctly.
+
+Towfic, Kusko, and Zeskind replied with a re-analysis of one of the
+datasets used by Nygaard (GSE61901), arguing that the inflation
+Nygaard reported was driven not by ComBat itself but by how
+\emph{technical replicates} were handled in the analysis pipeline.
+When technical replicates were retained and modelled with limma's
+\texttt{duplicateCorrelation} or with mixed-effects regression
+rather than averaged away, several batch-handling strategies
+(including ComBat followed by limma) converged on a similar
+$\sim\!1500$-DEG result, while the averaging strategy collapsed it
+to 11 DEGs~\cite{towfic2017}. The two papers therefore agree on the
+core diagnostic --- when the design is unbalanced the choice of
+batch-handling pipeline materially changes the differential
+expression list and must be documented --- but they disagree about
+which step in the pipeline is to blame: Nygaard fingers the
+ComBat-then-test sequence, Towfic et al.\ fingers the averaging of
+technical replicates.
+
+This supplement reviews the methods that are most commonly used as
+\emph{alternatives} or \emph{supplements} to ComBat for this regime,
+groups them by the assumption they substitute for the
+``balanced design'' assumption, and gives practical recommendations
+for the placenta integration use case. Downloaded references are
+listed in
+\texttt{references/integration\_methods\_references/}.
+
+%% =====================================================================
+\section{Why ComBat is fragile on unbalanced trimester data}
+
+ComBat fits, for every gene $g$ and every sample $i$ in batch $b$:
+\begin{equation}
+  Y_{gi} \;=\; \alpha_g \;+\; X_i\,\beta_g \;+\; \gamma_{gb} \;+\;
+  \delta_{gb}\,\varepsilon_{gi},
+  \label{eq:combat}
+\end{equation}
+where $X_i$ encodes the biological covariates that should be
+preserved, $\gamma_{gb}$ is the additive batch shift, and
+$\delta_{gb}$ is the multiplicative batch scale. Empirical-Bayes
+shrinkage of $\gamma_{gb}$ and $\delta_{gb}$ across genes makes the
+fit stable even with few samples per batch.
+
+The crucial step is that ComBat then \emph{subtracts} the estimated
+$\hat{\gamma}_{gb}$ and divides by $\hat{\delta}_{gb}$ to produce a
+``corrected'' $Y^{*}_{gi}$ that downstream methods treat as if it
+came from a single batch. The estimate $\hat{\gamma}_{gb}$ is the
+within-batch residual mean after removing $X_i\,\beta_g$. If batch
+$b$ contains only first-trimester samples, then ``the within-batch
+mean after accounting for biology'' is meaningless: the design matrix
+cannot identify $\beta_g$ from $\gamma_{gb}$ inside that batch alone,
+and the cross-batch pooling of $\hat{\gamma}_{gb}$ ends up importing
+trimester structure into the batch shift. The result is that the
+trimester effect is partially absorbed into the batch correction and
+then subtracted off.
+
+Two observations follow:
+\begin{enumerate}
+  \item If the goal is ``one merged matrix that PCA, clustering, and
+        visualisation can use,'' the bias from unbalanced ComBat is
+        irreducible without strong external assumptions.
+  \item If the goal is differential expression, it is almost always
+        safer to keep batch in the design matrix of the
+        downstream linear model and \emph{not} pre-subtract a batch
+        shift~\cite{nygaard2016,towfic2017}.
+\end{enumerate}
+
+The methods reviewed below trade the ``balanced design'' assumption
+for one of: (a) the existence of negative-control genes, (b) the
+existence of a reference batch or replicate samples, (c) the
+existence of mutual-nearest-neighbour structure between batches, or
+(d) the willingness to combine effect sizes per study rather than
+samples.
+
+%% =====================================================================
+\section{Alternatives and supplements}
+
+\subsection{Surrogate Variable Analysis (SVA)}
+
+SVA~\cite{leek2007} sidesteps the problem of \emph{naming} batches.
+Instead of asking the user which samples share a batch, it estimates
+latent factors (``surrogate variables'') from the residuals after
+removing the biological model, and adds those factors as covariates
+in the downstream test. Because the latent factors are estimated
+\emph{conditional on the protected biological covariate}, SVA is in
+principle robust to designs where the explicit batch label is
+confounded with biology.
+
+In practice SVA is very useful when the technical structure is
+multi-dimensional (lab effect $+$ scan date $+$ ozone). Leek and
+Storey themselves note that SVA's identifiability rests on the
+assumption that a substantial subset of genes is unaffected by the
+biological covariate; if that assumption is violated, the surrogate
+variables can become correlated with biology and remove signal
+along with noise. Although the original paper does not work out
+this failure mode for the specific case of a batch that is fully
+aliased with biology, the consequence is direct: with placenta
+data where one batch contains a single trimester, the leading
+residual direction is essentially ``this study,'' and any
+data-driven surrogate-variable estimator is at risk of capturing
+trimester structure inside its surrogate factor. We therefore
+recommend that on this collection SVA be used \emph{instead of}
+ComBat (never on top of it) and that the recovered surrogate
+variables always be plotted against the trimester labels before
+being trusted.
+
+\subsection{Remove Unwanted Variation (RUV)}
+
+The RUV family~\cite{gagnonbartsch2012,risso2014} replaces the
+``balanced design'' assumption with ``the user can name a set of
+genes that are not differentially expressed with respect to the
+biological covariate of interest.'' Variation in those negative
+control genes is by construction technical, so a factor analysis
+restricted to them yields nuisance factors that can be added to the
+limma design.
+
+RUV-2 (RUVg) uses negative-control genes; RUV-4 and RUVs allow
+control \emph{samples} (e.g.\ technical replicates) instead.
+Importantly RUV does \emph{not} require that controls be present in
+every batch: the factor model is estimated globally. This makes RUV
+the most direct ``ComBat replacement'' for unbalanced placental
+data, provided a sensible negative-control list can be assembled.
+The validity of that list is the load-bearing assumption of the
+whole approach --- Gagnon-Bartsch and Speed are explicit that
+negative-control genes must be ones whose expression is known
+\emph{a priori} not to depend on the biological variable of
+interest, and the method gives no diagnostic if that assumption is
+broken. For trimester comparisons a reasonable starting point is
+housekeeping genes from the Eisenberg/Levanon list intersected with
+genes that have low variance across the trimester axis in a single
+balanced study (e.g.\ a study that contains both endpoints of the
+contrast); any list assembled this way must then be validated
+against an independent balanced subset before being trusted.
+
+A pragmatic recipe:
+\begin{enumerate}
+  \item Pick negative-control genes (housekeeping, or empirically
+        invariant in a balanced reference study).
+  \item Run \texttt{RUVg(set, controls, k)} with $k$ chosen by the
+        elbow of the singular values, capped at the number of
+        batches minus one.
+  \item Add the \texttt{W} factors as covariates to the limma
+        design alongside the trimester contrast.
+  \item Plot \texttt{W} against trimester to verify that the
+        surrogate factors are \emph{not} just trimester re-labelled.
+\end{enumerate}
+
+\subsection{Reference-batch ComBat (BESC, ComBat-ref)}
+
+A second family of methods keeps the ComBat additive/multiplicative
+model but eliminates the within-batch identifiability problem by
+nominating one batch as a \emph{reference}.
+
+Walker et al.~\cite{walker2008} were the earliest concrete proposal:
+include identical pooled-RNA reference samples, derived from the
+same tissue as the biological samples, in every batch. Their
+correction is essentially ComBat with the reference samples used
+to anchor each batch's location and scale, allowing biological
+groups to be unbalanced across batches as long as the reference
+pool is shared.
+
+Varma's BESC~\cite{varma2020} addresses the same problem
+independently. Rather than requiring physical reference samples in
+every batch, BESC precomputes a small set of ``batch effect
+signatures'' (vectors of length \(p\), the number of probes) on a
+large public reference cohort, and at correction time projects
+each new sample onto those signatures and subtracts them. Because
+the signatures are estimated once and then applied per sample,
+BESC is conservative (it only removes variation in directions that
+were technical in the reference cohort) but cannot remove batch
+effects whose direction was not represented there.
+
+ComBat-ref~\cite{zhang2025} is the most recent entry. It fits the
+negative-binomial ComBat-seq model~\cite{zhang2020} on count data, but instead of
+treating all batches symmetrically it estimates a per-batch
+dispersion \(\hat{\lambda}_b\) and \emph{automatically selects the
+batch with the smallest dispersion as the reference}. Counts in
+the reference batch are then preserved unchanged, and every other
+batch is adjusted towards it. This automation removes the need for
+the user to nominate a reference batch by hand. ComBat-ref is
+implemented as a small set of R scripts at
+\url{https://github.com/xiaoyu12/Combat-ref} (a copy of the
+sources is included in
+\texttt{references/integration\_methods\_references/}).
+
+These methods are well suited to the placenta problem if a
+reference batch can be chosen --- whether by hand or, as in
+ComBat-ref, automatically --- that contains samples from a broad
+range of trimesters and has stable internal variance. In practice
+the closest reference candidate in the current collection is the
+dataset that spans the broadest sample of trimesters. We recommend
+testing reference-batch ComBat with that dataset as the anchor and
+comparing the resulting differential expression list against the
+imputation pipeline output. ComBat-ref itself targets RNA-seq
+counts; for the existing log-transformed microarray matrices the
+relevant analogues are Walker-style anchored ComBat or BESC.
+
+\subsection{Mutual Nearest Neighbours (MNN, fastMNN, scMerge, Harmony)}
+
+MNN~\cite{haghverdi2018} and Harmony~\cite{korsunsky2019} were
+developed for single-cell RNA-seq integration but they are agnostic
+about the data type and have been used on bulk
+microarrays~\cite{varma2020}. The core idea is that batches are
+\emph{aligned} rather than \emph{normalised}: pairs of samples
+across batches that are mutual nearest neighbours in expression
+space are taken as evidence that those samples represent the same
+biological state, and a translation vector is computed to bring
+them into register.
+
+MNN-style alignment is attractive for the placenta integration
+problem because it requires \emph{some} biological overlap between
+batches but not the full factorial: as long as one or two samples
+per pair of studies represent comparable trimesters, the alignment
+can stitch the studies together. The downside is that MNN was
+designed for thousands of cells, not for tens of bulk samples, and
+the variance estimates that drive the neighbour search are noisy
+on bulk data. We therefore recommend MNN only as a sanity check on
+top of ComBat or RUV, not as the sole correction.
+
+\subsection{Direct integration of cross-platform intensity data}
+
+Turnbull et al.~\cite{turnbull2012} demonstrated that intensity
+levels from Affymetrix and Illumina single-channel arrays can be
+merged at the probe level after within-platform normalisation, and
+that the merged data have higher statistical power than any single
+platform alone. They benchmarked several normalisation /
+batch-correction combinations and found that ComBat and
+cross-platform normalisation (XPN) outperformed mean-centring and
+distance-weighted discrimination (DWD); their workflow allows
+ComBat as an optional step when batch effects remain large after
+within-platform normalisation. The takeaway for the placenta
+collection is therefore not ``skip ComBat'' but rather ``do not
+assume that a single normalisation step is enough --- benchmark
+several combinations and pick the one that minimises residual
+batch structure in PCA.''
+
+Almeida-de-Macedo et al.~\cite{macedo2013} studied a related
+question: when correlation coefficients between gene pairs are
+estimated from heterogeneous microarray data, is it better to pool
+the data first (``melting pot'') or to estimate the correlation in
+each study and combine afterwards (``mosaic'')? Their primary
+finding is about bias in correlation estimates rather than about
+DE detection: pooled estimates can be substantially biased when
+group sizes are heterogeneous across studies, whereas the mosaic
+combination of per-study estimates is less biased at the cost of
+statistical power. The paper does not directly address
+batch-confounded differential expression, but its conclusion ---
+that combination of per-study summaries is safer than direct
+pooling when studies are heterogeneous --- carries over and
+motivates the effect-size meta-analysis approach in the next
+section.
+
+\subsection{Effect-size meta-analysis (the mosaic approach)}
+
+Meta-analytic combination of per-study effect sizes does not need
+any cross-batch normalisation at all: each study contributes a
+$\log\!\mathit{FC}$ and a standard error, and a random-effects
+model combines them. Crucially, the per-study contrast can only be
+computed in studies that contain \emph{both} of its endpoints, so
+the unbalanced studies that motivate this supplement contribute to
+some contrasts but not others.
+
+A related but distinct problem is studied by Shi et
+al.~\cite{shi2011}: their ``meta-analysis with missing
+replicates'' framework targets \emph{within-study} missing data
+(genes that are absent on some platforms or replicates that
+failed) and combines per-study summaries with imputation of the
+missing entries. The methodology is not a one-to-one match for
+the placenta case, where the missingness is at the level of
+\emph{whole biological groups} per study rather than of individual
+replicates, but the same effect-size combination machinery
+(\texttt{metafor}-style random-effects models) applies. For the
+placenta collection, an effect-size meta-analysis should be
+reported \emph{alongside} the ComBat / imputation pipeline as a
+sensitivity analysis: any gene that is differentially expressed
+under both the merged-matrix and the per-study-effect-size views
+is more credible than any gene found under one view alone.
+
+\subsection{Matrix dissection: HarmonizR}
+
+Vo{\ss} et al.~\cite{voss2022} introduced HarmonizR, a framework
+that applies batch correction to incomplete matrices \emph{without}
+imputation. The key idea is \emph{matrix dissection}: the combined
+data matrix is split into sub-matrices that share a common pattern
+of non-missing values (i.e.\ every feature in a sub-matrix is
+observed in every sample of that sub-matrix). ComBat or limma's
+\texttt{removeBatchEffect()} is then applied independently to each
+sub-matrix, and the corrected sub-matrices are reassembled into the
+full matrix. Features that are observed in only a single batch
+cannot be corrected and are returned unchanged.
+
+HarmonizR was developed for proteomics, where block-structured
+missingness is endemic: different LC-MS/MS acquisition modes (DDA,
+DIA, SWATH) yield overlapping but non-identical protein inventories
+across batches, exactly paralleling the gene-coverage problem in
+our microarray collection. Evaluated on four proteomic datasets
+with up to 23 batches, HarmonizR outperformed the impute-then-ComBat
+strategy in terms of significant-protein detection while
+preserving within-batch statistical properties~\cite{voss2022}.
+A follow-up paper~\cite{voss2025} added blocking and singular-feature
+handling, further improving runtime and data preservation.
+
+The method is available as a Bioconductor R package
+(\texttt{HarmonizR}). For the placenta collection it is directly
+applicable: the merged expression matrix can be fed to HarmonizR
+without prior imputation, and the framework will automatically
+partition genes by their dataset-coverage pattern and apply ComBat
+to each partition. This approach avoids the chicken-and-egg problem
+of needing batch correction before imputation but imputation before
+batch correction.
+
+\subsection{Batch-sensitized imputation}
+
+Goh, Hui, and Wong~\cite{goh2023} formalised the interaction
+between missing value imputation (MVI) and batch effect correction
+(BEC). They compared three imputation strategies:
+\begin{itemize}
+  \item \textbf{M1 (global):} impute using information from all
+        samples regardless of batch;
+  \item \textbf{M2 (self-batch / batch-sensitized):} split by batch,
+        impute within each batch separately;
+  \item \textbf{M3 (cross-batch):} impute using only samples from
+        the \emph{opposite} batch.
+\end{itemize}
+On simulated and real proteomics/genomics data, M2 consistently
+outperformed M1 and M3: batch-sensitized imputation preserved
+within-batch variance structure and produced lower RMSE after
+downstream ComBat correction. Crucially, both M1 and M3 increased
+sample variance following ComBat, whereas M2 did not.
+
+The authors also introduced the concept of \emph{batch effect
+associated missing values} (BEAMs) --- missingness that is itself
+correlated with the batch factor. When BEAMs are present (as in
+our microarray collection, where gene coverage differs by platform),
+global imputation (M1) is particularly problematic because the
+imputed values carry no batch-specific information, making subsequent
+BEC less effective.
+
+For the placenta pipeline, this motivates a modification of the
+current imputation step: rather than applying softImpute to the
+full merged matrix (a global M1 strategy), imputation could be
+performed per-dataset (M2) before merging. However, per-dataset
+imputation is only possible for genes measured in at least some
+samples within that dataset; genes entirely absent from a dataset
+cannot be imputed within it, so the coverage problem remains and
+must still be addressed by cross-dataset methods such as HarmonizR
+or the current softImpute approach.
+
+No standalone R package was released with the Goh et al.\ paper;
+the M2 strategy is a simple procedural change (split by batch,
+impute, recombine) applicable to any imputation method.
+
+\subsection{Imputation as a complement, not a replacement}
+
+The main manuscript advocates matrix-completion imputation
+(\textit{softImpute}, $k$-NN) followed by ComBat. This combination
+addresses the \emph{coverage} problem (different platforms target
+different gene catalogues) but not the \emph{design imbalance}
+problem (different studies cover different trimesters). The two
+are independent: imputing missing genes does not give ComBat any
+new information about the trimester--batch confound. Any of the
+methods in this supplement can be applied to the imputed matrix
+exactly as they would be applied to the raw merged matrix.
+
+%% =====================================================================
+\section{Recommendations for the placenta pipeline}
+
+We suggest the following layered strategy, ordered from cheapest to
+most invasive, so that each layer can be added without rebuilding
+the previous one:
+
+\begin{enumerate}
+  \item \textbf{Document the imbalance.} Tabulate, for every
+        contrast of interest, which studies contribute samples from
+        which trimester. Any contrast for which one trimester comes
+        from disjoint studies is intrinsically risky and should be
+        flagged in the results.
+
+  \item \textbf{Replace ``ComBat $\to$ limma'' with
+        ``limma with batch in the design.''} This is the
+        Nygaard/Towfic recommendation~\cite{nygaard2016,towfic2017}.
+        It is one line of R and removes the largest source of bias
+        for free, at the cost of some power when the design happens
+        to be balanced.
+
+  \item \textbf{Run RUV with negative-control genes
+        in parallel.} Use the imputed, merged expression matrix as
+        input. Restrict to housekeeping genes intersected with
+        empirically invariant genes from a balanced reference
+        study. Compare the resulting DEG list against the
+        ComBat-in-design list and report the intersection.
+
+  \item \textbf{Run an effect-size meta-analysis as a sanity
+        check.} Compute per-study log fold changes for every
+        contrast in which a study contains both endpoints, then
+        combine with a random-effects model (\texttt{metafor}).
+        Report only genes that are significant under both the
+        joint-matrix and the meta-analytic views.
+
+  \item \textbf{If a single dataset spans the broadest range of
+        trimesters, try reference-batch ComBat (or ComBat-ref) with
+        that dataset as the anchor.} Use this as a third comparison
+        point, not as the primary correction.
+
+  \item \textbf{Avoid SVA on this collection unless the residual
+        structure has been inspected first.} The risk that SVA
+        absorbs trimester into a surrogate variable is real and
+        hard to detect without a balanced ground-truth subset.
+
+  \item \textbf{Consider HarmonizR as an alternative to
+        imputation + ComBat.} HarmonizR~\cite{voss2022} applies
+        ComBat to sub-matrices sharing common coverage patterns,
+        bypassing imputation entirely. This avoids the
+        imputation--batch-correction confound documented by
+        Goh et al.~\cite{goh2023} and is directly applicable to
+        the block-structured missingness in the placenta collection.
+
+  \item \textbf{If imputation is used, prefer batch-sensitized
+        imputation (M2).} Following Goh et al.~\cite{goh2023},
+        impute within each dataset separately before merging, rather
+        than imputing on the combined matrix. This preserves
+        within-batch variance structure and improves subsequent
+        batch correction.
+\end{enumerate}
+
+The above strategy preserves the existing imputation step --- which
+addresses a different problem (cross-platform gene coverage) ---
+and supplements ComBat with methods that do not require a balanced
+design.
+
+%% =====================================================================
+\begin{thebibliography}{99}
+
+\bibitem{johnson2007}
+Johnson WE, Li C, Rabinovic A.
+Adjusting batch effects in microarray expression data using
+empirical Bayes methods.
+\textit{Biostatistics} 2007;8(1):118--127.
+\doi{10.1093/biostatistics/kxj037}
+
+\bibitem{nygaard2016}
+Nygaard V, R{\o}dland EA, Hovig E.
+Methods that remove batch effects while retaining group differences
+may lead to exaggerated confidence in downstream analyses.
+\textit{Biostatistics} 2016;17(1):29--39.
+\doi{10.1093/biostatistics/kxv027}
+
+\bibitem{towfic2017}
+Towfic F, Kusko R, Zeskind B.
+Letter to the Editor response: Nygaard et al.
+\textit{Biostatistics} 2017;18(2):195--197.
+\doi{10.1093/biostatistics/kxw031}
+
+\bibitem{leek2007}
+Leek JT, Storey JD.
+Capturing heterogeneity in gene expression studies by surrogate
+variable analysis.
+\textit{PLoS Genetics} 2007;3(9):e161.
+\doi{10.1371/journal.pgen.0030161}
+
+\bibitem{gagnonbartsch2012}
+Gagnon-Bartsch JA, Speed TP.
+Using control genes to correct for unwanted variation in
+microarray data.
+\textit{Biostatistics} 2012;13(3):539--552.
+\doi{10.1093/biostatistics/kxr034}
+
+\bibitem{risso2014}
+Risso D, Ngai J, Speed TP, Dudoit S.
+Normalization of RNA-seq data using factor analysis of control
+genes or samples.
+\textit{Nature Biotechnology} 2014;32(9):896--902.
+\doi{10.1038/nbt.2931}
+
+\bibitem{walker2008}
+Walker WL, Liao IH, Gilbert DL, et al.
+Empirical Bayes accommodation of batch effects in microarray data
+using identical replicate reference samples.
+\textit{BMC Genomics} 2008;9:494.
+\doi{10.1186/1471-2164-9-494}
+
+\bibitem{varma2020}
+Varma S.
+Blind estimation and correction of microarray batch effect.
+\textit{PLoS ONE} 2020;15(4):e0231446.
+\doi{10.1371/journal.pone.0231446}
+
+\bibitem{zhang2020}
+Zhang Y, Parmigiani G, Johnson WE.
+ComBat-seq: batch effect adjustment for RNA-seq count data.
+\textit{NAR Genomics and Bioinformatics} 2020;2(3):lqaa078.
+\doi{10.1093/nargab/lqaa078}
+
+\bibitem{zhang2025}
+Zhang X.
+Highly effective batch effect correction method for RNA-seq count
+data (ComBat-ref).
+\textit{Computational and Structural Biotechnology Journal}
+2025;27:58--68.
+\doi{10.1016/j.csbj.2024.12.010}
+
+\bibitem{haghverdi2018}
+Haghverdi L, Lun ATL, Morgan MD, Marioni JC.
+Batch effects in single-cell RNA-sequencing data are corrected by
+matching mutual nearest neighbors.
+\textit{Nature Biotechnology} 2018;36(5):421--427.
+\doi{10.1038/nbt.4091}
+
+\bibitem{korsunsky2019}
+Korsunsky I, Millard N, Fan J, et al.
+Fast, sensitive and accurate integration of single-cell data with
+Harmony.
+\textit{Nature Methods} 2019;16(12):1289--1296.
+\doi{10.1038/s41592-019-0619-0}
+
+\bibitem{turnbull2012}
+Turnbull AK, Kitchen RR, Larionov AA, et al.
+Direct integration of intensity-level data from Affymetrix and
+Illumina microarrays improves statistical power for robust
+reanalysis.
+\textit{BMC Medical Genomics} 2012;5:35.
+\doi{10.1186/1755-8794-5-35}
+
+\bibitem{macedo2013}
+Almeida-de-Macedo MM, Ransom N, Feng Y, Hurst J, Wurtele ES.
+Comprehensive analysis of correlation coefficients estimated from
+pooling heterogeneous microarray data.
+\textit{BMC Bioinformatics} 2013;14:214.
+\doi{10.1186/1471-2105-14-214}
+
+\bibitem{shi2011}
+Shi F, Abraham G, Leckie C, Haviv I, Kowalczyk A.
+Meta-analysis of gene expression microarrays with missing
+replicates.
+\textit{BMC Bioinformatics} 2011;12:84.
+\doi{10.1186/1471-2105-12-84}
+
+\bibitem{voss2022}
+Vo{\ss} H, Schlumbohm S, Barwikowski P, et al.
+HarmonizR enables data harmonization across independent proteomic
+datasets with appropriate handling of missing values.
+\textit{Nature Communications} 2022;13:3523.
+\doi{10.1038/s41467-022-31007-x}
+
+\bibitem{voss2025}
+Vo{\ss} H, Schlumbohm S, Barwikowski P, et al.
+HarmonizR: blocking and singular feature data adjustment improve
+runtime efficiency and data preservation.
+\textit{BMC Bioinformatics} 2025;26:73.
+\doi{10.1186/s12859-025-06073-9}
+
+\bibitem{goh2023}
+Goh WWB, Hui HWH, Peng H, Wong L.
+How missing value imputation is confounded with batch effects and
+what you can do about it.
+\textit{Drug Discovery Today} 2023;28(9):103661.
+\doi{10.1016/j.drudis.2023.103661}
+
+%% --- Source datasets ---
+
+\bibitem{GSE100051}
+Soncin F, Khater M, To C, et al.
+Comparative analysis of mouse and human placentae across gestation
+reveals species-specific regulators of placental development.
+\textit{Development} 2018;145(2):dev156273.
+\doi{10.1242/dev.156273}
+
+\bibitem{GSE122214}
+Zhao L, Sun LF.
+The placental transcriptome of the first-trimester placenta is
+affected by in vitro fertilization and embryo transfer.
+\textit{Reproductive Biology and Endocrinology} 2019;17:54.
+\doi{10.1186/s12958-019-0494-7}
+
+\bibitem{GSE22490}
+Rull K, Nagirnaja L, Ulander VM, et al.
+Increased placental expression and maternal serum levels of
+apoptosis-inducing TRAIL in recurrent miscarriage.
+\textit{Placenta} 2013;34(2):141--148.
+\doi{10.1016/j.placenta.2012.11.032}
+
+\bibitem{GSE28551}
+Sitras V, Paulssen RH, Gr{\o}naas H, et al.
+Differences in gene expression between first and third trimester
+human placenta: a microarray study.
+\textit{PLoS ONE} 2012;7(3):e33294.
+\doi{10.1371/journal.pone.0033294}
+
+\bibitem{GSE35574}
+Guo L, Tsai SQ, Hardison NE, et al.
+Differentially expressed microRNAs and affected biological pathways
+revealed by modulated modularity clustering (MMC) analysis of human
+preeclamptic and IUGR placentas.
+\textit{Placenta} 2013;34(7):599--605.
+\doi{10.1016/j.placenta.2013.04.007}
+
+\bibitem{GSE37653}
+Khan MA, Manna S, Engstr{\"o}m K, et al.
+Expressional regulation of genes linked to immunity \&
+programmed development in human early placental villi.
+\textit{Indian Journal of Medical Research} 2014;139(1):125--140.
+PMID:~24604048.
+
+\bibitem{GSE37901}
+Uusk{\"u}la L, R{\~o}{\~o}t A, Reimand J, et al.
+Mid-gestational gene expression profile in placenta and link to
+pregnancy complications.
+\textit{PLoS ONE} 2012;7(11):e49248.
+\doi{10.1371/journal.pone.0049248}
+
+% GSE55439: no associated publication (GEO citation missing).
+% Submitters: Wolfe LM, Thagarajan RD, Boscolo F, et al.
+
+\bibitem{GSE6573}
+Herse F, Dechend R, Harsem NK, et al.
+Dysregulation of the circulating and tissue-based
+renin-angiotensin system in preeclampsia.
+\textit{Hypertension} 2007;49(3):604--611.
+\doi{10.1161/01.HYP.0000257797.49289.71}
+
+\bibitem{GSE70102}
+Bianco K, Gormley M, Engel N, et al.
+Placental transcriptomes in the common aneuploidies reveal
+critical regions on the trisomic chromosomes and genome-wide
+effects.
+\textit{Prenatal Diagnosis} 2016;36(9):812--822.
+\doi{10.1002/pd.4862}
+
+\bibitem{GSE73374}
+Martin E, Smeester L, Bommarito PA, et al.
+Epigenetics and preeclampsia: defining functional epimutations in
+the preeclamptic placenta related to the TGF-$\beta$ pathway.
+\textit{PLoS ONE} 2015;10(10):e0141294.
+\doi{10.1371/journal.pone.0141294}
+
+\bibitem{GSE73685}
+Bukowski R, Sadovsky Y, Goodarzi H, et al.
+Onset of human preterm and term birth is related to unique
+inflammatory transcriptome profiles at the maternal fetal
+interface.
+\textit{PeerJ} 2017;5:e3685.
+\doi{10.7717/peerj.3685}
+
+\bibitem{GSE93520}
+Zhang B, Zheng Z, Wu X, et al.
+Villi-specific gene expression reveals novel prognostic
+biomarkers in multiple human cancers.
+\textit{Journal of Cancer} 2017;8(16):3193--3200.
+\doi{10.7150/jca.19787}
+
+\bibitem{GSE9984}
+Mikheev AM, Nabekura T, Kaddoumi A, et al.
+Profiling gene expression in human placentae of different
+gestational ages: an OPRU Network and UW SCOR Study.
+\textit{Reproductive Sciences} 2008;15(9):866--877.
+\doi{10.1177/1933719108322425}
+
+\end{thebibliography}
+
+\end{document}

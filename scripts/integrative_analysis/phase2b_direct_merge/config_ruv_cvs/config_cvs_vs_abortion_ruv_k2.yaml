@@ -1,0 +1,89 @@
+# CVS (ongoing pregnancy) vs Abortion (terminated) chorionic villi
+# RUVg k=2 — batch = dataset, biology = sampling method
+#
+# GSE12767: CVS, Affymetrix HGU133Plus2, GA 10-12 weeks (8 healthy)
+# GSE93520: Termination, Agilent 4x44K, GA 9-10 weeks (13 samples at GA 9-10)
+#
+# The batch (dataset) is perfectly confounded with the biological
+# variable (CVS vs abortion). RUV estimates unwanted factors from
+# housekeeping genes that should not differ between the two conditions.
+# Control genes: Eisenberg-Levanon HK list minus apoptosis, immune,
+# trophoblast, hormone, stress/hypoxia GO terms.
+
+paths:
+  mapped_data: "data/mapped"
+  phenodata: "data/phenodata/samples.csv"
+  output: "output/phase2b_ruv_cvs/cvs_vs_abortion_ruv_k2"
+  baseline_output: null
+
+files:
+  pattern: "\\.tsv$"
+  datasets:
+    - "GSE12767"
+    - "GSE93520"
+  file_map:
+    GSE12767: "cvs/GSE12767_entrez_protein_coding.tsv"
+    GSE93520: "GSE93520.tsv"
+
+sample_filter:
+  Diagnosis: ["Healthy"]
+  Biological.Specimen: ["Chorionic Villus Sampling", "Chorionic villi"]
+  Gestational.Age.Category: ["First Trimester"]
+
+per_dataset_filter:
+  GSE93520:
+    Gestational.Age: ["9", "10"]
+
+phenotype:
+  group_column: "Biological.Specimen"
+  baseline: "Chorionic villi"
+  contrast: "Chorionic Villus Sampling"
+  covariates: []
+
+imputation:
+  softimpute:
+    enabled: false
+  knn:
+    enabled: false
+  missmda:
+    enabled: false
+  sample_knn:
+    enabled: false
+  none:
+    enabled: true
+
+normalization:
+  combat:
+    enabled: false
+  ruv:
+    enabled: true
+    k: 2
+    control_genes_file: "scripts/integrative_analysis/phase2b_direct_merge/config_ruv_cvs/ruv_control_genes_cvs.txt"
+  dwd:
+    enabled: false
+
+coverage:
+  max_imputation_allowed: 0.0
+  compare_thresholds: [0.0]
+  drop_imputed_genes_missing_in_group: true
+
+de:
+  imputed_cell_weight: 0.0
+
+thresholds:
+  fdr: 0.05
+  logfc: 1.0
+
+gene_filter:
+  protein_coding_only: true
+  min_variance: 0.01
+
+output:
+  save_imputed_matrices: false
+  save_normalized_matrices: true
+  save_validation_report: false
+  save_comparison_plots: true
+
+logging:
+  verbose: true
+  save_log: true

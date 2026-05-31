@@ -1,0 +1,73 @@
+# Compare: our harmonizr vs GitHub HarmonizR (Bioconductor)
+# Same 8-dataset 1_2 comparison, both methods side by side
+# Key difference: ours supports mod (covariates), GitHub does not
+
+paths:
+  mapped_data: "data/mapped"
+  phenodata: "data/phenodata/samples.csv"
+  output: "output/harmonizr/compare_implementations"
+
+files:
+  datasets:
+    - "GSE100051"
+    - "GSE122214"
+    - "GSE22490"
+    - "GSE28551"
+    - "GSE37653"
+    - "GSE37901"
+    - "GSE93520"
+    - "GSE9984"
+
+sample_filter:
+  Diagnosis: ["Healthy"]
+  Biological.Specimen: ["Placenta", "Chorionic villi"]
+  Gestational.Age.Category: ["First Trimester", "Second Trimester"]
+
+phenotype:
+  group_column: "Gestational.Age.Category"
+  baseline: "First Trimester"
+  contrast: "Second Trimester"
+  covariates: ["Combined.Fetus.Sex"]
+
+imputation:
+  none:
+    enabled: true
+
+normalization:
+  combat:
+    enabled: false
+  combat_ref:
+    enabled: false
+  harmonizr:
+    enabled: true
+    ref_batch: "GSE100051"
+  github_harmonizr:
+    enabled: true
+    algorithm: "ComBat"
+    ComBat_mode: 1
+
+coverage:
+  max_imputation_allowed: 0.20
+  compare_thresholds: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+  drop_imputed_genes_missing_in_group: true
+
+de:
+  imputed_cell_weight: 0.0
+
+thresholds:
+  fdr: 0.05
+  logfc: 1.0
+
+gene_filter:
+  protein_coding_only: true
+  min_variance: 0.01
+
+output:
+  save_imputed_matrices: true
+  save_normalized_matrices: true
+  save_validation_report: true
+  save_comparison_plots: true
+
+logging:
+  verbose: true
+  save_log: true

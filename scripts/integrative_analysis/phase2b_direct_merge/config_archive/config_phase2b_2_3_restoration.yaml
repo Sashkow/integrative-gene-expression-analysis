@@ -1,0 +1,102 @@
+# Phase 2B: Direct Merge Improvements - 2_3 Comparison (restoration datasets)
+# =============================================================================
+#
+# Second Trimester vs Term comparison using the SAME initial datasets as
+# scripts/article_4_trims_compare_restoration/ (7 datasets, no GSE55439).
+#
+# Note: contrast is "Term" (not "Third Trimester") — this matches the
+# Gestational.Age.Category values actually present in data/phenodata/samples.csv
+# for these datasets. "Third Trimester" only exists in GSE28551.
+#
+# Expected healthy placenta samples: 9 Second + 55 Term = 64 total
+
+# Input paths
+paths:
+  mapped_data: "data/mapped"
+  phenodata: "data/phenodata/samples.csv"
+  output: "output/phase2b_combat/phase2b_2_3_restoration"
+  baseline_output: "output/baseline_2_3"
+
+# File matching
+files:
+  pattern: "\\.tsv$"
+  # Same 7 datasets as article_4_trims_compare_restoration/data/2_3
+  datasets: ["GSE22490", "GSE35574", "GSE37901", "GSE6573", "GSE73374", "GSE73685", "GSE9984"]
+
+# Sample filter (applied before imputation/ComBat, matches restoration inputs)
+sample_filter:
+  Diagnosis: ["Healthy"]
+  Biological.Specimen: ["Placenta"]
+  Gestational.Age.Category: ["Second Trimester", "Term"]
+
+# Phenotype configuration
+phenotype:
+  group_column: "Gestational.Age.Category"
+  baseline: "Second Trimester"
+  contrast: "Term"
+  # Adjust for fetal sex in ComBat mod and limma design (matches restoration).
+  covariates: ["Combined.Fetus.Sex"]
+
+# Imputation methods
+imputation:
+  softimpute:
+    enabled: true
+    rank_max: 30
+    lambda: 0
+    thresh: 1e-4
+    maxit: 50
+    type: "als"
+
+  knn:
+    enabled: true
+    k: 10
+
+  none:
+    enabled: true
+
+# Normalization methods
+normalization:
+  combat:
+    enabled: true
+    par_prior: true
+
+  dwd:
+    enabled: false  # disabled: fails on single-sample batches
+
+# Coverage thresholds for merging
+# The pipeline auto-picks the LOWEST threshold from compare_thresholds
+# whose pre-imputation missing fraction is <= max_imputation_allowed.
+coverage:
+  max_imputation_allowed: 0.20
+  compare_thresholds: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+  # If true, drop genes that would be imputed but lack real values in at
+  # least one comparison group (softimpute would otherwise synthesize
+  # their expression under an unseen condition).
+  drop_imputed_genes_missing_in_group: true
+
+# Differential expression
+thresholds:
+  fdr: 0.05
+  logfc: 1.0
+
+# Gene filtering
+gene_filter:
+  protein_coding_only: true
+  min_variance: 0.01
+
+# Validation
+validation:
+  leave_out_fraction: 0.1
+  n_repeats: 3
+
+# Output options
+output:
+  save_imputed_matrices: true
+  save_normalized_matrices: true
+  save_validation_report: true
+  save_comparison_plots: true
+
+# Logging
+logging:
+  verbose: true
+  save_log: true
