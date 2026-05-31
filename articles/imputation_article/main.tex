@@ -22,6 +22,8 @@
 \usepackage{hyperref}
 \hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
 \newcommand{\doi}[1]{\href{https://doi.org/#1}{\texttt{doi:#1}}}
+\newcommand{\ghb}{https://github.com/Sashkow/integrative-gene-expression-analysis/blob/article/imputation}
+\newcommand{\src}[2]{\footnote{\url{\ghb/#1}~--- #2}}
 \setlength{\emergencystretch}{1em}
 
 \title{A direct-merge pipeline with matrix-completion imputation
@@ -198,7 +200,7 @@ $\ge$1/6 & 17{,}531 & 603{,}190 & 29.4\,\% \\
   are retained with zero imputation. At $k = 1$ (any gene in
   $\ge$1 dataset), 17{,}531 genes are retained after the
   per-group safety drop, with
-  29.4\% of cells requiring imputation.}
+  29.4\% of cells requiring imputation.\src{output/yehor_sashko/phase2b_1_2_yehor_6ds_no_37653_no_22490_enriched_sashko/imputed_gene_group_coverage.csv}{gene coverage data}\src{output/yehor_sashko/phase2b_1_2_yehor_6ds_no_37653_no_22490_enriched_sashko/summary.txt}{pipeline summary}}
 \label{tab:recovery}
 \end{table}
 
@@ -228,7 +230,7 @@ Final merged matrix size                               & 17{,}531 \\
 \caption{Per-group imputation safety audit for the 1\_2
   comparison. The final merged matrix contains 8{,}260 fully
   observed genes plus 9{,}271 partially observed genes that
-  passed the both-groups-have-evidence rule.}
+  passed the both-groups-have-evidence rule.\src{output/yehor_sashko/phase2b_1_2_yehor_6ds_no_37653_no_22490_enriched_sashko/imputed_gene_group_coverage.csv}{per-gene coverage audit}}
 \label{tab:coverage}
 \end{table}
 
@@ -256,7 +258,7 @@ Figure~\ref{fig:staircase}.
   Note that many genes in the imputed region (upper block)
   show significant FDR values (dark blue), confirming that
   the discarded genes carry real differential expression signal
-  that an intersection-only analysis would miss.}
+  that an intersection-only analysis would miss.\src{articles/imputation_article/figures}{article figures}}
 \label{fig:staircase}
 \end{figure}
 
@@ -336,7 +338,7 @@ gene--dataset block & softImpute & 144{,}811 &
   observed across all six datasets (so masking removes one dataset's worth of
   observations from an otherwise complete row); partially observed
   genes are excluded because masking them would leave rows too
-  sparse for \texttt{biScale} to converge.}
+  sparse for \texttt{biScale} to converge.\src{output/yehor_sashko/phase2b_1_2_yehor_6ds_no_37653_no_22490_enriched_sashko/imputation_validation.csv}{cross-validation results}}
 \label{tab:imputation}
 \end{table}
 
@@ -365,7 +367,7 @@ gene space.
   separates the two trimesters, confirming that ComBat-ref
   removes batch effects without collapsing the biological
   contrast. The softImpute panel includes 9{,}271 additional
-  genes recovered by imputation.}
+  genes recovered by imputation.\src{articles/imputation_article/figures/fig_pca_intersection.png}{intersection PCA}\src{articles/imputation_article/figures/fig_pca_softimpute.png}{softImpute PCA}}
 \label{fig:pca}
 \end{figure}
 
@@ -392,7 +394,8 @@ difference of $0.014$ $\log_2$ units and $99\%$ of genes
 differing by less than $0.09$. The additional genes recovered
 by imputation therefore expand the testable feature space
 without altering the differential expression landscape of the
-originally observed genes.
+originally observed
+genes.\src{scripts/integrative_analysis/article_validation/logfc_stability.R}{logFC stability script}\src{articles/imputation_article/data/logfc_stability/logfc_stability.csv}{per-gene logFC comparison data}
 
 The earlier intersection-only analysis by
 \citet{Lykhenko2021a}, which was restricted to four
@@ -435,7 +438,7 @@ softImpute & ComBat-ref & 6 & 17{,}531 & 447 & 369 &  78 \\
   imputation). ComBat-ref uses GSE100051 as the reference batch.
   Imputed-cell weight $w = 0$ (hard masking) for all softImpute
   runs. Thresholds: $\text{adj.P.Val} < 0.05$,
-  $|\text{logFC}| > 1$.}
+  $|\text{logFC}| > 1$.\src{output/yehor_sashko/phase2b_1_2_yehor_6ds_no_37653_no_22490_enriched_sashko/method_comparison.csv}{DE method comparison data}}
 \label{tab:de}
 \end{table}
 
@@ -449,10 +452,13 @@ first-trimester $+$ 15 second-trimester $=$ 117 healthy
 placental/chorionic-villi samples; reference: 447~DEGs at FDR${}<0.05$,
 $|\text{logFC}|>1$). All tests reused the reference run's
 imputed matrix to eliminate \textit{softImpute} stochasticity and
-isolate the effect of sample composition.
+isolate the effect of sample
+composition.\src{scripts/integrative_analysis/phase5_validation/config_validation_6ds.yaml}{validation config}\src{output/yehor_sashko/phase5_validation_6ds}{validation output}
 
 \paragraph{Test~1: first-trimester subsampling.}
-All 15 second-trimester samples were retained and the
+All 15 second-trimester samples were
+retained\src{scripts/integrative_analysis/phase5_validation/test1_first_trim_subsample.R}{test~1 script}\src{output/yehor_sashko/phase5_validation_6ds/test1_first_trim_subsample.tsv}{test~1 results}
+and the
 first-trimester pool was subsampled at sizes
 $N \in \{10, 15, 20, 25, 30, 40, 50, 60, 80, 102\}$
 (30~iterations per size). Three key findings emerged
@@ -489,7 +495,8 @@ $N \in \{10, 15, 20, 25, 30, 40, 50, 60, 80, 102\}$
 To test whether the design imbalance --- some datasets
 contribute samples from only one trimester, which can bias
 ComBat batch-effect estimates --- inflates the DEG
-list, we compared against a balanced 2-dataset reference
+list, we compared against a balanced 2-dataset
+reference\src{scripts/integrative_analysis/phase5_validation/test1b_vs_balanced.R}{balanced comparison script}\src{output/yehor_sashko/phase5_validation_6ds/test1b_vs_balanced.tsv}{balanced comparison results}\src{output/yehor_sashko/phase2b_1_2_yehor_2ds_balanced/difexp_softimpute_combat.tsv}{balanced reference DE table}
 (GSE100051 $+$ GSE9984; 46 first-trimester $+$ 11
 second-trimester samples; regular ComBat; 416~DEGs). Of the
 447 full-integration DEGs, $91.5\%$ ($409/447$) also appeared in
@@ -524,7 +531,9 @@ indicating that the design imbalance does not drive the observed
 instability.
 
 \paragraph{Test~3: stratified split-half.}
-The full sample was randomly split into two halves maintaining
+The full sample was randomly
+split\src{scripts/integrative_analysis/phase5_validation/test3_split_half.R}{split-half script}\src{output/yehor_sashko/phase5_validation_6ds/test3_split_half.tsv}{split-half results}
+into two halves maintaining
 the trimester ratio (50~iterations). Median Jaccard between
 halves was $0.40$, reflecting the limited statistical power
 of 7--8 second-trimester samples per half. However, each half
@@ -548,7 +557,7 @@ groups and does not indicate fragility of the core result.
   \textbf{Right:} median retention of reference DEGs (blue:
   full integration, 447~DEGs; red: balanced 2-dataset
   reference, 416~DEGs) as a function of first-trimester
-  sample size.}
+  sample size.\src{output/yehor_sashko/phase5_validation_6ds/plots}{validation plots}\src{scripts/integrative_analysis/phase5_validation/plot_validation_results.R}{plot generation script}}
 \label{fig:convergence}
 \end{figure}
 
@@ -1146,13 +1155,15 @@ in the subsections that follow.
   \texttt{TRUE},
   \texttt{impute.method} $=$ \texttt{softimpute},
   ComBat-ref (reference batch: GSE100051), and
-  \texttt{de.imputed\_cell\_weight} $w = 0$ (hard masking).}
+  \texttt{de.imputed\_cell\_weight} $w = 0$ (hard masking).\src{scripts/integrative_analysis/phase2b_direct_merge/plot_na_staircase.R}{staircase visualisation code}}
 \label{fig:pipeline}
 \end{figure}
 
 \subsection{Input harmonisation and sample filtering}
 
-The pipeline (\texttt{run\_phase2b.R}) consumes a YAML
+The pipeline
+(\texttt{run\_phase2b.R}\src{scripts/integrative_analysis/phase2b_direct_merge/run_phase2b.R}{main pipeline script}\src{scripts/integrative_analysis/phase2b_direct_merge/config_yehor_sashko/config_phase2b_1_2_yehor_6ds_no_37653_no_22490_enriched_sashko.yaml}{6ds pipeline configuration})
+consumes a YAML
 configuration file that specifies (a) the directory containing
 ENTREZID-keyed expression TSVs, (b) the metadata table with
 sample-level annotations, (c) the biological contrast (baseline vs.
@@ -1205,7 +1216,8 @@ unseen condition and bias the contrast.
 
 \subsection{Matrix completion}
 
-Two imputation methods are available:
+Two imputation methods are
+available\src{scripts/integrative_analysis/phase2b_direct_merge/imputation.R}{imputation methods implementation}:
 \begin{enumerate}
   \item \textit{softImpute} \citep{Mazumder2010,Hastie2015}:
     low-rank matrix completion regularised by the nuclear norm
@@ -1233,7 +1245,9 @@ matrix and carried through all subsequent steps.
 
 \subsection{ComBat batch correction}
 
-The completed matrix is batch-corrected with
+The completed matrix is
+batch-corrected\src{scripts/integrative_analysis/phase2b_direct_merge/normalization.R}{batch correction implementation}
+with
 \texttt{sva::ComBat} using a model matrix of
 $\sim\!\text{bio\_group}+\text{fetus\_sex}$, where
 \texttt{bio\_group} is the two-level contrast. We use the
