@@ -819,7 +819,7 @@ for (imp_method in imputation_methods) {
                         result_key, nrow(normalized), ncol(normalized)))
     grp_n <- table(factor(pca_group, levels = group_lvls))
     ds_n <- table(factor(pca_batch, levels = ds_lvls))
-    legend("topright",
+    legend("bottomright",
            legend = c(sprintf("%s (n=%d)", group_lvls, grp_n),
                       "", sprintf("%s (n=%d)", ds_lvls, ds_n)),
            col = c(grp_col[group_lvls], NA, rep("grey30", length(ds_lvls))),

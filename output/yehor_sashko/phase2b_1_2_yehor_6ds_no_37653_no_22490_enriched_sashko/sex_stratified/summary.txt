@@ -1,0 +1,20 @@
+Sex-stratified DE analysis — 6ds pack
+Date: 2026-05-23
+Total samples: 117
+Genes in normalized matrix: 17531
+
+=== Fetal sex counts ===
+First trimester: 56 female (0 known + 56 predicted), 46 male (0 known + 46 predicted)
+Second trimester: 9 female (0 known + 9 predicted), 6 male (0 known + 6 predicted)
+
+=== DE results (FDR < 0.05, |logFC| > 1.0) ===
+1T: male vs female: 56 baseline vs 46 contrast → 3 significant (3 up, 0 down)
+2T: male vs female: 9 baseline vs 6 contrast → 1 significant (1 up, 0 down)
+Males: 1T vs 2T: 46 baseline vs 6 contrast → 337 significant (284 up, 53 down)
+Females: 1T vs 2T: 56 baseline vs 9 contrast → 504 significant (411 up, 93 down)
+
+=== Article paragraph (fill in [N]) ===
+Imputation of missing values allowed us to integrate data from all 117 available samples.
+In addition, fetal sex was predicted for samples with missing metadata: 46 male and 56 female fetuses were identified among first-trimester samples, in addition to the previously known 0 male and 0 female samples; and 6 male and 9 female fetuses were identified among second-trimester samples, in addition to the previously known 0 male and 0 female samples.
+Differential expression analysis identified 3 genes between first-trimester male and first-trimester female samples, 1 genes between second-trimester male and second-trimester female samples, 337 genes between first- and second-trimester male samples, and 504 genes between first- and second-trimester female samples.
+PCA plots showed that, after preprocessing, samples clustered primarily according to gestational age and fetal sex.

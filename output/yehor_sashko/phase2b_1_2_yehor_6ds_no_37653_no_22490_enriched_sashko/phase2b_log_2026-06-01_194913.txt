@@ -1,0 +1,280 @@
+Log started: 2026-06-01 19:49:13 
+Log file: output/yehor_sashko/phase2b_1_2_yehor_6ds_no_37653_no_22490_enriched_sashko/phase2b_log_2026-06-01_194913.txt 
+
+=== Step 1: Loading Datasets ===
+
+  Column mapped: sample_id -> arraydatafile_exprscolumnnames 
+  Column mapped: dataset_id -> secondaryaccession 
+  Column mapped: trimester -> Gestational.Age.Category 
+  Column mapped: condition -> Diagnosis 
+Loaded phenodata: 186 samples
+  Loaded GSE100051 : 11761 genes x 49 samples
+  Loaded GSE122214 : 16925 genes x 4 samples
+  Loaded GSE28551 : 11013 genes x 16 samples
+  Loaded GSE37901 : 16925 genes x 4 samples
+  Loaded GSE93520 : 12055 genes x 36 samples
+  Loaded GSE9984 : 16925 genes x 8 samples
+
+Loaded 6 datasets
+
+Applying sample filter:
+   condition : healthy 
+   trimester : First trimester, Second trimester 
+   148 samples pass filter globally
+   GSE100051 : 49 -> 49 samples
+   GSE122214 : 4 -> 4 samples
+   GSE28551 : 16 -> 16 samples
+   GSE37901 : 4 -> 4 samples
+   GSE93520 : 36 -> 36 samples
+   GSE9984 : 8 -> 8 samples
+   6 datasets retained after filter
+
+Filtering to protein-coding genes (org.Hs.eg.db GENETYPE)...
+  protein-coding reference set: 20597 genes
+   GSE100051 : 11761 -> 11761 genes
+   GSE122214 : 16925 -> 16924 genes
+   GSE28551 : 11013 -> 11013 genes
+   GSE37901 : 16925 -> 16924 genes
+   GSE93520 : 12055 -> 12055 genes
+   GSE9984 : 16925 -> 16924 genes
+
+=== Step 2: Gene Coverage Analysis ===
+
+=== Imputed-gene coverage per comparison group ===
+Genes in all datasets (no imputation): 8260
+Genes needing imputation somewhere:    9569
+  In BOTH groups with >=1 real value: 9271 / 9569
+  Missing entirely from First trimester : 0
+  Missing entirely from Second trimester: 298
+Saved: imputed_gene_group_coverage.csv
+WARNING: some imputed genes lack real values in one comparison group - softimpute will synthesize their expression under that condition.
+Dropping 298 imputed genes without real values in both groups.
+
+=== Coverage threshold selection ===
+Number of datasets: 6 
+Creating incomplete matrix from 6 datasets
+  Total unique genes: 17531 
+  Genes in >= 1 of 6 datasets: 17531 
+  Total samples: 117 
+  Missing values: 603190 ( 29.4 %)
+  Fixed min_datasets=1/6 -> 17531 genes, 29.41% missing
+Selected min_datasets: 1 of 6 
+
+=== Step 3: Imputation Validation ===
+
+=== Imputation Validation ===
+Mask type: gene_dataset_block 
+Leave-out fraction: 0.1 
+Repeats: 3 
+Methods: softimpute 
+
+Creating incomplete matrix from 6 datasets
+  Total unique genes: 17531 
+  Genes in >= 1 of 6 datasets: 17531 
+  Total samples: 117 
+  Missing values: 603190 ( 29.4 %)
+Observed values: 1447937 
+Target masked cells per repeat: 144794 
+Observed (gene, dataset) pairs (gene in all 6 datasets): 49560 
+
+[19:49:24] Repeat 1 / 3 ...
+  Blocks selected: 7559  (skipped to keep >= 4 obs/gene: 0 )
+  Cells masked: 144819 
+
+=== softImpute Matrix Completion ===
+Input matrix: 17531 genes x 117 samples
+Missing values: 748009 / 2051127 ( 36.5 %)
+Auto-selecting lambda via warm starts...
+  Lambda 48.6058 : rank = 30 (approaching rank_max)
+  Lambda 25.1752 : rank = 30 (approaching rank_max)
+  Lambda 13.0395 : rank = 30 (approaching rank_max)
+  Lambda 6.7538 : rank = 30 (approaching rank_max)
+Using lambda = 6.7538 
+
+Imputation complete:
+  Final rank: 30 
+  Imputed values: 748009 
+[19:50:20] Repeat 2 / 3 ...
+  Blocks selected: 7343  (skipped to keep >= 4 obs/gene: 0 )
+  Cells masked: 144816 
+
+=== softImpute Matrix Completion ===
+Input matrix: 17531 genes x 117 samples
+Missing values: 748006 / 2051127 ( 36.5 %)
+Auto-selecting lambda via warm starts...
+  Lambda 48.6007 : rank = 30 (approaching rank_max)
+  Lambda 25.1726 : rank = 30 (approaching rank_max)
+  Lambda 13.0381 : rank = 30 (approaching rank_max)
+  Lambda 6.753 : rank = 30 (approaching rank_max)
+Using lambda = 6.753 
+
+Imputation complete:
+  Final rank: 30 
+  Imputed values: 748006 
+[19:51:08] Repeat 3 / 3 ...
+  Blocks selected: 7404  (skipped to keep >= 4 obs/gene: 0 )
+  Cells masked: 144798 
+
+=== softImpute Matrix Completion ===
+Input matrix: 17531 genes x 117 samples
+Missing values: 747988 / 2051127 ( 36.5 %)
+Auto-selecting lambda via warm starts...
+  Lambda 48.5142 : rank = 30 (approaching rank_max)
+  Lambda 25.1278 : rank = 30 (approaching rank_max)
+  Lambda 13.0149 : rank = 30 (approaching rank_max)
+  Lambda 6.741 : rank = 30 (approaching rank_max)
+Using lambda = 6.741 
+
+Imputation complete:
+  Final rank: 30 
+  Imputed values: 747988 
+
+=== Validation Summary ===
+
+softimpute:
+  Converged: 3/3
+  Correlation: 0.816 (+/- 0.002)
+  RMSE: 1.523 (+/- 0.012)
+  MAE: 1.165 (+/- 0.007)
+
+Saved imputation validation results
+
+=== Step 4: Creating Merged Expression Matrices ===
+Creating incomplete matrix from 6 datasets
+  Total unique genes: 17531 
+  Genes in >= 1 of 6 datasets: 17531 
+  Total samples: 117 
+  Missing values: 603190 ( 29.4 %)
+
+--- Imputation: none ---
+Common genes across all datasets: 8260 
+Imputed cells in merged matrix: 0 / 966420 (0.00%)
+Saved imputed matrix: output/yehor_sashko/phase2b_1_2_yehor_6ds_no_37653_no_22490_enriched_sashko/exprs_imputed_none.tsv 
+Using covariates: fetux_sex_estimate 
+
+  Normalization: combat 
+
+=== ComBat Batch Correction ===
+Batches: 6 
+Batch sizes: 49, 4, 16, 4, 36, 8 
+ComBat correction complete
+  Saved normalized matrix: output/yehor_sashko/phase2b_1_2_yehor_6ds_no_37653_no_22490_enriched_sashko/exprs_none_combat.tsv 
+  PCA plot saved: output/yehor_sashko/phase2b_1_2_yehor_6ds_no_37653_no_22490_enriched_sashko/pca_none_combat.png 
+
+  Running differential expression...
+  Total genes: 8260 
+  Significant (FDR < 0.05 , |logFC| > 1 ): 221 
+    Up-regulated: 175 
+    Down-regulated: 46 
+
+  Normalization: combat_ref 
+
+=== Reference-Batch ComBat ===
+Batches: 6 
+Reference batch: GSE100051 
+Reference batch samples: 49 / 117 total
+Batch sizes: GSE100051=49, GSE122214=4, GSE28551=16, GSE37901=4, GSE93520=36, GSE9984=8 
+Reference-batch ComBat correction complete
+  Saved normalized matrix: output/yehor_sashko/phase2b_1_2_yehor_6ds_no_37653_no_22490_enriched_sashko/exprs_none_combat_ref.tsv 
+  PCA plot saved: output/yehor_sashko/phase2b_1_2_yehor_6ds_no_37653_no_22490_enriched_sashko/pca_none_combat_ref.png 
+
+  Running differential expression...
+  Total genes: 8260 
+  Significant (FDR < 0.05 , |logFC| > 1 ): 221 
+    Up-regulated: 174 
+    Down-regulated: 47 
+
+--- Imputation: softimpute ---
+
+=== softImpute Matrix Completion ===
+Input matrix: 17531 genes x 117 samples
+Missing values: 603190 / 2051127 ( 29.4 %)
+Auto-selecting lambda via warm starts...
+Using lambda = 7.5023 
+
+Imputation complete:
+  Final rank: 1 
+  Imputed values: 603190 
+Imputed cells in merged matrix: 603190 / 2051127 (29.41%)
+Saved imputed matrix: output/yehor_sashko/phase2b_1_2_yehor_6ds_no_37653_no_22490_enriched_sashko/exprs_imputed_softimpute.tsv 
+Using covariates: fetux_sex_estimate 
+
+  Normalization: combat 
+
+=== ComBat Batch Correction ===
+Batches: 6 
+Batch sizes: 49, 4, 16, 4, 36, 8 
+ComBat correction complete
+  Saved normalized matrix: output/yehor_sashko/phase2b_1_2_yehor_6ds_no_37653_no_22490_enriched_sashko/exprs_softimpute_combat.tsv 
+  PCA plot saved: output/yehor_sashko/phase2b_1_2_yehor_6ds_no_37653_no_22490_enriched_sashko/pca_softimpute_combat.png 
+
+  Running differential expression...
+  Imputed-cell weight: 0.000  (downweighting 603190 cells)
+  Total genes: 17531 
+  Significant (FDR < 0.05 , |logFC| > 1 ): 416 
+    Up-regulated: 346 
+    Down-regulated: 70 
+
+  Normalization: combat_ref 
+
+=== Reference-Batch ComBat ===
+Batches: 6 
+Reference batch: GSE100051 
+Reference batch samples: 49 / 117 total
+Batch sizes: GSE100051=49, GSE122214=4, GSE28551=16, GSE37901=4, GSE93520=36, GSE9984=8 
+Reference-batch ComBat correction complete
+  Saved normalized matrix: output/yehor_sashko/phase2b_1_2_yehor_6ds_no_37653_no_22490_enriched_sashko/exprs_softimpute_combat_ref.tsv 
+  PCA plot saved: output/yehor_sashko/phase2b_1_2_yehor_6ds_no_37653_no_22490_enriched_sashko/pca_softimpute_combat_ref.png 
+
+  Running differential expression...
+  Imputed-cell weight: 0.000  (downweighting 603190 cells)
+  Total genes: 17531 
+  Significant (FDR < 0.05 , |logFC| > 1 ): 447 
+    Up-regulated: 369 
+    Down-regulated: 78 
+
+=== Step 6: Method Comparison ===
+
+                 method imputation normalization n_genes n_significant n_up
+1           none_combat       none        combat    8260           221  175
+2       none_combat_ref       none    combat_ref    8260           221  174
+3     softimpute_combat softimpute        combat   17531           416  346
+4 softimpute_combat_ref softimpute    combat_ref   17531           447  369
+  n_down
+1     46
+2     47
+3     70
+4     78
+
+=== DEG Overlap Between Methods ===
+
+Overlap matrix (significant genes):
+                      none_combat none_combat_ref softimpute_combat
+none_combat                   221             220               220
+none_combat_ref               220             221               220
+softimpute_combat             220             220               416
+softimpute_combat_ref         216             216               412
+                      softimpute_combat_ref
+none_combat                             216
+none_combat_ref                         216
+softimpute_combat                       412
+softimpute_combat_ref                   447
+
+=== Step 7: Visualization ===
+Creating incomplete matrix from 6 datasets
+  Total unique genes: 17829 
+  Genes in >= 1 of 6 datasets: 17829 
+  Total samples: 117 
+  Missing values: 628732 ( 30.1 %)
+NA staircase [none_combat]: 17829 genes x 117 samples, 30.1% NA
+Wrote: output/yehor_sashko/phase2b_1_2_yehor_6ds_no_37653_no_22490_enriched_sashko/na_staircase_none_combat.png 
+NA staircase [none_combat_ref]: 17829 genes x 117 samples, 30.1% NA
+Wrote: output/yehor_sashko/phase2b_1_2_yehor_6ds_no_37653_no_22490_enriched_sashko/na_staircase_none_combat_ref.png 
+NA staircase [softimpute_combat]: 17829 genes x 117 samples, 30.1% NA
+Wrote: output/yehor_sashko/phase2b_1_2_yehor_6ds_no_37653_no_22490_enriched_sashko/na_staircase_softimpute_combat.png 
+NA staircase [softimpute_combat_ref]: 17829 genes x 117 samples, 30.1% NA
+Wrote: output/yehor_sashko/phase2b_1_2_yehor_6ds_no_37653_no_22490_enriched_sashko/na_staircase_softimpute_combat_ref.png 
+
+Saved summary to: output/yehor_sashko/phase2b_1_2_yehor_6ds_no_37653_no_22490_enriched_sashko/summary.txt 
+
+Log ended: 2026-06-01 19:52:24 
